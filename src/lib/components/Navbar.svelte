@@ -19,12 +19,12 @@
 	}
 </script>
 
-<aside class="of-top of-bottom no-scrollbar flex h-full max-h-screen w-50 flex-col overflow-y-auto border-r">
+<aside class="of-top of-bottom of-length-2 no-scrollbar flex h-full max-h-screen w-50 flex-col overflow-y-auto border-r">
 	<div class="flex justify-center border-b p-4">
 		<img src="/images/logo.svg" class="h-auto w-30" alt="logo" />
 	</div>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-1.jpg" class="h-auto w-full" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-1.jpg" class="h-30 object-cover" alt="grainy tech" />
 	</div>
 	<nav class="flex flex-col items-start gap-2 border-y py-4">
 		{#each navigationEntries as entry}
@@ -38,7 +38,7 @@
 		{/each}
 	</nav>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-2.jpg" class="h-35 object-cover" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-2.jpg" class="h-30 object-cover" alt="grainy tech" />
 	</div>
 	<div class="space-y-4 border-y p-4 py-6">
 		<h3><span class="align-[2px] text-xs">//</span> Philosophy</h3>
@@ -53,7 +53,10 @@
 		<p>Modify, repair and utilize a Root smart home device however you intend.</p>
 	</div>
 	<div class="hover-reveal border-b" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-3.jpg" class="h-40 object-cover" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-3.jpg" class="h-30 object-cover" alt="grainy tech" />
+	</div>
+	<div class="p-4 border-b">
+		<Button href="https://github.com/therealPaulPlay/root-site" variant="link" target="_blank" class="text-wrap">source code</Button>
 	</div>
 </aside>
 
@@ -70,7 +73,7 @@
 		right: 0;
 		bottom: 0;
 		background: var(--background);
-		opacity: 0.5;
+		opacity: 1;
 		pointer-events: none;
 		transition: all 0.3s ease;
 		z-index: 1;
@@ -79,8 +82,9 @@
 	.hover-reveal:hover::after {
 		mask: radial-gradient(circle 80px at var(--mouse-x, -200px) var(--mouse-y, -200px), transparent 0%, black 100%);
 		-webkit-mask: radial-gradient(
-			circle 200px at var(--mouse-x, -200px) var(--mouse-y, -200px),
+			circle 150px at var(--mouse-x, -200px) var(--mouse-y, -200px),
 			transparent 0%,
+			rgba(0, 0, 0, 0.9) 75%,
 			black 100%
 		);
 	}

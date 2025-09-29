@@ -1,4 +1,4 @@
-# Root Website
+# Root website
 Made with [Svelte](https://svelte.dev/) and [Tailwindcss](https://tailwindcss.com/).
 
 ## Developing
