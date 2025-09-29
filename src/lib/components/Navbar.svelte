@@ -7,18 +7,26 @@
 		{ name: "Home", href: "/" },
 		{ name: "Mission", href: "/#mission" },
 		{ name: "Devices", href: "/#devices" },
-		{ name: "About", href: "/#about" }
+		{ name: "Connect", href: "/connect" }
 	];
+
+	function handleMouseMove(event) {
+		const rect = event.currentTarget.getBoundingClientRect();
+		const x = event.clientX - rect.left;
+		const y = event.clientY - rect.top;
+		event.currentTarget.style.setProperty("--mouse-x", `${x}px`);
+		event.currentTarget.style.setProperty("--mouse-y", `${y}px`);
+	}
 </script>
 
-<aside class="flex h-full max-h-screen overflow-y-auto of-top of-bottom of-length-2 w-50 flex-col border-r no-scrollbar">
-	<div class="border-b p-4">
+<aside class="of-top of-bottom no-scrollbar flex h-full max-h-screen w-50 flex-col overflow-y-auto border-r">
+	<div class="flex justify-center border-b p-4">
 		<img src="/images/logo.svg" class="h-auto w-30" alt="logo" />
 	</div>
-	<div>
-		<img src="/images/grainy-tech-dots-1.jpg" class="h-auto w-full opacity-25" alt="grainy tech" />
+	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
+		<img src="/images/grainy-tech-dots-1.jpg" class="h-auto w-full" alt="grainy tech" />
 	</div>
-	<nav class="flex flex-col items-start">
+	<nav class="flex flex-col items-start gap-2 border-y py-4">
 		{#each navigationEntries as entry}
 			<Button
 				href={entry.href}
@@ -29,33 +37,51 @@
 			>
 		{/each}
 	</nav>
-	<div>
-		<img
-			src="/images/grainy-tech-dots-3.jpg"
-			class="h-50  object-cover opacity-25"
-			alt="grainy tech"
-		/>
+	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
+		<img src="/images/grainy-tech-dots-2.jpg" class="h-35 object-cover" alt="grainy tech" />
 	</div>
-	<div class="space-y-4 border-y p-4">
-		<h3 class="font-medium"><span>//</span> Philosophy</h3>
+	<div class="space-y-4 border-y p-4 py-6">
+		<h3><span class="align-[2px] text-xs">//</span> Philosophy</h3>
 		<p>
-			Root, as in <span class="bg-neutral-100">root-access</span>, is about lifting all restrictions and building smart
-			devices that purely serve their owner.
+			<i>Root</i>, as in <span class="bg-neutral-100">root-access</span>, is about building unrestricted devices that
+			purely serve their owner.
 		</p>
 		<p>
-			<span class="bg-neutral-100">Privacy</span> is the foundation of every design decision. Data stays local, nothing
-			leaves your home. Fully <span class="bg-neutral-100">open-source</span>.
+			<span class="bg-neutral-100">Privacy is the foundation</span> of every design decision. Data stays local or is
+			end-2-end encrypted and all software is <span class="bg-neutral-100">open-source</span>.
 		</p>
-		<p>
-			Owning a Root device means <span class="bg-neutral-100">unrestricted use</span>. Modify, repair and utilize it
-			however you intend.
-		</p>
+		<p>Modify, repair and utilize a Root smart home device however you intend.</p>
 	</div>
-	<div class="grow relative">
-		<img
-			src="/images/grainy-tech-dots-2.jpg"
-			class="h-full max-h-100 min-h-50  object-cover opacity-25"
-			alt="grainy tech"
-		/>
+	<div class="hover-reveal border-b" onmousemove={handleMouseMove} role="img">
+		<img src="/images/grainy-tech-dots-3.jpg" class="h-40 object-cover" alt="grainy tech" />
 	</div>
 </aside>
+
+<style>
+	.hover-reveal {
+		position: relative;
+	}
+
+	.hover-reveal::after {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: var(--background);
+		opacity: 0.5;
+		pointer-events: none;
+		transition: all 0.3s ease;
+		z-index: 1;
+	}
+
+	.hover-reveal:hover::after {
+		mask: radial-gradient(circle 80px at var(--mouse-x, -200px) var(--mouse-y, -200px), transparent 0%, black 100%);
+		-webkit-mask: radial-gradient(
+			circle 200px at var(--mouse-x, -200px) var(--mouse-y, -200px),
+			transparent 0%,
+			black 100%
+		);
+	}
+</style>

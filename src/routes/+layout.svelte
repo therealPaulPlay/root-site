@@ -14,7 +14,7 @@
 
 <main class="relative container mx-auto flex h-screen border-x">
 	<Navbar />
-	<article>
+	<article class="w-full ml-15 border-l">
 		{@render children?.()}
 	</article>
 </main>

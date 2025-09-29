@@ -6,7 +6,12 @@
 
 @font-face {
   font-family: Courier;
-  src: url("/fonts/courier-prime-regular.ttf"), sans-serif;
+  src: url("/fonts/courier-prime-regular.ttf");
+}
+
+@font-face {
+  font-family: Commit;
+  src: url("/fonts/commit-mono-regular.otf");
 }
 
 :root {
@@ -119,11 +124,17 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    @apply font-[Courier]
+    @apply font-[Commit];
   }
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  h3,
+  h4,
+  h5 {
+    @apply uppercase
   }
 }
 
