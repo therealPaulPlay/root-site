@@ -1,2 +1,5 @@
-# root-site
-Website for Root – Privacy-first smart home devices
+# Root Website
+Made with [Svelte](https://svelte.dev/) and [Tailwindcss](https://tailwindcss.com/).
+
+## Developing
+Start the dev server using `npm run dev` or use vite commands directly.
