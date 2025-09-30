@@ -19,8 +19,8 @@
 	}
 </script>
 
-<aside class="of-top of-bottom of-length-2 no-scrollbar flex h-full max-h-screen w-50 flex-col overflow-y-auto border-r">
-	<div class="flex justify-center border-b p-4">
+<aside class="of-top of-bottom of-length-2 no-scrollbar flex h-full max-h-screen w-50 flex-col overflow-y-auto border-x">
+	<div class="flex justify-center border-b min-h-20">
 		<img src="/images/logo.svg" class="h-auto w-30" alt="logo" />
 	</div>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">

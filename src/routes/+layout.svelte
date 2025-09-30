@@ -12,9 +12,9 @@
 	<link rel="icon" href="/images/favicon.svg" />
 </svelte:head>
 
-<main class="relative container mx-auto flex h-screen border-x">
+<main class="relative container mx-auto flex h-screen overflow-hidden">
 	<Navbar />
-	<article class="w-full ml-15 border-l">
+	<article class="w-full ml-15 border-x overflow-auto no-scrollbar">
 		{@render children?.()}
 	</article>
 </main>
