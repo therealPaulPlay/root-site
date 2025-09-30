@@ -3,6 +3,7 @@
 	import { RiDeviceLine, RiTimeLine, RiComputerLine, RiCpuLine, RiTranslate2 } from "svelte-remixicon";
 	import { blur } from "svelte/transition";
 
+	// User tracking example
 	let exampleTrackingInfo = $state([]);
 	let trackingExampleIndex = $state(0);
 
@@ -40,6 +41,9 @@
 			}
 		];
 
+		// Update marquee text based on width
+		updateMarqueeText();
+
 		// Start the auto-rotation timer
 		const trackingExampleInterval = setInterval(() => {
 			if (trackingExampleIndex < exampleTrackingInfo.length - 1) trackingExampleIndex += 1;
@@ -51,19 +55,42 @@
 			binaryEffectString = Array.from({ length: 500 }, () => Math.round(Math.random())).join("");
 		}, 100);
 
+		const marqueeInterval = setInterval(() => {
+			const textArray = Array.from(marqueeText);
+			const lastEl = textArray.pop();
+			textArray.unshift(lastEl);
+            marqueeText = textArray.join("");
+		}, 250);
+
 		return () => {
 			clearInterval(trackingExampleInterval);
 			clearInterval(binaryChangeInterval);
+			clearInterval(marqueeInterval);
 		};
 	});
 
+	// Binary background
 	const binaryEffectArray = Array(20).fill(0);
 	let binaryEffectString = $state(Array.from({ length: 500 }, () => Math.round(Math.random())).join(""));
+
+	// Retro marquee
+	let marqueeText = $state("+++Devices+++");
+	let marqueeElement = $state();
+
+	function updateMarqueeText() {
+		if (!marqueeElement) return;
+		const width = marqueeElement.offsetWidth;
+		const plusCount = Math.floor(width / 65); // Rough estimate for plus width
+		const plus = '+'.repeat(Math.max(1, plusCount));
+		marqueeText = `${plus}Devices${plus}`;
+	}
 </script>
 
 <svelte:head>
 	<title>ROOT - Private smart home devices</title>
 </svelte:head>
+
+<svelte:window onresize={updateMarqueeText} />
 
 <section class="relative mb-20 flex h-155 w-full items-center justify-center">
 	<img
@@ -73,7 +100,7 @@
 	/>
 </section>
 
-<section class="flex border-y max-md:flex-wrap">
+<section class="mb-20 flex border-y max-md:flex-wrap">
 	<div class="relative flex min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100% p-4">
 		<div
 			class="absolute inset-0 ml-20 transition-transform duration-700 ease-in-out"
@@ -102,16 +129,14 @@
 			<span class="bg-neutral-100">monitoring becomes possible</span>.
 		</p>
 		<p class="max-w-3/4">
-			Countless ordinary IoT devices <span class="bg-neutral-100">embrace this possibility by design</span>. They are
-			capable of watching, listening, and exchanging information.
+			Countless IoT devices <span class="bg-neutral-100">embrace this possibility by design</span>. They are capable of
+			watching, listening, and exchanging information.
 		</p>
 	</div>
 </section>
 
-<section class="h-20 w-full"></section>
-
-<section class="relative flex w-full items-center justify-center overflow-hidden border-y py-30">
-	<div class="absolute -inset-3 -z-1 bg-foreground select-none">
+<section class="relative mb-20 flex w-full items-center justify-center overflow-hidden border-y py-30">
+	<div class="absolute -inset-2.5 -z-1 bg-foreground select-none">
 		{#each binaryEffectArray as row, index}
 			<p class="w-full text-lg font-thin text-background" style:opacity={0.5 - 0.035 * index}>
 				{binaryEffectString?.slice(Math.floor(Math.random() * 100))}
@@ -122,11 +147,25 @@
 		<a class="p-8 font-display text-7xl font-medium text-background uppercase" name="mission">The mission.</a>
 		<div class="w-2/3 border p-4">
 			<p class="text-background">
-				Crafting smart home devices that fulfill their purpose, nothing more. Function &gt; form. Not just promising privacy,
-				but developing open-source software that is incapable of tracking users. <span
+				Crafting smart home devices that fulfill their purpose, nothing more. Function &gt; form. Not just promising
+				privacy, but developing open-source software that is incapable of tracking users. <span
 					class="inline-block h-4 w-2 animate-flash bg-background align-middle"
 				></span>
 			</p>
 		</div>
 	</div>
+</section>
+
+<section class="w-full border-y mb-20">
+	<div class="w-full relative">
+		<h3 bind:this={marqueeElement} class="text-5xl whitespace-nowrap -ml-2.5">
+			{#each Array.from(marqueeText) as char}
+				<span class:opacity-50={char === '+'}>{char}</span>
+			{/each}
+		</h3>
+	</div>
+    <div class="p-8 border-t space-y-4">
+        <h3 class="text-3xl font-display font-medium">Observer.</h3>
+        <p>The Observer is a smart home security camera.</p>
+    </div>
 </section>
