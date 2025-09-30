@@ -135,12 +135,26 @@
 
 @font-face {
   font-family: Commit;
-  src: url("/fonts/commit-mono-regular.otf");
+  src: url("/fonts/commit-mono-variable.woff2");
 }
 
 @theme {
   --font-sans: Commit, sans-serif;
   --font-display: Clash, sans-serif;
+
+  --animate-flash: flash 1.75s steps(1) infinite;
+
+  @keyframes flash {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0;
+    }
+  }
 }
 
 @layer utilities {
