@@ -61,12 +61,11 @@
 		src="/images/privacy-matters-placeholder.jpg"
 		class="absolute inset-0 -z-1 h-full w-full object-cover"
 	/>
-	<h1 class="font-display text-7xl text-background">What about privacy?</h1>
 </section>
 
 <section class="flex border-y max-md:flex-wrap">
 	<div
-		class="relative flex min-w-1/3 flex-col justify-center overflow-hidden border-r mask-y-from-75% mask-y-to-100% p-4"
+		class="relative flex min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100% p-4"
 	>
 		<div
 			class="absolute inset-0 ml-20 transition-transform duration-700 ease-in-out"
@@ -88,7 +87,7 @@
 			{/each}
 		</div>
 	</div>
-	<div class="min-w-2/3 space-y-4 p-10">
+	<div class="min-w-2/3 space-y-4 p-10 border-l">
 		<h3 class="font-display text-3xl font-medium">The age of the transparent home.</h3>
 		<p class="max-w-3/4">
 			Privacy isn't about having nothing to hide. It's a human right, violated the moment <span class="bg-neutral-100"
@@ -97,7 +96,7 @@
 		</p>
 		<p class="max-w-3/4">
 			Ordinary smart home devices <span class="bg-neutral-100">embrace this possibility by design</span>. They are
-			capable of watching, listening, and quietly turning your home into a data stream.
+			capable of watching, listening, and turning your home into a data stream.
 		</p>
 	</div>
 </section>
