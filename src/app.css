@@ -4,16 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@font-face {
-  font-family: Courier;
-  src: url("/fonts/courier-prime-regular.ttf");
-}
-
-@font-face {
-  font-family: Commit;
-  src: url("/fonts/commit-mono-regular.otf");
-}
-
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -124,7 +114,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    @apply font-[Commit];
+    @apply font-sans;
   }
 
   body {
@@ -136,6 +126,21 @@
   h5 {
     @apply uppercase
   }
+}
+
+@font-face {
+  font-family: Clash;
+  src: url("/fonts/clash-display-variable.woff2");
+}
+
+@font-face {
+  font-family: Commit;
+  src: url("/fonts/commit-mono-regular.otf");
+}
+
+@theme {
+  --font-sans: Commit, sans-serif;
+  --font-display: Clash, sans-serif;
 }
 
 @layer utilities {
