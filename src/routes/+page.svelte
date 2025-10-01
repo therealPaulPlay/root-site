@@ -92,8 +92,12 @@
 
 	function handleMouseMove(e) {
 		if (!pupil || !innerPupil) return;
-		const x = Math.max(38, Math.min(82, 60 + (e.clientX - window.innerWidth / 2) * 0.012));
-		const y = Math.max(50, Math.min(90, 70 + (e.clientY - window.innerHeight / 2) * 0.012));
+		const eyeRect = pupil.closest('svg').getBoundingClientRect();
+		const eyeCenterX = eyeRect.left + eyeRect.width / 2;
+		const eyeCenterY = eyeRect.top + eyeRect.height * 0.5;
+		const x = Math.max(38, Math.min(82, 60 + (e.clientX - eyeCenterX) * 0.01));
+		const y = Math.max(33, Math.min(57, 45 + (e.clientY - eyeCenterY) * 0.005));
+
 		pupil.setAttribute('cx', x); pupil.setAttribute('cy', y);
 		innerPupil.setAttribute('cx', x); innerPupil.setAttribute('cy', y);
 	}
@@ -126,23 +130,23 @@
 		</p>
 	</div>
 	<div class="relative flex min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100% p-4">
-		<svg viewBox="0 0 120 140" class="w-72 h-84 mx-auto">
+		<svg viewBox="0 0 120 90" class="mx-auto">
 			<defs>
 				<clipPath id="eyeClip">
-					<path d="M20 70 Q60 30 100 70 Q60 110 20 70 Z"/>
+					<path d="M20 45 Q60 5 100 45 Q60 85 20 45 Z"/>
 				</clipPath>
 			</defs>
 			<!-- Eye outline (much taller almond shape) -->
-			<path d="M20 70 Q60 30 100 70 Q60 110 20 70 Z" fill="white" stroke="currentColor" stroke-width="1.5"/>
+			<path d="M20 45 Q60 5 100 45 Q60 85 20 45 Z" fill="white" stroke="currentColor" stroke-width="1.5"/>
 			<!-- Iris and Pupil with clipping -->
 			<g clip-path="url(#eyeClip)">
-				<!-- Iris (outline only) -->
-				<circle bind:this={pupil} cx="60" cy="70" r="18" fill="none" stroke="currentColor" stroke-width="1.5" class="transition-all duration-500 ease-out"/>
-				<!-- Pupil (outline only) -->
-				<circle bind:this={innerPupil} cx="60" cy="70" r="8" fill="none" stroke="currentColor" stroke-width="1.5" class="transition-all duration-500 ease-out"/>
+				<!-- Iris (filled black) -->
+				<circle bind:this={pupil} cx="60" cy="45" r="18" fill="currentColor" stroke="currentColor" stroke-width="1.5" class="transition-all duration-500 ease-out"/>
+				<!-- Pupil (white fill) -->
+				<circle bind:this={innerPupil} cx="60" cy="45" r="8" fill="white" stroke="currentColor" stroke-width="1.5" class="transition-all duration-500 ease-out"/>
 			</g>
 			<!-- Eyelid for blinking -->
-			<path d="M20 70 Q60 30 100 70 Q60 30 20 70 Z" fill="white" stroke="currentColor" stroke-width="1.5" class="animate-blink"/>
+			<path d="M20 45 Q60 5 100 45 Q60 5 20 45 Z" fill="white" stroke="currentColor" stroke-width="1.5" class="animate-blink"/>
 		</svg>
 	</div>
 </section>
@@ -222,10 +226,10 @@
 <style>
 	@keyframes blink {
 		0%, 85%, 100% {
-			d: path("M20 70 Q60 30 100 70 Q60 30 20 70 Z");
+			d: path("M20 45 Q60 5 100 45 Q60 5 20 45 Z");
 		}
 		90%, 95% {
-			d: path("M20 70 Q60 30 100 70 Q60 110 20 70 Z");
+			d: path("M20 45 Q60 5 100 45 Q60 85 20 45 Z");
 		}
 	}
 

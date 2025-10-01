@@ -32,7 +32,7 @@
 		background-repeat: no-repeat;
 		background-position: center;
 		filter: invert(1);
-		top: -40%;
+		top: -38%;
 		filter: invert();
 		transform: translateX(-50%);
 	}
