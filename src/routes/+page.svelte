@@ -1,6 +1,6 @@
 <script>
 	import { onMount, onDestroy } from "svelte";
-	import { RiDeviceLine, RiTimeLine, RiComputerLine, RiCpuLine, RiTranslate2 } from "svelte-remixicon";
+	import { RiDeviceLine, RiTimeLine, RiComputerLine, RiCpuLine, RiTranslate2, RiCamera2Fill } from "svelte-remixicon";
 	import { blur } from "svelte/transition";
 
 	// User tracking example
@@ -59,8 +59,9 @@
 			const textArray = Array.from(marqueeText);
 			const lastEl = textArray.pop();
 			textArray.unshift(lastEl);
-            marqueeText = textArray.join("");
+			marqueeText = textArray.join("");
 		}, 250);
+
 
 		return () => {
 			clearInterval(trackingExampleInterval);
@@ -74,15 +75,27 @@
 	let binaryEffectString = $state(Array.from({ length: 500 }, () => Math.round(Math.random())).join(""));
 
 	// Retro marquee
-	let marqueeText = $state("+++Devices+++");
+	let marqueeText = $state("");
 	let marqueeElement = $state();
+
+	// Eye pupil movement
+	let pupil = $state();
+	let innerPupil = $state();
 
 	function updateMarqueeText() {
 		if (!marqueeElement) return;
 		const width = marqueeElement.offsetWidth;
-		const plusCount = Math.floor(width / 65); // Rough estimate for plus width
-		const plus = '+'.repeat(Math.max(1, plusCount));
-		marqueeText = `${plus}Devices${plus}`;
+		const plusCount = Math.floor(width / 55); // Rough estimate for plus width
+		const plus = "+".repeat(Math.max(1, plusCount));
+		marqueeText = `${plus}Shockingly+++Private+++Devices${plus}`;
+	}
+
+	function handleMouseMove(e) {
+		if (!pupil || !innerPupil) return;
+		const x = Math.max(38, Math.min(82, 60 + (e.clientX - window.innerWidth / 2) * 0.012));
+		const y = Math.max(50, Math.min(90, 70 + (e.clientY - window.innerHeight / 2) * 0.012));
+		pupil.setAttribute('cx', x); pupil.setAttribute('cy', y);
+		innerPupil.setAttribute('cx', x); innerPupil.setAttribute('cy', y);
 	}
 </script>
 
@@ -90,7 +103,7 @@
 	<title>ROOT - Private smart home devices</title>
 </svelte:head>
 
-<svelte:window onresize={updateMarqueeText} />
+<svelte:window onresize={updateMarqueeText} onmousemove={handleMouseMove} />
 
 <section class="relative mb-20 flex h-155 w-full items-center justify-center">
 	<img
@@ -98,6 +111,40 @@
 		src="/images/privacy-matters-placeholder.jpg"
 		class="absolute inset-0 -z-1 h-full w-full border-b object-cover"
 	/>
+</section>
+
+<section class="mb-20 flex border-y max-md:flex-wrap">
+	<div class="min-w-2/3 space-y-4 border-r p-10">
+		<h3 class="font-display text-3xl font-medium">More than capable.</h3>
+		<p class="max-w-3/4">
+			Privacy protects everyone, not just those with something to hide. It’s a basic human right, threatened the moment
+			<span class="bg-neutral-100">monitoring becomes possible</span>.
+		</p>
+		<p class="max-w-3/4">
+			Countless IoT devices <span class="bg-neutral-100">embrace this possibility by design</span>. They are capable of
+			watching, listening, and exchanging information.
+		</p>
+	</div>
+	<div class="relative flex min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100% p-4">
+		<svg viewBox="0 0 120 140" class="w-72 h-84 mx-auto">
+			<defs>
+				<clipPath id="eyeClip">
+					<path d="M20 70 Q60 30 100 70 Q60 110 20 70 Z"/>
+				</clipPath>
+			</defs>
+			<!-- Eye outline (much taller almond shape) -->
+			<path d="M20 70 Q60 30 100 70 Q60 110 20 70 Z" fill="white" stroke="currentColor" stroke-width="1.5"/>
+			<!-- Iris and Pupil with clipping -->
+			<g clip-path="url(#eyeClip)">
+				<!-- Iris (outline only) -->
+				<circle bind:this={pupil} cx="60" cy="70" r="18" fill="none" stroke="currentColor" stroke-width="1.5" class="transition-all duration-500 ease-out"/>
+				<!-- Pupil (outline only) -->
+				<circle bind:this={innerPupil} cx="60" cy="70" r="8" fill="none" stroke="currentColor" stroke-width="1.5" class="transition-all duration-500 ease-out"/>
+			</g>
+			<!-- Eyelid for blinking -->
+			<path d="M20 70 Q60 30 100 70 Q60 30 20 70 Z" fill="white" stroke="currentColor" stroke-width="1.5" class="animate-blink"/>
+		</svg>
+	</div>
 </section>
 
 <section class="mb-20 flex border-y max-md:flex-wrap">
@@ -123,15 +170,9 @@
 		</div>
 	</div>
 	<div class="min-w-2/3 space-y-4 border-l p-10">
-		<h3 class="font-display text-3xl font-medium">The opportunity for surveillance.</h3>
-		<p class="max-w-3/4">
-			Privacy isn’t about hiding something. It’s a basic human right, put at risk the moment
-			<span class="bg-neutral-100">monitoring becomes possible</span>.
-		</p>
-		<p class="max-w-3/4">
-			Countless IoT devices <span class="bg-neutral-100">embrace this possibility by design</span>. They are capable of
-			watching, listening, and exchanging information.
-		</p>
+		<h3 class="font-display text-3xl font-medium">Tracking, everywhere.</h3>
+		<p class="max-w-3/4">Lorem Ipsum Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum? Ipsum Lorem. Lorem Ipsum.</p>
+		<p class="max-w-3/4">Lorem Ipsum Lorem Ipsum Lorem Ipsum. Lorem Ipsum! Lorem Ipsum Lorem Ipsum.</p>
 	</div>
 </section>
 
@@ -147,8 +188,8 @@
 		<a class="p-8 font-display text-7xl font-medium text-background uppercase" name="mission">The mission.</a>
 		<div class="w-2/3 border p-4">
 			<p class="text-background">
-				Crafting smart home devices that fulfill their purpose, nothing more. Function &gt; form. Not just promising
-				privacy, but developing open-source software that is incapable of tracking users. <span
+				Building smart home devices that are private out of the box, without sacrificing usability. Running on
+				open-source software that is incapable of tracking users. Function &gt; form. No subscriptions. <span
 					class="inline-block h-4 w-2 animate-flash bg-background align-middle"
 				></span>
 			</p>
@@ -156,16 +197,39 @@
 	</div>
 </section>
 
-<section class="w-full border-y mb-20">
-	<div class="w-full relative">
-		<h3 bind:this={marqueeElement} class="text-5xl whitespace-nowrap -ml-2.5">
+<section class="mb-20 w-full border-y">
+	<div class="relative w-full overflow-hidden">
+		<!-- svelte-ignore a11y_consider_explicit_label -->
+		<a name="devices" class="h-0"></a>
+		<h3 bind:this={marqueeElement} class="-ml-1.5 text-3xl whitespace-nowrap">
 			{#each Array.from(marqueeText) as char}
-				<span class:opacity-50={char === '+'}>{char}</span>
+				<span class:opacity-50={char === "+"}>{char}</span>
 			{/each}
 		</h3>
 	</div>
-    <div class="p-8 border-t space-y-4">
-        <h3 class="text-3xl font-display font-medium">Observer.</h3>
-        <p>The Observer is a smart home security camera.</p>
-    </div>
+	<div class="relative overflow-hidden border-t p-8 py-12">
+		<p class="mb-1 w-fit bg-foreground px-0.5 text-background uppercase">Coming soon</p>
+		<h3 class="mb-4 font-display text-3xl font-medium">Observer.</h3>
+		<p>A home security camera with on-device AI vision.</p>
+		<img
+			src="/images/observer-simplified-line.svg"
+			alt="observer illustration"
+			class="absolute -top-2 right-5 h-100 w-100 opacity-20"
+		/>
+	</div>
 </section>
+
+<style>
+	@keyframes blink {
+		0%, 85%, 100% {
+			d: path("M20 70 Q60 30 100 70 Q60 30 20 70 Z");
+		}
+		90%, 95% {
+			d: path("M20 70 Q60 30 100 70 Q60 110 20 70 Z");
+		}
+	}
+
+	:global(.animate-blink) {
+		animation: blink 4s ease-in-out infinite;
+	}
+</style>
