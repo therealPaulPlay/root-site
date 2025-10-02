@@ -62,7 +62,6 @@
 			marqueeText = textArray.join("");
 		}, 250);
 
-
 		return () => {
 			clearInterval(trackingExampleInterval);
 			clearInterval(binaryChangeInterval);
@@ -78,10 +77,6 @@
 	let marqueeText = $state("");
 	let marqueeElement = $state();
 
-	// Eye pupil movement
-	let pupil = $state();
-	let innerPupil = $state();
-
 	function updateMarqueeText() {
 		if (!marqueeElement) return;
 		const width = marqueeElement.offsetWidth;
@@ -90,16 +85,25 @@
 		marqueeText = `${plus}Shockingly+++Private+++Devices${plus}`;
 	}
 
-	function handleMouseMove(e) {
-		if (!pupil || !innerPupil) return;
-		const eyeRect = pupil.closest('svg').getBoundingClientRect();
-		const eyeCenterX = eyeRect.left + eyeRect.width / 2;
-		const eyeCenterY = eyeRect.top + eyeRect.height * 0.5;
-		const x = Math.max(38, Math.min(82, 60 + (e.clientX - eyeCenterX) * 0.01));
-		const y = Math.max(33, Math.min(57, 45 + (e.clientY - eyeCenterY) * 0.005));
+	function handleEyePupilMouseMove(e) {
+		// Handle all eyes in the grid
+		for (let i = 0; i < 80; i++) {
+			const pupil = document.getElementById(`pupil-${i}`);
+			const innerPupil = document.getElementById(`inner-pupil-${i}`);
 
-		pupil.setAttribute('cx', x); pupil.setAttribute('cy', y);
-		innerPupil.setAttribute('cx', x); innerPupil.setAttribute('cy', y);
+			if (!pupil || !innerPupil) continue;
+
+			const eyeRect = pupil.closest("svg").getBoundingClientRect();
+			const eyeCenterX = eyeRect.left + eyeRect.width / 2;
+			const eyeCenterY = eyeRect.top + eyeRect.height * 0.5;
+			const x = Math.max(38, Math.min(82, 60 + (e.clientX - eyeCenterX) * 0.02));
+			const y = Math.max(33, Math.min(57, 45 + (e.clientY - eyeCenterY) * 0.01));
+
+			pupil.setAttribute("cx", x);
+			pupil.setAttribute("cy", y);
+			innerPupil.setAttribute("cx", x);
+			innerPupil.setAttribute("cy", y);
+		}
 	}
 </script>
 
@@ -107,7 +111,7 @@
 	<title>ROOT - Private smart home devices</title>
 </svelte:head>
 
-<svelte:window onresize={updateMarqueeText} onmousemove={handleMouseMove} />
+<svelte:window onresize={updateMarqueeText} onmousemove={handleEyePupilMouseMove} />
 
 <section class="relative mb-20 flex h-155 w-full items-center justify-center">
 	<img
@@ -129,25 +133,62 @@
 			watching, listening, and exchanging information.
 		</p>
 	</div>
-	<div class="relative flex min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100% p-4">
-		<svg viewBox="0 0 120 90" class="mx-auto">
-			<defs>
-				<clipPath id="eyeClip">
-					<path d="M20 45 Q60 5 100 45 Q60 85 20 45 Z"/>
-				</clipPath>
-			</defs>
-			<!-- Eye outline (much taller almond shape) -->
-			<path d="M20 45 Q60 5 100 45 Q60 85 20 45 Z" fill="white" stroke="currentColor" stroke-width="1.5"/>
-			<!-- Iris and Pupil with clipping -->
-			<g clip-path="url(#eyeClip)">
-				<!-- Iris (filled black) -->
-				<circle bind:this={pupil} cx="60" cy="45" r="18" fill="currentColor" stroke="currentColor" stroke-width="1.5" class="transition-all duration-500 ease-out"/>
-				<!-- Pupil (white fill) -->
-				<circle bind:this={innerPupil} cx="60" cy="45" r="8" fill="white" stroke="currentColor" stroke-width="1.5" class="transition-all duration-500 ease-out"/>
-			</g>
-			<!-- Eyelid for blinking -->
-			<path d="M20 45 Q60 5 100 45 Q60 5 20 45 Z" fill="white" stroke="currentColor" stroke-width="1.5" class="animate-blink"/>
-		</svg>
+	<div
+		class="relative flex min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-95% mask-y-to-100% mask-x-from-95% mask-x-to-100% p-4"
+	>
+		{#snippet eyeSnippet(id)}
+			{@const pupilId = `pupil-${id}`}
+			{@const innerPupilId = `inner-pupil-${id}`}
+			<svg viewBox="15 0 120 90" class="h-8 w-12">
+				<defs>
+					<clipPath id="eyeClip{id}">
+						<path d="M20 45 Q60 5 100 45 Q60 85 20 45 Z" />
+					</clipPath>
+				</defs>
+				<!-- Eye outline -->
+				<path d="M20 45 Q60 5 100 45 Q60 85 20 45 Z" fill="white" stroke="currentColor" stroke-width="3.5" />
+				<!-- Iris and Pupil with clipping -->
+				<g clip-path="url(#eyeClip{id})">
+					<!-- Iris (filled black) -->
+					<circle
+						id={pupilId}
+						cx="60"
+						cy="45"
+						r="18"
+						fill="currentColor"
+						stroke="currentColor"
+						stroke-width="3.5"
+						class="transition-all duration-500 ease-out"
+					/>
+					<!-- Pupil (white fill) -->
+					<circle
+						id={innerPupilId}
+						cx="60"
+						cy="45"
+						r="8"
+						fill="white"
+						stroke="currentColor"
+						stroke-width="3.5"
+						class="transition-all duration-500 ease-out"
+					/>
+				</g>
+				<!-- Eyelid for blinking -->
+				<path
+					d="M20 45 Q60 5 100 45 Q60 5 20 45 Z"
+					fill="white"
+					stroke="currentColor"
+					stroke-width="1.5"
+					class="animate-blink"
+					style="animation-delay: {Math.random() * 8}s"
+				/>
+			</svg>
+		{/snippet}
+
+		<div class="mx-auto grid max-w-fit grid-cols-10 gap-1.5">
+			{#each Array(80) as _, i}
+				{@render eyeSnippet(i)}
+			{/each}
+		</div>
 	</div>
 </section>
 
@@ -159,7 +200,7 @@
 		>
 			{#each exampleTrackingInfo as info, i}
 				<div
-					class="flex h-20 items-center gap-3 text-5xl transition-all duration-700 ease-in-out"
+					class="flex h-18 items-center gap-3 text-5xl transition-all duration-700 ease-in-out"
 					class:opacity-100={i === trackingExampleIndex}
 					class:opacity-30={i !== trackingExampleIndex}
 					class:scale-100={i === trackingExampleIndex}
@@ -174,9 +215,18 @@
 		</div>
 	</div>
 	<div class="min-w-2/3 space-y-4 border-l p-10">
-		<h3 class="font-display text-3xl font-medium">Tracking, everywhere.</h3>
-		<p class="max-w-3/4">Lorem Ipsum Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum? Ipsum Lorem. Lorem Ipsum.</p>
-		<p class="max-w-3/4">Lorem Ipsum Lorem Ipsum Lorem Ipsum. Lorem Ipsum! Lorem Ipsum Lorem Ipsum.</p>
+		<h3 class="font-display text-3xl font-medium">Why it matters now.</h3>
+		<p class="max-w-3/4">
+			Fewer companies control more of our digital lives. From web services to smart home, connecting the dots with
+			algorithms and artifical intelligence allows for creating <span class="bg-neutral-100"
+				>super accurate profiles</span
+			>.
+		</p>
+		<p class="max-w-3/4">
+			As political landscapes shift, the question isn't just who can access your data today, but <span
+				class="bg-neutral-100">who might access it tomorrow</span
+			>. Privacy is about preparation.
+		</p>
 	</div>
 </section>
 
@@ -225,15 +275,18 @@
 
 <style>
 	@keyframes blink {
-		0%, 85%, 100% {
+		0%,
+		95%,
+		100% {
 			d: path("M20 45 Q60 5 100 45 Q60 5 20 45 Z");
 		}
-		90%, 95% {
+		97%,
+		98% {
 			d: path("M20 45 Q60 5 100 45 Q60 85 20 45 Z");
 		}
 	}
 
 	:global(.animate-blink) {
-		animation: blink 4s ease-in-out infinite;
+		animation: blink 8s ease-in-out infinite;
 	}
 </style>

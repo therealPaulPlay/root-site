@@ -13,9 +13,9 @@
 	<link rel="icon" href="/images/favicon.svg" />
 </svelte:head>
 
-<main class="relative container mx-auto flex h-screen overflow-hidden">
+<main class="relative container mx-auto flex min-h-screen">
 	<Navbar />
-	<article class="no-scrollbar ml-15 w-full overflow-auto border-x">
+	<article class="no-scrollbar ml-15 w-full border-x overflow-x-hidden">
 		{@render children?.()}
 		<Footer />
 	</article>

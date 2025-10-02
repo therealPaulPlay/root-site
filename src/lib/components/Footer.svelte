@@ -4,7 +4,7 @@
 </script>
 
 <section class="relative mt-auto w-full overflow-hidden border-t bg-foreground">
-	<div class="pointer-events-none absolute inset-0 -top-50">
+	<div class="pointer-events-none absolute inset-0 -bottom-180">
 		<div class="logo-layer"></div>
 		<div class="logo-layer logo-fill"></div>
 	</div>

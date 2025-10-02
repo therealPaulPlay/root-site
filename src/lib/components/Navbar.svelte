@@ -19,8 +19,10 @@
 	}
 </script>
 
-<aside class="of-top of-bottom of-length-2 no-scrollbar flex h-full max-h-screen w-50 flex-col overflow-y-auto border-x">
-	<div class="flex justify-center border-b min-h-20">
+<aside
+	class="of-top of-bottom of-length-2 no-scrollbar sticky top-0 flex h-screen w-50 flex-col overflow-y-auto border-x"
+>
+	<div class="flex min-h-20 justify-center border-b">
 		<img src="/images/logo.svg" class="h-auto w-30" alt="logo" />
 	</div>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
@@ -55,8 +57,10 @@
 	<div class="hover-reveal border-b" onmousemove={handleMouseMove} role="img">
 		<img src="/images/grainy-tech-dots-3.jpg" class="h-30 object-cover" alt="grainy tech" />
 	</div>
-	<div class="p-4 border-b">
-		<Button href="https://github.com/therealPaulPlay/root-site" variant="link" target="_blank" class="text-wrap">source code</Button>
+	<div class="p-4">
+		<Button href="https://github.com/therealPaulPlay/root-site" variant="link" target="_blank" class="text-wrap"
+			>source code</Button
+		>
 	</div>
 </aside>
 

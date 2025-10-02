@@ -114,7 +114,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    @apply font-sans;
+    @apply font-mono;
   }
 
   body {
@@ -139,7 +139,7 @@
 }
 
 @theme {
-  --font-sans: Commit, sans-serif;
+  --font-mono: Commit, sans-serif;
   --font-display: Clash, sans-serif;
 
   --animate-flash: flash 1.75s steps(1) infinite;
