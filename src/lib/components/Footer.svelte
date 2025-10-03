@@ -4,42 +4,40 @@
 </script>
 
 <section class="relative mt-auto w-full overflow-hidden border-t bg-foreground">
-	<div class="pointer-events-none absolute inset-0 -bottom-180">
-		<div class="logo-layer"></div>
-		<div class="logo-layer logo-fill"></div>
-	</div>
-	<div class="flex flex-col gap-4 p-8">
-		<Button variant="link" class="text-background w-fit" href="https://paulplay.studio/imprint" target="_blank"
+	<div class="flex flex-wrap gap-4 p-8">
+		<Button class="text-background" href="https://www.youtube.com/@PaulPlay" target="_blank" variant="link"
+			>YouTube <RiYoutubeFill /></Button
+		>
+		<Button class="text-background" href="https://x.com/PaulPlayStudio" target="_blank" variant="link"
+			>Twitter <RiTwitterXLine /></Button
+		>
+		<Button variant="link" class="text-background" href="/privacy">Privacy Policy</Button>
+		<Button variant="link" class="text-background" href="https://paulplay.studio/imprint" target="_blank"
 			>Imprint</Button
 		>
-		<Button variant="link" class="text-background w-fit" href="/privacy">Privacy Policy</Button>
-		<div class="flex gap-4 px-4 pt-2">
-			<Button class="text-background" href="https://www.youtube.com/@PaulPlay" target="_blank"><RiYoutubeFill /></Button
-			>
-			<Button class="text-background" href="https://x.com/PaulPlayStudio" target="_blank"><RiTwitterXLine /></Button>
-		</div>
+	</div>
+	<div class="pointer-events-none relative -mb-30 h-50 w-full md:-mb-23 lg:-mb-60 lg:h-100 xl:-mb-20 xl:h-70 2xl:h-80">
+		<div class="logo-layer"></div>
+		<div class="logo-layer logo-fill"></div>
 	</div>
 </section>
 
 <style>
 	.logo-layer {
 		position: absolute;
-		left: 60%;
-		height: 1000px;
-		width: 1000px;
+		width: 100%;
+		height: 100%;
 		background-image: url("/images/logo-stroke.svg");
 		background-size: contain;
 		background-repeat: no-repeat;
-		background-position: center;
-		filter: invert(1);
-		top: -38%;
+		left: 0;
+		top: 0;
 		filter: invert();
-		transform: translateX(-50%);
 	}
 
 	.logo-fill {
-		background-image: url("/images/logo.svg");
 		animation: laser ease-in-out 3s infinite;
+		background-image: url("/images/logo.svg");
 	}
 
 	@keyframes laser {

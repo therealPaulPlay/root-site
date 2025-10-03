@@ -122,7 +122,7 @@
 </section>
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
-	<div class="min-w-2/3 space-y-4 border-r p-10">
+	<div class="min-w-2/3 space-y-4 p-10 lg:border-r">
 		<h3 class="font-display text-3xl font-medium">More than capable.</h3>
 		<p class="max-w-150">
 			Privacy protects everyone, not just those with something to hide. It’s a basic human right, threatened the moment
@@ -196,7 +196,7 @@
 			{/each}
 		</div>
 	</div>
-	<div class="min-w-2/3 space-y-4 border-l p-10">
+	<div class="min-w-2/3 space-y-4 p-10 lg:border-l">
 		<h3 class="font-display text-3xl font-medium">Why it matters now.</h3>
 		<p class="max-w-150">
 			Fewer companies control more of our digital lives. From web services to smart home, connecting the dots with
@@ -225,7 +225,7 @@
 		<div class="w-9/10 border p-4 lg:w-2/3">
 			<p class="text-background">
 				Building smart home devices that are private out of the box, without sacrificing usability. Running on
-				open-source software that is incapable of tracking users. Function &gt; form. No subscriptions. <span
+				open-source software that is unable to track users. <span
 					class="inline-block h-4 w-2 animate-flash bg-background align-middle"
 				></span>
 			</p>
@@ -250,7 +250,7 @@
 		<img
 			src="/images/observer-simplified-line.svg"
 			alt="observer illustration"
-			class="absolute -top-2 right-5 h-100 w-100 opacity-20"
+			class="pointer-events-none absolute -top-2 right-5 -z-1 h-100 w-100 opacity-20"
 		/>
 	</div>
 </section>
