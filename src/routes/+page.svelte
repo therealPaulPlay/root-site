@@ -121,21 +121,19 @@
 	/>
 </section>
 
-<section class="mb-20 flex border-y max-md:flex-wrap">
+<section class="mb-20 flex border-y max-lg:flex-wrap">
 	<div class="min-w-2/3 space-y-4 border-r p-10">
 		<h3 class="font-display text-3xl font-medium">More than capable.</h3>
-		<p class="max-w-3/4">
+		<p class="max-w-150">
 			Privacy protects everyone, not just those with something to hide. It’s a basic human right, threatened the moment
 			<span class="bg-neutral-100">monitoring becomes possible</span>.
 		</p>
-		<p class="max-w-3/4">
+		<p class="max-w-150">
 			Countless IoT devices <span class="bg-neutral-100">embrace this possibility by design</span>. They are capable of
 			watching, listening, and exchanging information.
 		</p>
 	</div>
-	<div
-		class="relative flex min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-95% mask-y-to-100% mask-x-from-95% mask-x-to-100% p-4"
-	>
+	<div class="relative flex w-full min-w-1/3 flex-col justify-center overflow-hidden p-8 md:p-4">
 		{#snippet eyeSnippet(id)}
 			{@const pupilId = `pupil-${id}`}
 			{@const innerPupilId = `inner-pupil-${id}`}
@@ -150,27 +148,9 @@
 				<!-- Iris and Pupil with clipping -->
 				<g clip-path="url(#eyeClip{id})">
 					<!-- Iris (filled black) -->
-					<circle
-						id={pupilId}
-						cx="60"
-						cy="45"
-						r="18"
-						fill="currentColor"
-						stroke="currentColor"
-						stroke-width="3.5"
-						class="transition-all duration-500 ease-out"
-					/>
+					<circle id={pupilId} cx="60" cy="45" r="18" fill="currentColor" stroke="currentColor" stroke-width="3.5" />
 					<!-- Pupil (white fill) -->
-					<circle
-						id={innerPupilId}
-						cx="60"
-						cy="45"
-						r="8"
-						fill="white"
-						stroke="currentColor"
-						stroke-width="3.5"
-						class="transition-all duration-500 ease-out"
-					/>
+					<circle id={innerPupilId} cx="60" cy="45" r="8" fill="white" stroke="currentColor" stroke-width="3.5" />
 				</g>
 				<!-- Eyelid for blinking -->
 				<path
@@ -184,23 +164,25 @@
 			</svg>
 		{/snippet}
 
-		<div class="mx-auto grid max-w-fit grid-cols-10 gap-1.5">
-			{#each Array(80) as _, i}
+		<div class="mx-auto grid grid-cols-10 gap-2">
+			{#each Array(70) as _, i}
 				{@render eyeSnippet(i)}
 			{/each}
 		</div>
 	</div>
 </section>
 
-<section class="mb-20 flex border-y max-md:flex-wrap">
-	<div class="relative flex min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100% p-4">
+<section class="mb-20 flex border-y max-lg:flex-wrap-reverse">
+	<div
+		class="relative flex min-h-75 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
+	>
 		<div
-			class="absolute inset-0 ml-20 transition-transform duration-700 ease-in-out"
+			class="absolute inset-0 ml-10 transition-transform duration-700 ease-in-out md:ml-20"
 			style:transform="translateY({trackingExampleIndex * -60 + 40}px)"
 		>
 			{#each exampleTrackingInfo as info, i}
 				<div
-					class="flex h-18 items-center gap-3 text-5xl transition-all duration-700 ease-in-out"
+					class="flex h-18 items-center gap-3 text-5xl transition duration-700"
 					class:opacity-100={i === trackingExampleIndex}
 					class:opacity-30={i !== trackingExampleIndex}
 					class:scale-100={i === trackingExampleIndex}
@@ -216,13 +198,13 @@
 	</div>
 	<div class="min-w-2/3 space-y-4 border-l p-10">
 		<h3 class="font-display text-3xl font-medium">Why it matters now.</h3>
-		<p class="max-w-3/4">
+		<p class="max-w-150">
 			Fewer companies control more of our digital lives. From web services to smart home, connecting the dots with
 			algorithms and artifical intelligence allows for creating <span class="bg-neutral-100"
 				>super accurate profiles</span
 			>.
 		</p>
-		<p class="max-w-3/4">
+		<p class="max-w-150">
 			As political landscapes shift, the question isn't just who can access your data today, but <span
 				class="bg-neutral-100">who might access it tomorrow</span
 			>. Privacy is about preparation.
@@ -240,7 +222,7 @@
 	</div>
 	<div class="flex flex-col items-center justify-between gap-8">
 		<a class="p-8 font-display text-7xl font-medium text-background uppercase" name="mission">The mission.</a>
-		<div class="w-2/3 border p-4">
+		<div class="w-9/10 border p-4 lg:w-2/3">
 			<p class="text-background">
 				Building smart home devices that are private out of the box, without sacrificing usability. Running on
 				open-source software that is incapable of tracking users. Function &gt; form. No subscriptions. <span

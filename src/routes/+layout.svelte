@@ -15,7 +15,7 @@
 
 <main class="relative container mx-auto flex min-h-screen">
 	<Navbar />
-	<article class="no-scrollbar ml-15 w-full border-x overflow-x-hidden">
+	<article class="no-scrollbar w-full overflow-x-hidden sm:border-x">
 		{@render children?.()}
 		<Footer />
 	</article>

@@ -1,7 +1,7 @@
 <script>
 	import { page } from "$app/state";
 	import Button from "./ui/button/button.svelte";
-	import { RiCircleFill } from "svelte-remixicon";
+	import { RiCircleFill, RiCloseLargeLine, RiMenuLine } from "svelte-remixicon";
 
 	const navigationEntries = [
 		{ name: "Home", href: "/" },
@@ -17,16 +17,41 @@
 		event.currentTarget.style.setProperty("--mouse-x", `${x}px`);
 		event.currentTarget.style.setProperty("--mouse-y", `${y}px`);
 	}
+
+	let showMobileNavbar = $state(false);
 </script>
 
+<div class="fixed top-0 z-100 flex w-full justify-end text-xl sm:hidden" class:hidden={showMobileNavbar}>
+	<Button
+		class="h-20! p-6!"
+		onclick={() => {
+			showMobileNavbar = true;
+		}}
+	>
+		<RiMenuLine class="h-8! w-8!" />
+	</Button>
+</div>
+
 <aside
-	class="of-top of-bottom of-length-2 no-scrollbar sticky top-0 flex h-screen w-50 flex-col overflow-y-auto border-x"
+	class="no-scrollbar of-top of-bottom of-length-2 sticky top-0 z-99 flex h-screen w-50 flex-col overflow-y-auto bg-background max-sm:fixed max-sm:w-full max-sm:mask-none! sm:mr-15 sm:border-x"
+	class:max-sm:hidden={!showMobileNavbar}
 >
-	<div class="flex min-h-20 justify-center border-b">
+	<div class="relative flex min-h-20 justify-center border-b">
 		<img src="/images/logo.svg" class="h-auto w-30" alt="logo" />
+		{#if showMobileNavbar}
+			<Button
+				class="absolute top-0 right-0 ml-auto h-20! border-t-0! border-r-0! p-6! sm:hidden"
+				variant="outline"
+				onclick={() => {
+					showMobileNavbar = false;
+				}}
+			>
+				<RiCloseLargeLine class="h-8! w-8!" />
+			</Button>
+		{/if}
 	</div>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-1.jpg" class="h-30 object-cover" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-1.jpg" class="h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<nav class="flex flex-col items-start gap-2 border-y py-4">
 		{#each navigationEntries as entry}
@@ -34,13 +59,16 @@
 				href={entry.href}
 				variant="link"
 				class="w-full {page.url.pathname + page.url.hash == entry.href ? 'bg-foreground text-background' : ''}"
+				onclick={() => {
+					showMobileNavbar = false;
+				}}
 			>
 				{entry.name}</Button
 			>
 		{/each}
 	</nav>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-2.jpg" class="h-30 object-cover" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-2.jpg" class="h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<div class="space-y-4 border-y p-4 py-6">
 		<h3><span class="align-[2px] text-xs">//</span> Philosophy</h3>
@@ -55,9 +83,9 @@
 		<p>Modify, repair and utilize a Root smart home device however you intend.</p>
 	</div>
 	<div class="hover-reveal border-b" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-3.jpg" class="h-30 object-cover" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-3.jpg" class="h-30 w-full object-cover" alt="grainy tech" />
 	</div>
-	<div class="p-4">
+	<div class="flex justify-center p-4">
 		<Button href="https://github.com/therealPaulPlay/root-site" variant="link" target="_blank" class="text-wrap"
 			>source code</Button
 		>
