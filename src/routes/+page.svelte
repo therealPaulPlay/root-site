@@ -154,10 +154,10 @@
 		<h3 class="font-display text-3xl font-medium">More than capable.</h3>
 		<p class="max-w-150">
 			Privacy protects everyone, not just those with something to hide. It’s a basic human right, threatened the moment
-			<span class="bg-neutral-100">monitoring becomes possible</span>.
+			<span class="bg-accent">monitoring becomes possible</span>.
 		</p>
 		<p class="max-w-150">
-			Countless IoT devices <span class="bg-neutral-100">embrace this possibility by design</span>. They are capable of
+			Countless IoT devices <span class="bg-accent">embrace this possibility by design</span>. They are capable of
 			watching, listening, and exchanging information.
 		</p>
 	</div>
@@ -228,13 +228,13 @@
 		<h3 class="font-display text-3xl font-medium">Why it matters now.</h3>
 		<p class="max-w-150">
 			Fewer companies control more of our digital lives. From web services to smart home, connecting the dots with
-			algorithms and artifical intelligence allows for creating <span class="bg-neutral-100"
+			algorithms and artifical intelligence allows for creating <span class="bg-accent"
 				>super accurate profiles</span
 			>.
 		</p>
 		<p class="max-w-150">
 			As political landscapes shift, the question isn't just who can access your data today, but <span
-				class="bg-neutral-100">who might access it tomorrow</span
+				class="bg-accent">who might access it tomorrow</span
 			>. Privacy is about preparation.
 		</p>
 	</div>
@@ -249,7 +249,7 @@
 		{/each}
 	</div>
 	<div class="flex flex-col items-center justify-between gap-8">
-		<a class="p-8 font-display text-7xl font-medium text-background uppercase" name="mission">The mission.</a>
+		<a class="p-8 font-display text-7xl font-medium text-background uppercase scroll-mt-50" name="mission">The mission.</a>
 		<div class="w-9/10 border p-4 lg:w-2/3">
 			<p class="text-background">
 				Building smart home devices that are private out of the box, without sacrificing usability. Running on
@@ -267,7 +267,7 @@
 		<a name="devices" class="h-0"></a>
 		<h3 bind:this={marqueeElement} class="-ml-1.5 text-3xl whitespace-nowrap">
 			{#each Array.from(marqueeText) as char}
-				<span class:opacity-50={char === "+"}>{char}</span>
+				<span class:text-muted-foreground={char === "+"}>{char}</span>
 			{/each}
 		</h3>
 	</div>

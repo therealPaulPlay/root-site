@@ -1,12 +1,18 @@
 <script>
 	import { page } from "$app/state";
+	import { slide } from "svelte/transition";
 	import Button from "./ui/button/button.svelte";
-	import { RiCircleFill, RiCloseLargeLine, RiMenuLine } from "svelte-remixicon";
+	import { RiCircleFill, RiCloseLargeLine, RiCornerDownRightLine, RiMenuLine } from "svelte-remixicon";
 
 	const navigationEntries = [
-		{ name: "Home", href: "/" },
-		{ name: "Mission", href: "/#mission" },
-		{ name: "Devices", href: "/#devices" },
+		{
+			name: "Home",
+			href: "/",
+			anchors: [
+				{ name: "Mission", anchor: "#mission" },
+				{ name: "Devices", anchor: "#devices" }
+			]
+		},
 		{ name: "Connect", href: "/connect" }
 	];
 
@@ -21,7 +27,7 @@
 	let showMobileNavbar = $state(false);
 </script>
 
-<div class="fixed top-0 z-100 text-end w-full text-xl sm:hidden" class:hidden={showMobileNavbar}>
+<div class="fixed top-0 z-100 w-full text-end text-xl sm:hidden" class:hidden={showMobileNavbar}>
 	<Button
 		class="h-20! p-6!"
 		onclick={() => {
@@ -51,43 +57,61 @@
 		{/if}
 	</div>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-1.jpg" class="h-30 w-full object-cover pointer-events-none" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-1.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<nav class="flex flex-col items-start gap-2 border-y py-4">
 		{#each navigationEntries as entry}
-			<Button
-				href={entry.href}
-				variant="link"
-				class="w-full {page.url.pathname + page.url.hash == entry.href ? 'bg-foreground text-background' : ''}"
-				onclick={() => {
-					showMobileNavbar = false;
-				}}
-			>
-				{entry.name}</Button
-			>
+			<div class="flex w-full flex-col">
+				<Button
+					href={entry.href}
+					variant="link"
+					class="w-full {page.url.pathname == entry.href ? 'bg-foreground text-background' : ''}"
+					onclick={() => {
+						showMobileNavbar = false;
+					}}
+				>
+					{entry.name}</Button
+				>
+				{#if page.url.pathname == entry.href && entry.anchors?.length}
+					<div transition:slide>
+						{#each entry.anchors as subEntry}
+							<Button
+								href={entry.href + subEntry.anchor}
+								variant="link"
+								class="w-full bg-accent pl-1"
+								onclick={() => {
+									showMobileNavbar = false;
+								}}
+							>
+								<RiCornerDownRightLine />{subEntry.name}</Button
+							>
+						{/each}
+					</div>
+				{/if}
+			</div>
 		{/each}
 	</nav>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-2.jpg" class="h-30 w-full object-cover pointer-events-none" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-2.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<div class="space-y-4 border-y p-4 py-6">
 		<h3><span class="align-[2px] text-xs">//</span> Philosophy</h3>
 		<p>
-			<i>Root</i>, as in <span class="bg-neutral-100">root-access</span>, is about building unrestricted devices that
-			purely serve their owner.
+			<i>Root</i>, as in <span class="bg-accent">root-access</span>, is about building unrestricted devices that purely
+			serve their owner.
 		</p>
 		<p>
-			<span class="bg-neutral-100">Privacy is the foundation</span> of every design decision. Data stays local or is
-			end-2-end encrypted and all software is <span class="bg-neutral-100">open-source</span>.
+			<span class="bg-accent">Privacy is the foundation</span> of every design decision. Data stays local or is
+			end-2-end encrypted and all software is <span class="bg-accent">open-source</span>.
 		</p>
 		<p>Modify, repair and utilize a Root smart home device however you intend.</p>
 	</div>
 	<div class="hover-reveal border-b" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-3.jpg" class="h-30 w-full object-cover pointer-events-none" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-3.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<div class="flex justify-center p-4">
 		<Button href="https://github.com/therealPaulPlay/root-site" variant="link" target="_blank" class="text-wrap"
-			>source code</Button
+			>Source code</Button
 		>
 	</div>
 </aside>

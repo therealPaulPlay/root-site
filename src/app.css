@@ -124,7 +124,15 @@
   h3,
   h4,
   h5 {
-    @apply uppercase
+    @apply uppercase;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  ::selection {
+    @apply bg-foreground text-background;
   }
 }
 
@@ -161,9 +169,4 @@
   .no-scrollbar {
     scrollbar-width: none;
   }
-}
-
-::selection {
-  background: var(--foreground);
-  color: var(--background);
 }
