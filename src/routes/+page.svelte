@@ -210,7 +210,7 @@
 		>
 			{#each exampleTrackingInfo as info, i}
 				<div
-					class="flex h-18 items-center gap-3 text-4xl transition duration-700 xl:text-5xl"
+					class="flex h-18 items-center gap-3 text-4xl transition duration-700 2xl:text-5xl"
 					class:opacity-100={i === trackingExampleIndex}
 					class:opacity-30={i !== trackingExampleIndex}
 					class:scale-100={i === trackingExampleIndex}
@@ -243,7 +243,7 @@
 <section class="relative mb-20 flex w-full items-center justify-center overflow-hidden border-y py-30">
 	<div class="absolute -inset-2.5 -z-1 bg-foreground select-none">
 		{#each binaryEffectArray as row, index}
-			<p class="w-full text-lg font-thin text-background" style:opacity={0.5 - 0.035 * index}>
+			<p class="w-full text-lg font-thin text-background" style:opacity={0.5 - 0.05 * index}>
 				{binaryEffectString?.slice(Math.floor(Math.random() * 100))}
 			</p>
 		{/each}
