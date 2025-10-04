@@ -21,7 +21,7 @@
 	let showMobileNavbar = $state(false);
 </script>
 
-<div class="fixed top-0 z-100 flex w-full justify-end text-xl sm:hidden" class:hidden={showMobileNavbar}>
+<div class="fixed top-0 z-100 text-end w-full text-xl sm:hidden" class:hidden={showMobileNavbar}>
 	<Button
 		class="h-20! p-6!"
 		onclick={() => {
@@ -51,7 +51,7 @@
 		{/if}
 	</div>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-1.jpg" class="h-30 w-full object-cover" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-1.jpg" class="h-30 w-full object-cover pointer-events-none" alt="grainy tech" />
 	</div>
 	<nav class="flex flex-col items-start gap-2 border-y py-4">
 		{#each navigationEntries as entry}
@@ -68,7 +68,7 @@
 		{/each}
 	</nav>
 	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-2.jpg" class="h-30 w-full object-cover" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-2.jpg" class="h-30 w-full object-cover pointer-events-none" alt="grainy tech" />
 	</div>
 	<div class="space-y-4 border-y p-4 py-6">
 		<h3><span class="align-[2px] text-xs">//</span> Philosophy</h3>
@@ -83,7 +83,7 @@
 		<p>Modify, repair and utilize a Root smart home device however you intend.</p>
 	</div>
 	<div class="hover-reveal border-b" onmousemove={handleMouseMove} role="img">
-		<img src="/images/grainy-tech-dots-3.jpg" class="h-30 w-full object-cover" alt="grainy tech" />
+		<img src="/images/grainy-tech-dots-3.jpg" class="h-30 w-full object-cover pointer-events-none" alt="grainy tech" />
 	</div>
 	<div class="flex justify-center p-4">
 		<Button href="https://github.com/therealPaulPlay/root-site" variant="link" target="_blank" class="text-wrap"

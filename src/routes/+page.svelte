@@ -25,7 +25,7 @@
 			},
 			{
 				icon: RiComputerLine,
-				text: `${window.screen.width}x${window.screen.height}`
+				text: `${window.screen.height}p`
 			},
 			{
 				icon: RiTimeLine,
@@ -33,7 +33,7 @@
 			},
 			{
 				icon: RiTranslate2,
-				text: navigator.language?.toUpperCase()
+				text: navigator.language?.toUpperCase()?.slice(0, 2)
 			},
 			{
 				icon: RiCpuLine,
@@ -86,7 +86,6 @@
 	}
 
 	function handleEyePupilMouseMove(e) {
-		// Handle all eyes in the grid
 		for (let i = 0; i < 80; i++) {
 			const pupil = document.getElementById(`pupil-${i}`);
 			const innerPupil = document.getElementById(`inner-pupil-${i}`);
@@ -117,7 +116,7 @@
 	<img
 		alt="privacy matters"
 		src="/images/privacy-matters-placeholder.jpg"
-		class="absolute inset-0 -z-1 h-full w-full border-b object-cover"
+		class="pointer-events-none absolute inset-0 -z-1 h-full w-full border-b object-cover"
 	/>
 </section>
 
@@ -133,7 +132,7 @@
 			watching, listening, and exchanging information.
 		</p>
 	</div>
-	<div class="relative flex w-full min-w-1/3 flex-col justify-center overflow-hidden p-8 md:p-4">
+	<div class="relative m-8 flex w-1/3 w-full flex-col justify-center overflow-hidden md:m-4">
 		{#snippet eyeSnippet(id)}
 			{@const pupilId = `pupil-${id}`}
 			{@const innerPupilId = `inner-pupil-${id}`}
@@ -174,15 +173,15 @@
 
 <section class="mb-20 flex border-y max-lg:flex-wrap-reverse">
 	<div
-		class="relative flex min-h-75 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
+		class="relative flex min-h-60 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
 	>
 		<div
-			class="absolute inset-0 ml-10 transition-transform duration-700 ease-in-out md:ml-20"
+			class="absolute inset-0 mx-15 transition-transform duration-700 ease-in-out xl:mx-20"
 			style:transform="translateY({trackingExampleIndex * -60 + 40}px)"
 		>
 			{#each exampleTrackingInfo as info, i}
 				<div
-					class="flex h-18 items-center gap-3 text-5xl transition duration-700"
+					class="flex h-18 items-center gap-3 text-4xl transition duration-700 xl:text-5xl"
 					class:opacity-100={i === trackingExampleIndex}
 					class:opacity-30={i !== trackingExampleIndex}
 					class:scale-100={i === trackingExampleIndex}
@@ -246,11 +245,11 @@
 	<div class="relative overflow-hidden border-t p-8 py-12">
 		<p class="mb-1 w-fit bg-foreground px-0.5 text-background uppercase">Coming soon</p>
 		<h3 class="mb-4 font-display text-3xl font-medium">Observer.</h3>
-		<p>A home security camera with on-device AI vision.</p>
+		<p class="lg:max-w-1/2">A home security camera with on-device AI vision.</p>
 		<img
 			src="/images/observer-simplified-line.svg"
 			alt="observer illustration"
-			class="pointer-events-none absolute -top-2 right-5 -z-1 h-100 w-100 opacity-20"
+			class="pointer-events-none -top-2 right-0 -z-1 h-100 w-100 opacity-20 max-lg:-mb-35 lg:absolute"
 		/>
 	</div>
 </section>
