@@ -53,7 +53,7 @@
 
 		// Start the auto-rotation timer
 		const trackingExampleInterval = setInterval(() => {
-			if (trackingExampleIndex < exampleTrackingInfo.length - 1) trackingExampleIndex += 1;
+			if (trackingExampleIndex < exampleTrackingInfo.length - 1) trackingExampleIndex++;
 			else trackingExampleIndex = 0;
 		}, 5000);
 

@@ -1,9 +1,10 @@
 <script>
-	import Navbar from "$lib/components/navbar.svelte";
-	import init from "overfade";
 	import "../app.css";
 	import { onMount } from "svelte";
+	import init from "overfade";
+	import Navbar from "$lib/components/navbar.svelte";
 	import Footer from "$lib/components/Footer.svelte";
+
 	let { children } = $props();
 
 	onMount(init);
