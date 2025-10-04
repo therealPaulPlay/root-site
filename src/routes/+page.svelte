@@ -7,6 +7,10 @@
 	let exampleTrackingInfo = $state([]);
 	let trackingExampleIndex = $state(0);
 
+	// Dynamic eye grid
+	let eyeGridElement = $state();
+	let eyeCount = $state(70);
+
 	onMount(() => {
 		exampleTrackingInfo = [
 			{
@@ -43,6 +47,9 @@
 
 		// Update marquee text based on width
 		updateMarqueeText();
+
+		// Update eye grid based on container size
+		updateEyeGrid();
 
 		// Start the auto-rotation timer
 		const trackingExampleInterval = setInterval(() => {
@@ -85,8 +92,24 @@
 		marqueeText = `${plus}Shockingly+++Private+++Devices${plus}`;
 	}
 
+	function updateEyeGrid() {
+		if (!eyeGridElement) return;
+		const containerWidth = eyeGridElement.parentElement.offsetWidth;
+		const containerHeight = eyeGridElement.parentElement.offsetHeight;
+		const eyeWidth = 48; // w-12 = 48px
+		const eyeHeight = 32; // h-8 = 32px
+		const gap = 8; // gap-2 = 8px
+
+		const cols = Math.floor((containerWidth + gap) / (eyeWidth + gap));
+		const rows = Math.floor((containerHeight + gap) / (eyeHeight + gap));
+
+        // Update eye count and column count
+		eyeCount = Math.min(120, cols * rows); // Cap at 120 eyes
+		eyeGridElement.style.setProperty("--eye-grid-cols", cols.toString());
+	}
+
 	function handleEyePupilMouseMove(e) {
-		for (let i = 0; i < 80; i++) {
+		for (let i = 0; i < eyeCount; i++) {
 			const pupil = document.getElementById(`pupil-${i}`);
 			const innerPupil = document.getElementById(`inner-pupil-${i}`);
 
@@ -110,7 +133,13 @@
 	<title>ROOT - Private smart home devices</title>
 </svelte:head>
 
-<svelte:window onresize={updateMarqueeText} onmousemove={handleEyePupilMouseMove} />
+<svelte:window
+	onresize={() => {
+		updateMarqueeText();
+		updateEyeGrid();
+	}}
+	onmousemove={handleEyePupilMouseMove}
+/>
 
 <section class="relative mb-20 flex h-155 w-full items-center justify-center">
 	<img
@@ -163,8 +192,8 @@
 			</svg>
 		{/snippet}
 
-		<div class="mx-auto grid grid-cols-10 gap-2">
-			{#each Array(70) as _, i}
+		<div bind:this={eyeGridElement} class="eye-grid -mr-3 grid gap-2">
+			{#each Array(eyeCount) as _, i}
 				{@render eyeSnippet(i)}
 			{/each}
 		</div>
@@ -176,7 +205,7 @@
 		class="relative flex min-h-60 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
 	>
 		<div
-			class="absolute inset-0 mx-15 transition-transform duration-700 ease-in-out xl:mx-20"
+			class="absolute inset-0 max-xl:ml-15 transition-transform duration-700 ease-in-out xl:mx-20"
 			style:transform="translateY({trackingExampleIndex * -60 + 40}px)"
 		>
 			{#each exampleTrackingInfo as info, i}
@@ -269,5 +298,9 @@
 
 	:global(.animate-blink) {
 		animation: blink 8s ease-in-out infinite;
+	}
+
+	.eye-grid {
+		grid-template-columns: repeat(var(--eye-grid-cols, 10), minmax(0, 1fr));
 	}
 </style>
