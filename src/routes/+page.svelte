@@ -83,10 +83,16 @@
 	// Retro marquee
 	let marqueeText = $state("");
 	let marqueeElement = $state();
+	let lastMarqueeWidth = $state(0);
 
 	function updateMarqueeText() {
 		if (!marqueeElement) return;
 		const width = marqueeElement.offsetWidth;
+
+		// Only update if width actually changed
+		if (width === lastMarqueeWidth) return;
+		lastMarqueeWidth = width;
+
 		const plusCount = Math.floor(width / 55); // Rough estimate for plus width
 		const plus = "+".repeat(Math.max(1, plusCount));
 		marqueeText = `${plus}Shockingly+++Private+++Devices${plus}`;

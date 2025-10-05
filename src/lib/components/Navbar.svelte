@@ -20,8 +20,13 @@
 		const rect = event.currentTarget.getBoundingClientRect();
 		const x = event.clientX - rect.left;
 		const y = event.clientY - rect.top;
-		event.currentTarget.style.setProperty("--mouse-x", `${x}px`);
-		event.currentTarget.style.setProperty("--mouse-y", `${y}px`);
+		event.currentTarget.style.setProperty("--pointer-x", `${x}px`);
+		event.currentTarget.style.setProperty("--pointer-y", `${y}px`);
+	}
+
+	function resetPointerMove() {
+		event.currentTarget.style.setProperty("--pointer-x", `-1000px`);
+		event.currentTarget.style.setProperty("--pointer-y", `-1000px`);
 	}
 
 	let showMobileNavbar = $state(false);
@@ -56,7 +61,7 @@
 			</Button>
 		{/if}
 	</div>
-	<div class="hover-reveal" onpointermove={handlePointerMove} role="img">
+	<div class="hover-reveal" onpointermove={handlePointerMove} onpointerleave={resetPointerMove} role="img">
 		<img src="/images/grainy-tech-dots-1.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<nav class="flex flex-col items-start gap-2 border-y py-4">
@@ -91,7 +96,7 @@
 			</div>
 		{/each}
 	</nav>
-	<div class="hover-reveal" onpointermove={handlePointerMove} role="img">
+	<div class="hover-reveal" onpointermove={handlePointerMove} onpointerleave={resetPointerMove} role="img">
 		<img src="/images/grainy-tech-dots-2.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<div class="space-y-4 border-y p-4 py-6">
@@ -106,7 +111,7 @@
 		</p>
 		<p>Modify, repair and utilize a Root smart home device however you intend.</p>
 	</div>
-	<div class="hover-reveal border-b" onpointermove={handlePointerMove} role="img">
+	<div class="hover-reveal border-b" onpointermove={handlePointerMove} onpointerleave={resetPointerMove} role="img">
 		<img src="/images/grainy-tech-dots-3.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<div class="flex justify-center p-4">
@@ -119,6 +124,7 @@
 <style>
 	.hover-reveal {
 		position: relative;
+		touch-action: none; /* disable scrolling on here */
 	}
 
 	.hover-reveal::after {
@@ -136,9 +142,9 @@
 	}
 
 	.hover-reveal:hover::after {
-		mask: radial-gradient(circle 80px at var(--mouse-x, -200px) var(--mouse-y, -200px), transparent 0%, black 100%);
+		mask: radial-gradient(circle 80px at var(--pointer-x, -200px) var(--pointer-y, -200px), transparent 0%, black 100%);
 		-webkit-mask: radial-gradient(
-			circle 150px at var(--mouse-x, -200px) var(--mouse-y, -200px),
+			circle 150px at var(--pointer-x, -200px) var(--pointer-y, -200px),
 			transparent 0%,
 			rgba(0, 0, 0, 0.9) 75%,
 			black 100%
