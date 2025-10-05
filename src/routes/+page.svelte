@@ -108,7 +108,7 @@
 		eyeGridElement.style.setProperty("--eye-grid-cols", cols.toString());
 	}
 
-	function handleEyePupilMouseMove(e) {
+	function handleEyePupilPointerMove(e) {
 		for (let i = 0; i < eyeCount; i++) {
 			const pupil = document.getElementById(`pupil-${i}`);
 			const innerPupil = document.getElementById(`inner-pupil-${i}`);
@@ -138,7 +138,7 @@
 		updateMarqueeText();
 		updateEyeGrid();
 	}}
-	onmousemove={handleEyePupilMouseMove}
+	onpointermove={handleEyePupilPointerMove}
 />
 
 <section class="relative mb-20 flex h-155 w-full items-center justify-center">

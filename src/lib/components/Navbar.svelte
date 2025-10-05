@@ -16,7 +16,7 @@
 		{ name: "Connect", href: "/connect" }
 	];
 
-	function handleMouseMove(event) {
+	function handlePointerMove(event) {
 		const rect = event.currentTarget.getBoundingClientRect();
 		const x = event.clientX - rect.left;
 		const y = event.clientY - rect.top;
@@ -56,7 +56,7 @@
 			</Button>
 		{/if}
 	</div>
-	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
+	<div class="hover-reveal" onpointermove={handlePointerMove} role="img">
 		<img src="/images/grainy-tech-dots-1.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<nav class="flex flex-col items-start gap-2 border-y py-4">
@@ -91,7 +91,7 @@
 			</div>
 		{/each}
 	</nav>
-	<div class="hover-reveal" onmousemove={handleMouseMove} role="img">
+	<div class="hover-reveal" onpointermove={handlePointerMove} role="img">
 		<img src="/images/grainy-tech-dots-2.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<div class="space-y-4 border-y p-4 py-6">
@@ -106,7 +106,7 @@
 		</p>
 		<p>Modify, repair and utilize a Root smart home device however you intend.</p>
 	</div>
-	<div class="hover-reveal border-b" onmousemove={handleMouseMove} role="img">
+	<div class="hover-reveal border-b" onpointermove={handlePointerMove} role="img">
 		<img src="/images/grainy-tech-dots-3.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<div class="flex justify-center p-4">
