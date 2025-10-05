@@ -2,7 +2,7 @@
 	import "../app.css";
 	import { onMount } from "svelte";
 	import init from "overfade";
-	import Navbar from "$lib/components/navbar.svelte";
+	import Navbar from "$lib/components/Navbar.svelte";
 	import Footer from "$lib/components/Footer.svelte";
 
 	let { children } = $props();
