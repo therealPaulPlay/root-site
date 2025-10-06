@@ -45,11 +45,10 @@
 			}
 		];
 
-		// Update marquee text based on width
-		updateMarqueeText();
-
-		// Update eye grid based on container size
-		updateEyeGrid();
+		setTimeout(() => {
+			updateMarqueeText(); // Update marquee text based on width
+			updateEyeGrid(); // Update eye grid based on container size - delay to ensure DOM is ready
+		}, 0);
 
 		// Start the auto-rotation timer
 		const trackingExampleInterval = setInterval(() => {
