@@ -45,9 +45,10 @@
 			}
 		];
 
+		// Delay to ensure DOM is ready
 		setTimeout(() => {
 			updateMarqueeText(); // Update marquee text based on width
-			updateEyeGrid(); // Update eye grid based on container size - delay to ensure DOM is ready
+			updateEyeGrid(); // Update eye grid based on container size
 		}, 0);
 
 		// Start the auto-rotation timer
