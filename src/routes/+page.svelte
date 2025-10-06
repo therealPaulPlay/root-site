@@ -136,7 +136,7 @@
 </script>
 
 <svelte:head>
-	<title>ROOT - Private smart home devices</title>
+	<title>ROOT - Private smart home cameras</title>
 </svelte:head>
 
 <svelte:window
@@ -166,14 +166,15 @@
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
 	<div class="min-w-2/3 space-y-4 p-10 lg:border-r">
-		<h3 class="font-display text-3xl font-medium">More than capable.</h3>
+		<h3 class="font-display text-3xl font-medium">Built for privacy.</h3>
 		<p class="max-w-150">
-			Privacy protects everyone, not just those with something to hide. It’s a basic human right, threatened the moment
-			<span class="bg-accent">monitoring becomes possible</span>.
+			Privacy protects everyone, not just those with something to hide. It’s a basic human right, <span
+				class="bg-accent">threatened the moment monitoring becomes possible</span
+			>.
 		</p>
 		<p class="max-w-150">
-			Countless IoT devices <span class="bg-accent">embrace this possibility by design</span>. They are capable of
-			watching, listening, and exchanging information.
+			Unlike most smart home devices, <span class="bg-accent">Root products ensure only you can access</span> camera, microphone
+			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
 	</div>
 	<div class="relative m-8 flex w-1/3 w-full flex-col justify-center overflow-hidden md:m-4">
@@ -243,7 +244,7 @@
 		<h3 class="font-display text-3xl font-medium">Why it matters now.</h3>
 		<p class="max-w-150">
 			Fewer companies control more of our digital lives. From web services to smart home, connecting the dots with
-			machine learning allows for creating <span class="bg-accent">super accurate profiles</span>.
+			machine learning allows for <span class="bg-accent">creating accurate profiles</span>.
 		</p>
 		<p class="max-w-150">
 			As political landscapes shift, the question isn't just who can access your data today, but <span class="bg-accent"
@@ -267,8 +268,8 @@
 		>
 		<div class="w-9/10 border p-4 lg:w-2/3">
 			<p class="text-background">
-				Building smart home devices that are private out of the box, without sacrificing usability. Running on
-				open-source software that is unable to track users. <span
+				Building smart home devices that are private out of the box, without sacrificing usability. Based on verifiably
+				secure, intelligent open-source software. <span
 					class="inline-block h-4 w-2 animate-flash bg-background align-middle"
 				></span>
 			</p>

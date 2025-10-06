@@ -102,12 +102,12 @@
 	<div class="space-y-4 border-y p-4 py-6">
 		<h3><span class="align-[2px] text-xs">//</span> Philosophy</h3>
 		<p>
-			<i>Root</i>, as in <span class="bg-accent">root-access</span>, is about building unrestricted devices that purely
-			serve their owner.
+			<i>Root</i>, as in <span class="bg-accent">root-access</span>, is about building unrestricted smart home devices
+			that purely serve their owner.
 		</p>
 		<p>
-			<span class="bg-accent">Privacy is the foundation</span> of every design decision. Data stays local or is
-			end-2-end encrypted and all software is <span class="bg-accent">open-source</span>.
+			<span class="bg-accent">Privacy is the foundation</span> of every design decision and all firmware is
+			<span class="bg-accent">open-source</span>.
 		</p>
 		<p>Modify, repair and utilize a Root smart home device however you intend.</p>
 	</div>

@@ -1,5 +1,5 @@
 <svelte:head>
-	<title>Privacy Policy - ROOT</title>
+	<title>Privacy Policy</title>
 </svelte:head>
 
 <div class="p-8 pb-16 max-w-4xl min-h-screen">

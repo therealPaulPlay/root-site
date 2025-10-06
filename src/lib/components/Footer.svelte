@@ -4,7 +4,7 @@
 </script>
 
 <section class="relative mt-auto w-full overflow-hidden border-t bg-foreground">
-	<div class="flex flex-wrap gap-4 p-8">
+	<div class="flex flex-wrap gap-4 p-8 px-4 2xl:px-16 xl:px-12 lg:px-8">
 		<Button class="text-background" href="https://www.youtube.com/@PaulPlay" target="_blank" variant="link"
 			>YouTube <RiYoutubeFill /></Button
 		>
@@ -15,8 +15,11 @@
 		<Button variant="link" class="text-background" href="https://paulplay.studio/imprint" target="_blank"
 			>Imprint</Button
 		>
+		<p class="h-9 px-4 leading-9 text-muted-foreground uppercase">
+			© Root {new Date().getFullYear()}
+		</p>
 	</div>
-	<div class="pointer-events-none relative -mb-30 h-50 w-full md:-mb-23 lg:-mb-60 lg:h-100 xl:-mb-20 xl:h-70 2xl:h-80">
+	<div class="pointer-events-none relative -mb-30 h-50 w-full md:-mb-23 lg:-mb-60 lg:h-100 2xl:-mb-25 xl:-mb-18 xl:h-70 2xl:h-90">
 		<div class="logo-layer"></div>
 		<div class="logo-layer logo-fill"></div>
 	</div>
