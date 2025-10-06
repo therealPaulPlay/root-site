@@ -266,7 +266,7 @@
 		<a class="scroll-mt-50 p-8 font-display text-7xl font-medium text-background uppercase" name="mission"
 			>The mission.</a
 		>
-		<div class="w-9/10 border p-4 lg:w-2/3">
+		<div class="w-17/20 border p-4 lg:w-2/3">
 			<p class="text-background">
 				Building smart home devices that are private out of the box, without sacrificing usability. Based on verifiably
 				secure, intelligent open-source software. <span
