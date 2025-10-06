@@ -109,7 +109,7 @@
 		const cols = Math.floor((containerWidth + gap) / (eyeWidth + gap));
 		const rows = Math.floor((containerHeight + gap) / (eyeHeight + gap));
 
-        // Update eye count and column count
+		// Update eye count and column count
 		eyeCount = Math.min(120, cols * rows); // Cap at 120 eyes
 		eyeGridElement.style.setProperty("--eye-grid-cols", cols.toString());
 	}
@@ -147,12 +147,21 @@
 	onpointermove={handleEyePupilPointerMove}
 />
 
-<section class="relative mb-20 flex h-155 w-full items-center justify-center">
-	<img
-		alt="privacy matters"
-		src="/images/privacy-matters-placeholder.jpg"
-		class="pointer-events-none absolute inset-0 -z-1 h-full w-full border-b object-cover"
-	/>
+<section class="relative mb-20 flex h-100 w-full items-center justify-center lg:h-155">
+	<!-- svelte-ignore a11y_media_has_caption -->
+	<video
+		loop
+		playsinline
+		autoplay
+		muted
+		class="pointer-events-none absolute inset-0 -z-1 h-full w-full border-b bg-foreground object-cover"
+		style="object-position: 30% center;"
+	>
+		<source
+			src="https://paulplay-storage-1.fra1.digitaloceanspaces.com/misc/camera-chair-video-crop.mp4"
+			type="video/mp4"
+		/>
+	</video>
 </section>
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
@@ -211,8 +220,8 @@
 		class="relative flex min-h-60 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
 	>
 		<div
-			class="absolute inset-0 max-xl:ml-15 transition-transform duration-700 ease-in-out xl:mx-20"
-			style:transform="translateY({trackingExampleIndex * -60 + 40}px)"
+			class="absolute inset-0 transition-transform duration-700 ease-in-out max-xl:ml-15 xl:mx-20"
+			style:transform="translateY({trackingExampleIndex * -60 + 30}px)"
 		>
 			{#each exampleTrackingInfo as info, i}
 				<div
@@ -234,13 +243,11 @@
 		<h3 class="font-display text-3xl font-medium">Why it matters now.</h3>
 		<p class="max-w-150">
 			Fewer companies control more of our digital lives. From web services to smart home, connecting the dots with
-			algorithms and artifical intelligence allows for creating <span class="bg-accent"
-				>super accurate profiles</span
-			>.
+			machine learning allows for creating <span class="bg-accent">super accurate profiles</span>.
 		</p>
 		<p class="max-w-150">
-			As political landscapes shift, the question isn't just who can access your data today, but <span
-				class="bg-accent">who might access it tomorrow</span
+			As political landscapes shift, the question isn't just who can access your data today, but <span class="bg-accent"
+				>who might access it tomorrow</span
 			>. Privacy is about preparation.
 		</p>
 	</div>
@@ -255,7 +262,9 @@
 		{/each}
 	</div>
 	<div class="flex flex-col items-center justify-between gap-8">
-		<a class="p-8 font-display text-7xl font-medium text-background uppercase scroll-mt-50" name="mission">The mission.</a>
+		<a class="scroll-mt-50 p-8 font-display text-7xl font-medium text-background uppercase" name="mission"
+			>The mission.</a
+		>
 		<div class="w-9/10 border p-4 lg:w-2/3">
 			<p class="text-background">
 				Building smart home devices that are private out of the box, without sacrificing usability. Running on
