@@ -19,7 +19,7 @@
 			© Root {new Date().getFullYear()}
 		</p>
 	</div>
-	<div class="pointer-events-none relative -mb-30 h-50 w-full md:-mb-23 lg:-mb-60 lg:h-100 2xl:-mb-25 xl:-mb-18 xl:h-70 2xl:h-90">
+	<div class="pointer-events-none relative w-full lg:h-55 xl:h-72 2xl:h-90 md:h-38 h-30">
 		<div class="logo-layer"></div>
 		<div class="logo-layer logo-fill"></div>
 	</div>
