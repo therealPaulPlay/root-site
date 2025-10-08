@@ -12,6 +12,10 @@
 
 <svelte:head>
 	<link rel="icon" href="/images/favicon.svg" />
+	<meta
+		name="description"
+		content="Privacy-first smart home cameras. Root devices use on-device ML models and never transfer unencrypted data."
+	/>
 </svelte:head>
 
 <main class="relative container mx-auto flex min-h-screen">

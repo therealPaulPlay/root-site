@@ -290,7 +290,7 @@
 	<div class="relative overflow-hidden border-t p-8 py-12">
 		<p class="mb-1 w-fit bg-foreground px-0.5 text-background uppercase">Coming soon</p>
 		<h3 class="mb-4 font-display text-3xl font-medium">Observer.</h3>
-		<p class="lg:max-w-1/2">A home security camera with on-device AI vision.</p>
+		<p class="lg:max-w-1/2">An indoor security camera with on-device AI vision.</p>
 		<img
 			src="/images/observer-simplified-line.svg"
 			alt="observer illustration"
