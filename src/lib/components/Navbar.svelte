@@ -3,6 +3,7 @@
 	import { slide } from "svelte/transition";
 	import Button from "./ui/button/button.svelte";
 	import { RiCircleFill, RiCloseLargeLine, RiCornerDownRightLine, RiMenuLine } from "svelte-remixicon";
+	import { afterNavigate } from "$app/navigation";
 
 	const navigationEntries = [
 		{
@@ -28,6 +29,11 @@
 		event.currentTarget.style.setProperty("--pointer-x", `-1000px`);
 		event.currentTarget.style.setProperty("--pointer-y", `-1000px`);
 	}
+
+	// Hide navbar after navigation instead of immediately to prevent flash of old page
+	afterNavigate(() => {
+		showMobileNavbar = false;
+	});
 
 	let showMobileNavbar = $state(false);
 </script>
@@ -67,16 +73,15 @@
 	<nav class="flex flex-col items-start gap-2 border-y py-4">
 		{#each navigationEntries as entry}
 			<div class="flex w-full flex-col">
+				<!-- Sites -->
 				<Button
 					href={entry.href}
 					variant="link"
 					class="w-full {page.url.pathname == entry.href ? 'bg-foreground text-background' : ''}"
-					onclick={() => {
-						showMobileNavbar = false;
-					}}
 				>
 					{entry.name}</Button
 				>
+				<!-- Available anchors for current site -->
 				{#if page.url.pathname == entry.href && entry.anchors?.length}
 					<div transition:slide>
 						{#each entry.anchors as subEntry}
