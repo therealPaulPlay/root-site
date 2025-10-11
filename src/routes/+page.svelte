@@ -110,7 +110,7 @@
 		const rows = Math.floor((containerHeight + gap) / (eyeHeight + gap));
 
 		// Update eye count and column count
-		eyeCount = Math.min(120, cols * rows); // Cap at 120 eyes
+		eyeCount = Math.min(42, cols * rows); // Cap at 120 eyes
 		eyeGridElement.style.setProperty("--eye-grid-cols", cols.toString());
 	}
 
