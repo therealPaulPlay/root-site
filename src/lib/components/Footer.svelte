@@ -4,7 +4,7 @@
 </script>
 
 <section class="relative mt-auto w-full overflow-hidden border-t bg-foreground">
-	<div class="flex flex-wrap gap-4 p-8 px-4 2xl:px-16 xl:px-12 lg:px-8">
+	<div class="flex flex-wrap gap-4 p-8 px-2 2xl:px-16 xl:px-12 lg:px-8">
 		<Button class="text-background" href="https://www.youtube.com/@PaulPlay" target="_blank" variant="link"
 			>YouTube <RiYoutubeFill /></Button
 		>

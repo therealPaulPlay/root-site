@@ -165,7 +165,7 @@
 </section>
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
-	<div class="min-w-2/3 space-y-4 p-10 lg:border-r">
+	<div class="min-w-2/3 space-y-4 p-6 lg:border-r lg:p-8">
 		<h3 class="font-display text-3xl font-medium">Built for privacy.</h3>
 		<p class="max-w-150">
 			Privacy protects everyone, not just those with something to hide. It’s a basic human right, <span
@@ -177,7 +177,7 @@
 			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
 	</div>
-	<div class="relative m-8 flex w-1/3 w-full flex-col justify-center overflow-hidden lg:m-4 max-lg:max-h-30">
+	<div class="relative m-6 flex w-1/3 w-full flex-col justify-center overflow-hidden max-lg:max-h-30">
 		{#snippet eyeSnippet(id)}
 			{@const pupilId = `pupil-${id}`}
 			{@const innerPupilId = `inner-pupil-${id}`}
@@ -188,16 +188,29 @@
 					</clipPath>
 				</defs>
 				<!-- Eye outline -->
-				<path d="M20 45 Q60 5 100 45 Q60 85 20 45 Z" fill="white" stroke="currentColor" stroke-width="3.5" />
+				<path
+					d="M20 45 Q60 5 100 45 Q60 85 20 45 Z"
+					fill="var(--background)"
+					stroke="currentColor"
+					stroke-width="3.5"
+				/>
 				<!-- Iris and Pupil with clipping -->
 				<g clip-path="url(#eyeClip{id})">
 					<!-- Iris (filled black) -->
 					<circle id={pupilId} cx="60" cy="45" r="18" fill="currentColor" stroke="currentColor" stroke-width="3.5" />
-					<!-- Pupil (white fill) -->
-					<circle id={innerPupilId} cx="60" cy="45" r="8" fill="white" stroke="currentColor" stroke-width="3.5" />
+					<!-- Pupil -->
+					<circle
+						id={innerPupilId}
+						cx="60"
+						cy="45"
+						r="8"
+						fill="var(--background)"
+						stroke="currentColor"
+						stroke-width="3.5"
+					/>
 				</g>
 				<!-- Eyelid for blinking -->
-				<path d="M20 45 Q60 5 100 45 Q60 5 20 45 Z" fill="white" stroke="currentColor" stroke-width="1.5">
+				<path d="M20 45 Q60 5 100 45 Q60 5 20 45 Z" fill="var(--background)" stroke="currentColor" stroke-width="1.5">
 					<animate
 						attributeName="d"
 						values="M20 45 Q60 5 100 45 Q60 5 20 45 Z;
@@ -207,7 +220,7 @@
 						keyTimes="0; 0.95; 0.98; 1"
 						dur="8s"
 						repeatCount="indefinite"
-						begin="{(Math.random() * 16) - 8}s"
+						begin="{Math.random() * 16 - 8}s"
 					/>
 				</path>
 			</svg>
@@ -245,7 +258,7 @@
 			{/each}
 		</div>
 	</div>
-	<div class="min-w-2/3 space-y-4 p-10 lg:border-l">
+	<div class="min-w-2/3 space-y-4 p-6 lg:border-l lg:p-8">
 		<h3 class="font-display text-3xl font-medium">Why it matters now.</h3>
 		<p class="max-w-150">
 			Fewer companies control more of our digital lives. From web services to smart home, connecting the dots with
@@ -268,14 +281,13 @@
 		{/each}
 	</div>
 	<div class="flex flex-col items-center justify-between gap-8">
-		<a class="scroll-mt-50 p-8 font-display text-7xl font-medium text-background uppercase" name="mission"
+		<a class="scroll-mt-50 px-6 py-8 font-display text-7xl font-medium text-background uppercase" name="mission"
 			>The mission.</a
 		>
-		<div class="w-17/20 border p-4 lg:w-2/3">
+		<div class="w-18/20 border p-4 lg:w-2/3">
 			<p class="text-background">
-				Building smart home devices that are private out of the box, without sacrificing usability. Based on verifiably
-				secure, intelligent open-source software. <span
-					class="inline-block h-4 w-2 animate-flash bg-background align-middle"
+				Building smart home devices that are private out of the box, without sacrificing usability. Based on secure and
+				intelligent open-source software. <span class="inline-block h-4 w-2 animate-flash bg-background align-middle"
 				></span>
 			</p>
 		</div>
@@ -292,7 +304,7 @@
 			{/each}
 		</h3>
 	</div>
-	<div class="relative overflow-hidden border-t p-8 py-12">
+	<div class="relative overflow-hidden border-t px-6 py-12 lg:px-8">
 		<p class="mb-1 w-fit bg-foreground px-0.5 text-background uppercase">Coming soon</p>
 		<h3 class="mb-4 font-display text-3xl font-medium">Observer.</h3>
 		<p class="lg:max-w-1/2">An indoor security camera with on-device AI vision.</p>
