@@ -177,7 +177,7 @@
 			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
 	</div>
-	<div class="relative m-8 flex w-1/3 w-full flex-col justify-center overflow-hidden md:m-4">
+	<div class="relative m-8 flex w-1/3 w-full flex-col justify-center overflow-hidden lg:m-4 max-lg:max-h-30">
 		{#snippet eyeSnippet(id)}
 			{@const pupilId = `pupil-${id}`}
 			{@const innerPupilId = `inner-pupil-${id}`}
@@ -197,14 +197,19 @@
 					<circle id={innerPupilId} cx="60" cy="45" r="8" fill="white" stroke="currentColor" stroke-width="3.5" />
 				</g>
 				<!-- Eyelid for blinking -->
-				<path
-					d="M20 45 Q60 5 100 45 Q60 5 20 45 Z"
-					fill="white"
-					stroke="currentColor"
-					stroke-width="1.5"
-					class="animate-blink"
-					style="animation-delay: {Math.random() * 8}s"
-				/>
+				<path d="M20 45 Q60 5 100 45 Q60 5 20 45 Z" fill="white" stroke="currentColor" stroke-width="1.5">
+					<animate
+						attributeName="d"
+						values="M20 45 Q60 5 100 45 Q60 5 20 45 Z;
+								M20 45 Q60 5 100 45 Q60 5 20 45 Z;
+								M20 45 Q60 5 100 45 Q60 85 20 45 Z;
+								M20 45 Q60 5 100 45 Q60 5 20 45 Z"
+						keyTimes="0; 0.95; 0.98; 1"
+						dur="8s"
+						repeatCount="indefinite"
+						begin="{(Math.random() * 16) - 8}s"
+					/>
+				</path>
 			</svg>
 		{/snippet}
 
@@ -300,22 +305,6 @@
 </section>
 
 <style>
-	@keyframes blink {
-		0%,
-		95%,
-		100% {
-			d: path("M20 45 Q60 5 100 45 Q60 5 20 45 Z");
-		}
-		97%,
-		98% {
-			d: path("M20 45 Q60 5 100 45 Q60 85 20 45 Z");
-		}
-	}
-
-	:global(.animate-blink) {
-		animation: blink 8s ease-in-out infinite;
-	}
-
 	.eye-grid {
 		grid-template-columns: repeat(var(--eye-grid-cols, 10), minmax(0, 1fr));
 	}
