@@ -4,6 +4,7 @@
 	import Button from "./ui/button/button.svelte";
 	import { RiCircleFill, RiCloseLargeLine, RiCornerDownRightLine, RiMenuLine } from "svelte-remixicon";
 	import { afterNavigate } from "$app/navigation";
+	import { handlePointerMove, resetPointerMove } from "$lib/utils/trackPointer";
 
 	const navigationEntries = [
 		{
@@ -14,21 +15,9 @@
 				{ name: "Devices", anchor: "#devices" }
 			]
 		},
+		{ name: "About", href: "/about" },
 		{ name: "Connect", href: "/connect" }
 	];
-
-	function handlePointerMove(event) {
-		const rect = event.currentTarget.getBoundingClientRect();
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
-		event.currentTarget.style.setProperty("--pointer-x", `${x}px`);
-		event.currentTarget.style.setProperty("--pointer-y", `${y}px`);
-	}
-
-	function resetPointerMove() {
-		event.currentTarget.style.setProperty("--pointer-x", `-1000px`);
-		event.currentTarget.style.setProperty("--pointer-y", `-1000px`);
-	}
 
 	// Hide navbar after navigation instead of immediately to prevent flash of old page
 	afterNavigate(() => {

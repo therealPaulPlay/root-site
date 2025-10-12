@@ -174,11 +174,13 @@
 			>.
 		</p>
 		<p class="max-w-150">
-			Unlike most smart home devices, <span class="bg-accent">Root products ensure only you can access</span> camera, microphone
+			Unlike most smart home cameras, <span class="bg-accent">Root products ensure only you can access</span> video, audio
 			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
 		<Dialog.Root>
-			<Dialog.Trigger class="italic hover:underline text-start">&gt; I have nothing to hide – why should I care?</Dialog.Trigger>
+			<Dialog.Trigger class="text-start italic hover:underline"
+				>&gt; I have nothing to hide – why should I care?</Dialog.Trigger
+			>
 			<Dialog.Content class="w-full max-w-250!">
 				<Dialog.Header>
 					<Dialog.Title>An exceptional talk on why <span class="bg-accent">privacy matters</span>.</Dialog.Title>
@@ -300,7 +302,7 @@
 	</div>
 	<div class="flex flex-col items-center justify-between gap-8">
 		<a class="scroll-mt-50 px-6 py-8 font-display text-7xl font-medium text-background uppercase" name="mission"
-			>The mission.</a
+			>The mission</a
 		>
 		<div class="w-18/20 border p-4 lg:w-2/3">
 			<p class="text-background">
@@ -324,7 +326,7 @@
 	</div>
 	<div class="relative overflow-hidden border-t px-6 py-12 lg:px-8">
 		<p class="mb-1 w-fit bg-foreground px-0.5 text-background uppercase">Coming soon</p>
-		<h3 class="mb-4 font-display text-3xl font-medium">Observer.</h3>
+		<h3 class="mb-4 font-display text-3xl font-medium">Observer</h3>
 		<p class="lg:max-w-1/2">An indoor security camera with on-device AI vision.</p>
 		<img
 			src="/images/observer-simplified-line.svg"
