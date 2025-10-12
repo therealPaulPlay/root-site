@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from "svelte";
 	import { RiDeviceLine, RiTimeLine, RiComputerLine, RiCpuLine, RiTranslate2, RiCamera2Fill } from "svelte-remixicon";
 	import { blur } from "svelte/transition";
+	import * as Dialog from "$lib/components/ui/dialog";
 
 	// User tracking example
 	let exampleTrackingInfo = $state([]);
@@ -168,14 +169,31 @@
 	<div class="min-w-2/3 space-y-4 p-6 lg:border-r lg:p-8">
 		<h3 class="font-display text-3xl font-medium">Built for privacy.</h3>
 		<p class="max-w-150">
-			Privacy protects everyone, not just those with something to hide. It’s a basic human right, <span
-				class="bg-accent">threatened the moment monitoring becomes possible</span
+			Privacy protects everyone. It’s a basic human right, <span class="bg-accent"
+				>threatened the moment monitoring becomes possible</span
 			>.
 		</p>
 		<p class="max-w-150">
 			Unlike most smart home devices, <span class="bg-accent">Root products ensure only you can access</span> camera, microphone
 			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
+		<Dialog.Root>
+			<Dialog.Trigger class="italic hover:underline text-start">&gt; I have nothing to hide – why should I care?</Dialog.Trigger>
+			<Dialog.Content class="w-full max-w-250!">
+				<Dialog.Header>
+					<Dialog.Title>An exceptional talk on why <span class="bg-accent">privacy matters</span>.</Dialog.Title>
+				</Dialog.Header>
+				<iframe
+					class="aspect-video w-full"
+					src="https://www.youtube.com/embed/pcSlowAhvUk?si=Bv0q3nb1OqOsj9Hh"
+					title="YouTube video player"
+					frameborder="0"
+					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+					referrerpolicy="strict-origin-when-cross-origin"
+					allowfullscreen
+				></iframe>
+			</Dialog.Content>
+		</Dialog.Root>
 	</div>
 	<div class="relative m-6 flex w-1/3 w-full flex-col justify-center overflow-hidden max-lg:max-h-30">
 		{#snippet eyeSnippet(id)}

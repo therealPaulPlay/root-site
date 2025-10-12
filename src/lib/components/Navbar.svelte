@@ -50,8 +50,9 @@
 </div>
 
 <aside
-	class="no-scrollbar of-top of-bottom of-length-2 sticky top-0 z-99 flex h-screen w-50 flex-col overflow-y-auto bg-background max-sm:fixed max-sm:w-full max-sm:mask-none! sm:mr-15 sm:border-x"
+	class="no-scrollbar of-top of-bottom of-length-2 sticky top-0 flex h-screen w-50 flex-col overflow-y-auto bg-background max-sm:fixed max-sm:w-full max-sm:mask-none! sm:mr-15 sm:border-x"
 	class:max-sm:hidden={!showMobileNavbar}
+	class:z-99={showMobileNavbar}
 >
 	<div class="relative flex min-h-20 justify-center border-b">
 		<img src="/images/logo.svg" class="h-auto w-30" alt="logo" />
