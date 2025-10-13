@@ -100,10 +100,17 @@
 				{#each Array(30) as _, i}
 					{@const words = ["REPAIRABILITY", "OPEN SOURCE", "SECURITY", "PRIVACY", "ROOT ACCESS", "FULL OWNERSHIP"]}
 					{@const word = words[i % words.length]}
-					<div class="scroll-line flex whitespace-nowrap" style="animation-duration: {20 + (i % 3) * 5}s">
-						{#each Array(100) as _}
-							{word}{" "}
-						{/each}
+					<div class="flex whitespace-nowrap">
+						<div class="scroll-line" style="animation-duration: {150 + (i % 3) * 30}s">
+							{#each Array(10) as _}
+								{word}{" "}
+							{/each}
+						</div>
+						<div class="scroll-line" style="animation-duration: {150 + (i % 3) * 30}s" aria-hidden="true">
+							{#each Array(10) as _}
+								{word}{" "}
+							{/each}
+						</div>
 					</div>
 				{/each}
 			</div>
@@ -155,7 +162,7 @@
 
 	@keyframes scroll {
 		from {
-			transform: translateX(-50%);
+			transform: translateX(-100%);
 		}
 		to {
 			transform: translateX(0);

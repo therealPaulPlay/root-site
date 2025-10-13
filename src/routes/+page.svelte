@@ -141,16 +141,19 @@
 		{
 			text: "Eufy failed to encrypt some video streams and made private home footage accessible to unauthenticated users.",
 			source:
-				"https://ag.ny.gov/press-release/2025/attorney-general-james-secures-450000-companies-selling-home-security-cameras?utm_source=chatgpt.com"
+				"https://ag.ny.gov/press-release/2025/attorney-general-james-secures-450000-companies-selling-home-security-cameras?utm_source=chatgpt.com",
+			sourceName: "NY AG"
 		},
 		{
 			text: "Ring let employees or contractors view private user videos and allowed hackers to take control of users’ accounts.",
 			source:
-				"https://consumer.ftc.gov/consumer-alerts/2023/05/rings-privacy-failures-led-spying-and-harassment-through-home-security-cameras?page=0&utm_source=chatgpt.com"
+				"https://consumer.ftc.gov/consumer-alerts/2023/05/rings-privacy-failures-led-spying-and-harassment-through-home-security-cameras?page=0&utm_source=chatgpt.com",
+			sourceName: "FTC"
 		},
 		{
 			text: "Wyze exposed thumbnails and video previews allowing some customers to see other people’s recordings.",
-			source: "https://edition.cnn.com/2024/02/20/tech/wyze-breach-camera/index.html?utm_source=chatgpt.com"
+			source: "https://edition.cnn.com/2024/02/20/tech/wyze-breach-camera/index.html?utm_source=chatgpt.com",
+			sourceName: "CNN"
 		}
 	];
 </script>
@@ -322,9 +325,9 @@
 			<Carousel.Content>
 				{#each privacyIssueArticleSnippets as item}
 					<Carousel.Item class="min-w-50 lg:basis-5/11">
-						<div class="my-4 flex h-[calc(100%-2rem)] flex-col border p-4 bg-accent">
+						<div class="my-4 flex h-[calc(100%-2rem)] flex-col border bg-accent p-4">
 							<p class="italic">
-								"{item.text}" - <a target="_blank" class="not-italic hover:underline" href={item.source}>Source</a>
+								"{item.text}" - <a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
 							</p>
 						</div>
 					</Carousel.Item>
