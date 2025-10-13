@@ -94,17 +94,20 @@
 	<div class="hover-reveal" onpointermove={handlePointerMove} onpointerleave={resetPointerMove} role="img">
 		<img src="/images/grainy-tech-dots-2.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
-	<div class="space-y-4 border-y p-4 py-6">
-		<h3><span class="align-[2px] text-xs">//</span> Philosophy</h3>
-		<p>
-			<i>Root</i>, as in <span class="bg-accent">root-access</span>, is about building unrestricted smart home devices
-			that purely serve their owner.
-		</p>
-		<p>
-			<span class="bg-accent">Privacy is the foundation</span> of every design decision and all firmware is
-			<span class="bg-accent">open-source</span>.
-		</p>
-		<p>Modify, repair and utilize a Root smart home device however you intend.</p>
+	<div class="relative min-h-160 border-y">
+		<div class="absolute inset-0 overflow-hidden">
+			<div class="absolute -inset-50 flex -rotate-25 flex-col gap-2 bg-background text-neutral-300 select-none">
+				{#each Array(30) as _, i}
+					{@const words = ["REPAIRABILITY", "OPEN SOURCE", "SECURITY", "PRIVACY", "ROOT ACCESS", "FULL OWNERSHIP"]}
+					{@const word = words[i % words.length]}
+					<div class="scroll-line flex whitespace-nowrap" style="animation-duration: {20 + (i % 3) * 5}s">
+						{#each Array(100) as _}
+							{word}{" "}
+						{/each}
+					</div>
+				{/each}
+			</div>
+		</div>
 	</div>
 	<div class="hover-reveal border-b" onpointermove={handlePointerMove} onpointerleave={resetPointerMove} role="img">
 		<img src="/images/grainy-tech-dots-3.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
@@ -144,5 +147,18 @@
 			rgba(0, 0, 0, 0.9) 75%,
 			black 100%
 		);
+	}
+
+	.scroll-line {
+		animation: scroll 20s linear infinite;
+	}
+
+	@keyframes scroll {
+		from {
+			transform: translateX(-50%);
+		}
+		to {
+			transform: translateX(0);
+		}
 	}
 </style>

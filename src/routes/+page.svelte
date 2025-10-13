@@ -314,14 +314,14 @@
 
 <section class="relative mb-20 border-y">
 	<div class="p-6 pb-2 text-center">
-		<h3 class="font-display text-3xl font-medium">Don't trust blindly.</h3>
+		<h3 class="font-display text-3xl font-medium">Don't give up control.</h3>
 	</div>
 	<!-- Articles about data breaches affecting smart home cameras -->
 	<div class="px-16">
 		<Carousel.Root>
 			<Carousel.Content>
 				{#each privacyIssueArticleSnippets as item}
-					<Carousel.Item class="min-w-50 lg:basis-1/2">
+					<Carousel.Item class="min-w-50 lg:basis-5/11">
 						<div class="my-4 flex h-[calc(100%-2rem)] flex-col border p-4 bg-accent">
 							<p class="italic">
 								"{item.text}" - <a target="_blank" class="not-italic hover:underline" href={item.source}>Source</a>
