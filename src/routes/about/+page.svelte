@@ -6,7 +6,12 @@
 	<title>About</title>
 </svelte:head>
 
-<section class="relative my-20 flex w-full items-center justify-center gap-8 overflow-hidden border-y max-xl:flex-wrap">
+<div class="mt-20 flex h-14 w-full items-center justify-center gap-5 border-y">
+	<img src="/images/flag-of-europe-black.svg" alt="EU flag" class="h-12 w-12" />
+	<p>Based in the EU</p>
+</div>
+
+<section class="relative mb-20 mt-10 flex w-full items-center justify-center gap-8 overflow-hidden border-y max-xl:flex-wrap">
 	<div class="w-full space-y-4 p-6 xl:p-8">
 		<h1 class="font-display text-3xl font-medium">About me</h1>
 		<p>
@@ -16,9 +21,9 @@
 			– starting with the Observer – that <span class="bg-accent">respect user privacy</span>.
 		</p>
 		<p>
-			While I was going all-in on privacy (Modded-Lineage OS on my phone, tracker-blocking firewall...) a couple years
+			While I was going all-in on privacy (Modded LineageOS on my phone, tracker-blocking firewall...) a couple years
 			ago, I no longer have the time to tinker with my tools – they <span class="bg-accent">need to just work</span>.
-			That's my goal with Root: Privacy without sacrificing UX.
+			That's my goal with Root: Privacy without sacrificing the user experience.
 		</p>
 	</div>
 	<div
