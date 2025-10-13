@@ -159,7 +159,7 @@
 </script>
 
 <svelte:head>
-	<title>ROOT - Private smart home cameras</title>
+	<title>ROOT - Private home security cameras</title>
 </svelte:head>
 
 <svelte:window
@@ -319,7 +319,7 @@
 	<div class="p-6 pb-2 text-center">
 		<h3 class="font-display text-3xl font-medium">Don't give up control.</h3>
 	</div>
-	<!-- Articles about data breaches affecting smart home cameras -->
+	<!-- Articles about data breaches affecting security cameras -->
 	<div class="px-16">
 		<Carousel.Root>
 			<Carousel.Content>
