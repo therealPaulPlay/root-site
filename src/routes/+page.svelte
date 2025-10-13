@@ -2,7 +2,9 @@
 	import { onMount, onDestroy } from "svelte";
 	import { RiDeviceLine, RiTimeLine, RiComputerLine, RiCpuLine, RiTranslate2, RiCamera2Fill } from "svelte-remixicon";
 	import { blur } from "svelte/transition";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Dialog from "$lib/components/ui/dialog";
+	import * as Carousel from "$lib/components/ui/carousel";
 
 	// User tracking example
 	let exampleTrackingInfo = $state([]);
@@ -134,6 +136,23 @@
 			innerPupil.setAttribute("cy", y);
 		}
 	}
+
+	const privacyIssueArticleSnippets = [
+		{
+			text: "Eufy failed to encrypt some video streams and made private home footage accessible to unauthenticated users.",
+			source:
+				"https://ag.ny.gov/press-release/2025/attorney-general-james-secures-450000-companies-selling-home-security-cameras?utm_source=chatgpt.com"
+		},
+		{
+			text: "Ring let employees or contractors view private user videos and allowed hackers to take control of users’ accounts.",
+			source:
+				"https://consumer.ftc.gov/consumer-alerts/2023/05/rings-privacy-failures-led-spying-and-harassment-through-home-security-cameras?page=0&utm_source=chatgpt.com"
+		},
+		{
+			text: "Wyze exposed thumbnails and video previews allowing some customers to see other people’s recordings.",
+			source: "https://edition.cnn.com/2024/02/20/tech/wyze-breach-camera/index.html?utm_source=chatgpt.com"
+		}
+	];
 </script>
 
 <svelte:head>
@@ -178,7 +197,7 @@
 			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
 		<Dialog.Root>
-			<Dialog.Trigger class="text-start italic hover:underline"
+			<Dialog.Trigger class="text-start text-muted-foreground italic hover:underline"
 				>&gt; I have nothing to hide – why should I care?</Dialog.Trigger
 			>
 			<Dialog.Content class="w-full max-w-250!">
@@ -281,14 +300,39 @@
 	<div class="min-w-2/3 space-y-4 p-6 lg:border-l lg:p-8">
 		<h3 class="font-display text-3xl font-medium">Why it matters now.</h3>
 		<p class="max-w-150">
-			Fewer companies control more of our digital lives. From web services to smart home, connecting the dots with
-			machine learning allows for <span class="bg-accent">creating accurate profiles</span>.
+			Large tech corporations collect huge amounts of user information to <span class="bg-accent"
+				>piece together accurate profiles</span
+			>.
 		</p>
 		<p class="max-w-150">
-			As political landscapes shift, the question isn't just who can access your data today, but <span class="bg-accent"
+			As political landscapes shift, the question isn't just who can access this data today, but <span class="bg-accent"
 				>who might access it tomorrow</span
 			>. Privacy is about preparation.
 		</p>
+	</div>
+</section>
+
+<section class="relative mb-20 border-y">
+	<div class="p-6 pb-2 text-center">
+		<h3 class="font-display text-3xl font-medium">Don't trust blindly.</h3>
+	</div>
+	<!-- Articles about data breaches affecting smart home cameras -->
+	<div class="px-16">
+		<Carousel.Root>
+			<Carousel.Content>
+				{#each privacyIssueArticleSnippets as item}
+					<Carousel.Item class="min-w-50 lg:basis-1/2">
+						<div class="my-4 flex h-[calc(100%-2rem)] flex-col border p-4 bg-accent">
+							<p class="italic">
+								"{item.text}" - <a target="_blank" class="not-italic hover:underline" href={item.source}>Source</a>
+							</p>
+						</div>
+					</Carousel.Item>
+				{/each}
+			</Carousel.Content>
+			<Carousel.Previous />
+			<Carousel.Next />
+		</Carousel.Root>
 	</div>
 </section>
 

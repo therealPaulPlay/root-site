@@ -6,9 +6,9 @@
 	<title>About</title>
 </svelte:head>
 
-<div class="mt-20 flex h-14 w-full items-center justify-center gap-5 border-y">
+<div class="mt-20 flex h-14 w-full items-center justify-center gap-4 border-y">
 	<img src="/images/flag-of-europe-black.svg" alt="EU flag" class="h-12 w-12" />
-	<p>Based in the EU</p>
+	<p>Based in the EU.</p>
 </div>
 
 <section class="relative mb-20 mt-10 flex w-full items-center justify-center gap-8 overflow-hidden border-y max-xl:flex-wrap">
