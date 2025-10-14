@@ -101,12 +101,12 @@
 					{@const words = ["REPAIRABILITY", "OPEN SOURCE", "SECURITY", "PRIVACY", "ROOT ACCESS", "FULL OWNERSHIP"]}
 					{@const word = words[i % words.length]}
 					<div class="flex gap-[1ch] whitespace-nowrap">
-						<div class="scroll-line" style="animation-duration: {15 + (i % 3) * 3}s">
+						<div class="scroll-line" style="animation-duration: {150 + (i % 3) * 30}s">
 							{#each Array(10) as _}
 								{word + " "}
 							{/each}
 						</div>
-						<div class="scroll-line" style="animation-duration: {15 + (i % 3) * 3}s" aria-hidden="true">
+						<div class="scroll-line" style="animation-duration: {150 + (i % 3) * 30}s" aria-hidden="true">
 							{#each Array(10) as _}
 								{word + " "}
 							{/each}
