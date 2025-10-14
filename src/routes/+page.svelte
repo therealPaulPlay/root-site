@@ -315,8 +315,8 @@
 	</div>
 </section>
 
-<section class="relative mb-20 border-y">
-	<div class="p-6 pb-2 text-center">
+<section class="relative mb-20 border-y lg:p-8 p-6">
+	<div class="mb-6 text-center">
 		<h3 class="font-display text-3xl font-medium">Don't give up control.</h3>
 	</div>
 	<!-- Articles about data breaches affecting security cameras -->
@@ -325,9 +325,10 @@
 			<Carousel.Content>
 				{#each privacyIssueArticleSnippets as item}
 					<Carousel.Item class="min-w-50 lg:basis-5/11">
-						<div class="my-4 flex h-[calc(100%-2rem)] flex-col border bg-accent p-4">
+						<div class="flex h-full flex-col border bg-accent p-4">
 							<p class="italic">
-								"{item.text}" - <a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
+								"{item.text}" -
+								<a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
 							</p>
 						</div>
 					</Carousel.Item>
