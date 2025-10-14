@@ -12,6 +12,8 @@
 
 <svelte:head>
 	<link rel="icon" href="/images/favicon.svg" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+	<link rel="manifest" href="/images/site.webmanifest" />
 	<meta
 		name="description"
 		content="Privacy-first smart home cameras. Root devices use on-device ML models and never transfer unencrypted data."
