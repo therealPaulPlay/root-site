@@ -170,7 +170,7 @@
 	onpointermove={handleEyePupilPointerMove}
 />
 
-<section class="relative mb-20 flex h-100 w-full items-center justify-center lg:h-155">
+<section class="relative mb-20 flex h-100 w-full items-center justify-center lg:h-125 xl:h-155">
 	<!-- svelte-ignore a11y_media_has_caption -->
 	<video
 		loop
