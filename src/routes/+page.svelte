@@ -189,7 +189,7 @@
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
 	<div class="min-w-2/3 space-y-4 p-6 lg:border-r lg:p-8">
-		<h3 class="font-display text-3xl font-medium">Built for privacy.</h3>
+		<h3 class="font-display text-3xl font-medium tracking-wide">Built for privacy.</h3>
 		<p class="max-w-150">
 			Privacy protects everyone. It’s a basic human right, <span class="bg-accent"
 				>threatened the moment monitoring becomes possible</span
@@ -200,12 +200,12 @@
 			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
 		<Dialog.Root>
-			<Dialog.Trigger class="text-start text-muted-foreground italic hover:underline"
+			<Dialog.Trigger class="text-start text-muted-foreground hover:underline"
 				>&gt; I have nothing to hide – why should I care?</Dialog.Trigger
 			>
 			<Dialog.Content class="w-full max-w-250!">
 				<Dialog.Header>
-					<Dialog.Title>An exceptional talk on why <span class="bg-accent">privacy matters</span>.</Dialog.Title>
+					<Dialog.Title>This is why you should.</Dialog.Title>
 				</Dialog.Header>
 				<iframe
 					class="aspect-video w-full"
@@ -301,7 +301,7 @@
 		</div>
 	</div>
 	<div class="min-w-2/3 space-y-4 p-6 lg:border-l lg:p-8">
-		<h3 class="font-display text-3xl font-medium">Why it matters now.</h3>
+		<h3 class="font-display text-3xl font-medium tracking-wide">Why it matters now.</h3>
 		<p class="max-w-150">
 			Large tech corporations collect huge amounts of user information to <span class="bg-accent"
 				>piece together accurate profiles</span
@@ -317,10 +317,10 @@
 
 <section class="relative mb-20 border-y lg:p-8 p-6">
 	<div class="mb-6 text-center">
-		<h3 class="font-display text-3xl font-medium">Don't give up control.</h3>
+		<h3 class="font-display text-3xl font-medium tracking-wide">Don't give up control.</h3>
 	</div>
 	<!-- Articles about data breaches affecting security cameras -->
-	<div class="px-16">
+	<div class="px-10">
 		<Carousel.Root>
 			<Carousel.Content>
 				{#each privacyIssueArticleSnippets as item}
@@ -374,7 +374,7 @@
 	</div>
 	<div class="relative overflow-hidden border-t px-6 py-12 lg:px-8">
 		<p class="mb-1 w-fit bg-foreground px-0.5 text-background uppercase">Coming soon</p>
-		<h3 class="mb-4 font-display text-3xl font-medium">Observer</h3>
+		<h3 class="mb-4 font-display text-3xl font-medium tracking-wide">Observer</h3>
 		<p class="lg:max-w-1/2">An indoor security camera with on-device AI vision.</p>
 		<img
 			src="/images/observer-simplified-line.svg"

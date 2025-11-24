@@ -13,7 +13,7 @@
 
 <section class="relative mb-20 mt-10 flex w-full items-center justify-center gap-8 overflow-hidden border-y max-xl:flex-wrap">
 	<div class="w-full space-y-4 p-6 xl:p-8">
-		<h1 class="font-display text-3xl font-medium">About me</h1>
+		<h1 class="font-display text-3xl font-medium tracking-wide">About</h1>
 		<p>
 			Working on web games by day, and on Root by night, I am persuing my <span class="bg-accent"
 				>dream of creating smart home devices</span
