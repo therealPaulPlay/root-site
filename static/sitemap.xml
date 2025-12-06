@@ -14,7 +14,13 @@
         <loc>https://rootprivacy.com/connect</loc>
     </url>
     <url>
+        <loc>https://rootprivacy.com/connect/add</loc>
+    </url>
+    <url>
         <loc>https://rootprivacy.com/privacy</loc>
+    </url>
+    <url>
+        <loc>https://rootprivacy.com/source-code</loc>
     </url>
 
 </urlset>

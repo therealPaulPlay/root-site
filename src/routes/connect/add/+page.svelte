@@ -9,6 +9,10 @@
 	let stepTitle = ["Plug your device in."];
 </script>
 
+<svelte:head>
+	<title>Add new device</title>
+</svelte:head>
+
 <div class="min-h-dvh w-full justify-center">
 	<div class="h-[50dvh] w-full overflow-hidden border-b">
 		<img alt="Step illustration" src="/images/connect/charge-image.jpg" class="h-full w-full object-cover" />

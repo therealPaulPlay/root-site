@@ -3,7 +3,7 @@
 </svelte:head>
 
 <div class="p-8 pb-16 max-w-4xl min-h-screen">
-	<h1 class="font-display text-3xl font-medium">Privacy Policy</h1>
+	<h1 class="font-display text-3xl font-medium uppercase">Privacy Policy</h1>
 	<br />
 	<p>
 		By using this site, you agree to the collection and use of information as described in this policy.

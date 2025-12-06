@@ -120,7 +120,7 @@
 		<img src="/images/navbar/grainy-tech-dots-3.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
 	</div>
 	<div class="flex justify-center p-4">
-		<Button href="https://github.com/therealPaulPlay/root-site" variant="link" target="_blank" class="text-wrap"
+		<Button href="/source-code" variant="link" class="text-wrap"
 			>Source code</Button
 		>
 	</div>
