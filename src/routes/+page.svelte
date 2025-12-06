@@ -377,7 +377,7 @@
 		<h3 class="mb-4 font-display text-3xl font-medium tracking-wide">Observer</h3>
 		<p class="lg:max-w-1/2">An indoor security camera with on-device AI vision.</p>
 		<img
-			src="/images/observer-simplified-line.svg"
+			src="/images/home/observer-simplified-line.svg"
 			alt="observer illustration"
 			class="pointer-events-none -top-2 right-0 -z-1 h-100 w-100 opacity-20 max-lg:-mb-35 lg:absolute"
 		/>

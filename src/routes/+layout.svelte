@@ -11,8 +11,8 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href="/images/favicon.svg" />
-	<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+	<link rel="icon" href="/images/icons/favicon.svg" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/images/icons/apple-touch-icon.png" />
 	<link rel="manifest" href="/images/site.webmanifest" />
 	<meta
 		name="description"
@@ -22,7 +22,7 @@
 
 <main class="relative container mx-auto flex min-h-screen">
 	<Navbar />
-	<article class="no-scrollbar w-full overflow-x-hidden sm:border-x">
+	<article class="no-scrollbar w-full overflow-x-hidden sm:border-x relative">
 		{@render children?.()}
 		<Footer />
 	</article>

@@ -7,7 +7,7 @@
 </svelte:head>
 
 <div class="mt-20 flex h-14 w-full items-center justify-center gap-4 border-y">
-	<img src="/images/flag-of-europe-black.svg" alt="EU flag" class="h-12 w-12" />
+	<img src="/images/about/flag-of-europe-black.svg" alt="EU flag" class="h-12 w-12" />
 	<p>Based in the EU.</p>
 </div>
 
@@ -32,7 +32,7 @@
 		onpointerleave={resetPointerMove}
 		role="img"
 	>
-		<img alt="Paul" src="/images/about-image.jpg" class="absolute h-full w-full object-cover not-hover:grayscale" />
+		<img alt="Paul" src="/images/about/about-image.jpg" class="absolute h-full w-full object-cover not-hover:grayscale" />
 	</div>
 </section>
 
@@ -48,7 +48,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background-image: url("/images/about-image.jpg");
+		background-image: url("/images/about/about-image.jpg");
 		background-size: contain;
 		filter: grayscale();
 		opacity: 1;
