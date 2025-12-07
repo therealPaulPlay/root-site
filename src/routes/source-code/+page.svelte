@@ -10,7 +10,7 @@
 
 <div class="h-full">
 	<section class="relative mt-20 w-full space-y-4 border-y p-6 lg:p-8">
-		<h1 class="mb-4 font-display text-3xl font-medium tracking-wide uppercase">Source code</h1>
+		<h1 class="font-display text-3xl font-medium tracking-wide uppercase">Source code</h1>
 		<p>
 			<Button
 				href="https://github.com/therealPaulPlay/root-site"
