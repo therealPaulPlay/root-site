@@ -15,7 +15,7 @@
 	<div class="w-full space-y-4 p-6 xl:p-8">
 		<h1 class="font-display text-3xl font-medium tracking-wide uppercase">About</h1>
 		<p>
-			Working on web games by day, and on Root by night, I am persuing my <span class="bg-accent"
+			Working on web games by day, and on ROOT by night, I am persuing my <span class="bg-accent"
 				>dream of creating smart home devices</span
 			>
 			– starting with the Observer – that <span class="bg-accent">respect user privacy</span>.
@@ -23,7 +23,7 @@
 		<p>
 			While I was going all-in on privacy (Modded LineageOS on my phone, tracker-blocking firewall...) a couple years
 			ago, I no longer have the time to tinker with my tools – they <span class="bg-accent">need to just work</span>.
-			That's my goal with Root: Privacy without sacrificing the user experience.
+			That's my goal: Privacy without sacrificing the user experience.
 		</p>
 	</div>
 	<div
