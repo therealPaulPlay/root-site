@@ -1,12 +1,15 @@
 <script>
-	import { RiTwitterXLine, RiYoutubeFill } from "svelte-remixicon";
+	import { RiBlueskyLine, RiTwitterXLine, RiYoutubeFill } from "svelte-remixicon";
 	import Button from "./ui/button/button.svelte";
 </script>
 
 <section class="relative mt-auto w-full overflow-hidden border-t bg-foreground">
-	<div class="flex flex-wrap gap-4 p-8 px-2 2xl:px-16 xl:px-12 lg:px-8">
+	<div class="flex flex-wrap gap-4 p-8 px-2 lg:px-8 xl:px-12 2xl:px-16">
 		<Button class="text-background" href="https://www.youtube.com/@PaulPlay" target="_blank" variant="link"
 			>YouTube <RiYoutubeFill /></Button
+		>
+		<Button class="text-background" href="https://bsky.app/profile/paulplay.bsky.social" target="_blank" variant="link"
+			>Bluesky <RiBlueskyLine /></Button
 		>
 		<Button class="text-background" href="https://x.com/PaulPlayStudio" target="_blank" variant="link"
 			>Twitter <RiTwitterXLine /></Button
@@ -19,7 +22,7 @@
 			© Root {new Date().getFullYear()}
 		</p>
 	</div>
-	<div class="pointer-events-none relative w-full lg:h-55 xl:h-72 2xl:h-90 md:h-38 h-30">
+	<div class="pointer-events-none relative h-30 w-full md:h-38 lg:h-55 xl:h-72 2xl:h-90">
 		<div class="logo-layer"></div>
 		<div class="logo-layer logo-fill"></div>
 	</div>
