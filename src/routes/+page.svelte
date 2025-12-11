@@ -354,7 +354,7 @@
 		>
 		<div class="w-18/20 border p-4 lg:w-2/3">
 			<p class="text-background">
-				Building smart home devices that are private out of the box, without sacrificing usability. Based on secure and
+				Building smart home cameras that are private out of the box, without sacrificing usability. Based on secure and
 				intelligent open-source software. <span class="inline-block h-4 w-2 animate-flash bg-background align-middle"
 				></span>
 			</p>
