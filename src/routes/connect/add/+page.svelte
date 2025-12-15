@@ -4,9 +4,9 @@
 	import { RiArrowLeftLine, RiArrowRightLine } from "svelte-remixicon";
 
 	let step = $state(1);
-	let stepAmount = $state(4);
+	let stepAmount = $state(2);
 
-	let stepTitle = ["Plug your ROOT product in.", "Connect to the ROOT product's WiFi."];
+	let stepTitle = ["Plug your ROOT product in.", "Connect to the product's WiFi."];
 	let stepImage = ["/images/connect/charge-image.jpg", "/images/connect/wifi-image.jpg"];
 </script>
 
@@ -22,18 +22,19 @@
 		<h3 class="font-display text-3xl font-medium tracking-wide">{step}. {stepTitle[step - 1] || "Default."}</h3>
 
 		{#if step == 1}
-			<p>
+			<p class="max-w-3xl">
 				Use the USB charger to plug your ROOT product into a wall outlet. Wait until a startup sound plays. Rarely, this
 				can take up to 5 minutes.
 			</p>
 		{/if}
 
 		{#if step == 2}
-			<p>
-				Open the settings app on your device and connect to a WiFi network with "ROOT" in the name. Then, return to your
-				browser and open <a class="font-bold hover:underline" target="_blank" href="http://root.pair"
-					>http://root.pair</a
-				>. Follow the instructions there.
+			<p class="max-w-3xl">
+				Open the settings app on your device and connect to a WiFi network with "ROOT" in the name. Then, visit <a
+					class="font-bold hover:underline"
+					target="_blank"
+					href="http://root.test">http://root.test</a
+				> and follow the instructions there.
 			</p>
 		{/if}
 

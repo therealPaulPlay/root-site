@@ -20,13 +20,13 @@
 			>
 		</p>
 		<p>
-			<Button href="/" target="_blank" variant="link" class="inline-flex items-center gap-2 px-0!"
-				>Relay server (coming soon) <RiExternalLinkLine class="h-4! w-4!" /></Button
+			<Button href="https://github.com/therealPaulPlay/root-relay" target="_blank" variant="link" class="inline-flex items-center gap-2 px-0!"
+				>Relay server <RiExternalLinkLine class="h-4! w-4!" /></Button
 			>
 		</p>
 		<p>
-			<Button href="/" target="_blank" variant="link" class="inline-flex items-center gap-2 px-0!"
-				>Firmware (coming soon) <RiExternalLinkLine class="h-4! w-4!" /></Button
+			<Button href="https://github.com/therealPaulPlay/root-firmware" target="_blank" variant="link" class="inline-flex items-center gap-2 px-0!"
+				>Firmware <RiExternalLinkLine class="h-4! w-4!" /></Button
 			>
 		</p>
 	</section>
