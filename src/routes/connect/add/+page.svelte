@@ -6,8 +6,8 @@
 	let step = $state(1);
 	let stepAmount = $state(4);
 
-	let stepTitle = ["Plug your device in.", "Connect to the device's WiFi."];
-    let stepImage = ["/images/connect/charge-image.jpg", "/images/connect/wifi-image.jpg"];
+	let stepTitle = ["Plug your ROOT product in.", "Connect to the ROOT product's WiFi."];
+	let stepImage = ["/images/connect/charge-image.jpg", "/images/connect/wifi-image.jpg"];
 </script>
 
 <svelte:head>
@@ -23,15 +23,17 @@
 
 		{#if step == 1}
 			<p>
-				Use the USB charger to plug your device into a wall outlet. Wait until a startup sound plays. Rarely, this can
-				take up to 5 minutes if the battery is fully depleted.
+				Use the USB charger to plug your ROOT product into a wall outlet. Wait until a startup sound plays. Rarely, this
+				can take up to 5 minutes.
 			</p>
 		{/if}
 
 		{#if step == 2}
 			<p>
-				Open the settings app and look for a WiFi network with "ROOT" in the name. Connect to this
-				network, then return to your browser and open <a class="font-bold hover:underline" target="_blank" href="http://root.pair">http://root.pair</a>. Follow the instructions there.
+				Open the settings app on your device and connect to a WiFi network with "ROOT" in the name. Then, return to your
+				browser and open <a class="font-bold hover:underline" target="_blank" href="http://root.pair"
+					>http://root.pair</a
+				>. Follow the instructions there.
 			</p>
 		{/if}
 
