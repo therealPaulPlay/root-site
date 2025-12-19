@@ -20,9 +20,9 @@
 	/>
 </svelte:head>
 
-<main class="relative container mx-auto flex min-h-screen">
+<main class="relative container mx-auto flex">
 	<Navbar />
-	<article class="no-scrollbar w-full overflow-x-hidden sm:border-x relative">
+	<article class="no-scrollbar w-full overflow-x-hidden sm:border-x relative flex flex-col min-h-screen">
 		{@render children?.()}
 		<Footer />
 	</article>
