@@ -14,11 +14,11 @@
 	<title>Add new device</title>
 </svelte:head>
 
-<div class="min-h-dvh w-full justify-center">
-	<div class="h-[50dvh] w-full overflow-hidden border-b">
+<div class="min-h-svh w-full justify-center">
+	<div class="h-[50svh] w-full overflow-hidden border-b">
 		<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover" />
 	</div>
-	<div class="flex min-h-[50dvh] flex-col space-y-8 p-6 lg:p-8">
+	<div class="flex min-h-[50svh] flex-col space-y-8 p-6 lg:p-8">
 		<h3 class="font-display text-3xl font-medium tracking-wide">{step}. {stepTitle[step - 1] || "Default."}</h3>
 
 		{#if step == 1}
@@ -31,7 +31,7 @@
 		{#if step == 2}
 			<p class="max-w-3xl">
 				Open the settings app on your device and connect to a WiFi network with "ROOT" in the name. Then, visit <a
-					class="font-bold hover:underline"
+					class="underline"
 					target="_blank"
 					href="http://root.test">http://root.test</a
 				> and follow the instructions there.

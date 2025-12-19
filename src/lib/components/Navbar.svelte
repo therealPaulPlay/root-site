@@ -39,7 +39,7 @@
 </div>
 
 <aside
-	class="no-scrollbar of-top of-bottom of-length-2 sticky top-0 flex h-screen w-50 flex-col overflow-y-auto bg-background max-sm:fixed max-sm:w-full max-sm:mask-none! sm:mr-15 sm:border-x"
+	class="no-scrollbar of-top of-bottom of-length-2 sticky top-0 h-screen w-45 flex-none overflow-y-auto bg-background max-sm:fixed max-sm:w-full max-sm:mask-none! sm:mr-15 sm:border-x"
 	class:max-sm:hidden={!showMobileNavbar}
 	class:z-99={showMobileNavbar}
 >

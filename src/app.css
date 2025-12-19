@@ -130,7 +130,6 @@
 
   html {
     @apply scroll-smooth;
-    @apply overscroll-none;
     @apply touch-none;
   }
 
