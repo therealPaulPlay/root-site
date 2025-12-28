@@ -9,8 +9,7 @@ const CHAR_UUIDS = {
   pair: '4fafc201-1fb5-459e-8fcc-c5c9c331914b',
   wifiNetworks: 'c2be2bc9-cee3-40ae-af50-f9959f25ee5b',
   wifi: 'beb5483e-36e1-4688-b7f5-ea07361b26a8',
-  relay: 'cba1d466-344c-4be3-ab3f-189f80dd7518',
-  status: '8d8218b6-97bc-4527-a8db-13094ac06b1d'
+  relay: 'cba1d466-344c-4be3-ab3f-189f80dd7518'
 };
 
 export class Bluetooth {

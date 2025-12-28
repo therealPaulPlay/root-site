@@ -44,7 +44,7 @@
 	let wifiConfiured = $state(false);
 	let wifiNetworks = $state([]);
 	let selectedWiFiSSID = $state("");
-	let relayDomainInput = $state("relay.rootprivacy.com");
+	let relayDomainInput = $state("relay.rootprivacy.com"); // Default relay
 	let wifiConnectDialogOpen = $state(false);
 
 	// React to step changes
@@ -74,9 +74,16 @@
 </svelte:head>
 
 <div class="min-h-svh w-full justify-center">
-	<div class="h-[50svh] w-full overflow-hidden border-b">
-		<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover" />
-	</div>
+	{#if stepImage[step - 1]}
+		<div class="h-[50svh] w-full overflow-hidden border-b">
+			<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover" />
+		</div>
+	{/if}
+	{#if step == 3}
+		<div class="h-[50svh] w-full overflow-hidden border-b">
+			<!-- TODO: Display QR code here -->
+		</div>
+	{/if}
 	<div class="flex min-h-[50svh] flex-col space-y-8 p-6 lg:p-8">
 		<h3 class="font-display text-3xl font-medium tracking-wide">{step}. {stepTitle[step - 1] || "Default."}</h3>
 
@@ -105,7 +112,7 @@
 						try {
 							pairingCode = bluetoothInstance.read("getCode");
 						} catch (error) {
-							toast.error("Error getting pairing code: " + error.msg);
+							toast.error("Error requesting pairing code: " + error.msg);
 						}
 					}
 				}}
@@ -151,7 +158,7 @@
 
 						const response = await bluetoothInstance.write("pair", {
 							deviceId,
-							deviceName: deviceNameInput,
+							deviceName: deviceNameInput.trim(),
 							devicePublicKey: encodePublicKey(keypair.publicKey)
 						});
 						if (response.success) {
@@ -215,7 +222,7 @@
 										toast.error("Error requesting wifi change: " + error.msg);
 									}
 								}}
-								class="flex w-full justify-between gap-4 p-2 {network.unsupported
+								class="flex w-full justify-between gap-4 p-2 hover:bg-accent/50 {network.unsupported
 									? 'pointer-events-none opacity-50'
 									: ''}"
 								class:bg-accent={network.ssid === selectedWiFiSSID}
@@ -264,13 +271,29 @@
 
 		{#if step == 6}
 			{#if !relayConfigured}
-				<p class="max-w-3xl">Please set a relay domain.</p>
+				<p class="max-w-3xl">
+					Please set a relay domain. Custom relay servers give extra flexibility for advanced users.
+				</p>
 			{:else}
 				<p class="max-w-3xl">Relay domain is already configured, but can be changed below (optional).</p>
 			{/if}
 
 			<Label for="relay-domain">Domain</Label>
 			<Input type="text" placeholder="relay.com" class="max-w-xs" id="relay-domain" bind:value={relayDomainInput} />
+			<Button
+				onclick={async () => {
+					try {
+						const payload = { relayDomain: relayDomainInput.trim() };
+						// TODO: Encrypt payload
+						const response = await bluetoothInstance.write("relay", { deviceId: localStorage.getItem("deviceId"), encryptedPayload });
+						if (response.success) relayConfigured = true;
+					} catch (error) {
+						toast.error("Error requesting relay domain set " + error.msg);
+					}
+				}}
+			>
+				Set domain
+			</Button>
 		{/if}
 
 		<!-- Controls -->
