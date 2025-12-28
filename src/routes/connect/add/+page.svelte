@@ -6,6 +6,8 @@
 	import { encodePublicKey, Encryption } from "$lib/utils/encryption";
 	import { saveProduct } from "$lib/utils/pairedProductsStorage";
 	import { RiArrowLeftLine, RiArrowRightLine, RiLock2Line, RiLockUnlockLine } from "svelte-remixicon";
+	import * as NativeSelect from "$lib/components/ui/native-select/index.js";
+	import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
 	import { toast } from "svelte-sonner";
 
 	let step = $state(1);
@@ -43,6 +45,7 @@
 	let wifiNetworks = $state([]);
 	let selectedWiFiSSID = $state("");
 	let relayDomainInput = $state("relay.rootprivacy.com");
+	let wifiConnectDialogOpen = $state(false);
 
 	// React to step changes
 	$effect(async () => {
@@ -233,6 +236,31 @@
 				</div>
 			</div>
 		{/if}
+
+		<!-- This is heavily WIP -->
+		<AlertDialog.Root bind:open={wifiConnectDialogOpen}>
+			<AlertDialog.Content>
+				<AlertDialog.Header>
+					<AlertDialog.Title>Connect to {selectedWiFiSSID}</AlertDialog.Title>
+					<AlertDialog.Description>
+						Please input the WiFi password and choose the country that this WiFi is located in (processed on-device
+						only).
+					</AlertDialog.Description>
+				</AlertDialog.Header>
+				<div class="space-y-4">
+					<Input type="passsword" />
+					<NativeSelect.Root>
+						<NativeSelect.Option value="">Select country</NativeSelect.Option>
+						<NativeSelect.Option value="DE">Germany</NativeSelect.Option>
+						<NativeSelect.Option value="US">United States</NativeSelect.Option>
+					</NativeSelect.Root>
+				</div>
+				<AlertDialog.Footer>
+					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+					<AlertDialog.Action>Connect</AlertDialog.Action>
+				</AlertDialog.Footer>
+			</AlertDialog.Content>
+		</AlertDialog.Root>
 
 		{#if step == 6}
 			{#if !relayConfigured}
