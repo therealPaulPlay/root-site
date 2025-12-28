@@ -4,6 +4,7 @@
 	import init from "overfade";
 	import Navbar from "$lib/components/Navbar.svelte";
 	import Footer from "$lib/components/Footer.svelte";
+	import { Toaster } from "$lib/components/ui/sonner/index.js";
 
 	let { children } = $props();
 
@@ -20,9 +21,11 @@
 	/>
 </svelte:head>
 
-<main class="relative container mx-auto flex items-start-safe">
+<Toaster />
+
+<main class="items-start-safe relative container mx-auto flex">
 	<Navbar />
-	<article class="no-scrollbar w-full overflow-x-hidden sm:border-x relative flex flex-col min-h-screen">
+	<article class="no-scrollbar relative flex min-h-screen w-full flex-col overflow-x-hidden sm:border-x">
 		{@render children?.()}
 		<Footer />
 	</article>
