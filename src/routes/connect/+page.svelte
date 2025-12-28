@@ -18,6 +18,6 @@
 	</Button>
 </div>
 
-<div class="flex h-full w-full items-center justify-center">
+<div class="flex min-h-screen w-full items-center justify-center">
 	<p class="text-center">No devices connected.</p>
 </div>

@@ -175,4 +175,8 @@
   .shape-crisp {
     shape-rendering: crispEdges;
   }
+
+  .items-start-safe {
+    align-items: safe start;
+  }
 }
