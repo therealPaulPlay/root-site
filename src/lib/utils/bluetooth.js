@@ -1,71 +1,125 @@
 /**
- * Web Bluetooth API utility for ROOT camera pairing
+ * Bluetooth LE utility for ROOT camera pairing
+ * Uses @capacitor-community/bluetooth-le for cross-platform support
  */
 
-const SERVICE_UUID = 'a07498ca-ad5b-474e-940d-16f1fbe7e8cd';
+import { BleClient } from "@capacitor-community/bluetooth-le";
+import { Capacitor } from "@capacitor/core";
+
+const SERVICE_UUID = "a07498ca-ad5b-474e-940d-16f1fbe7e8cd";
 const CHAR_UUIDS = {
-  getCode: '51ff12bb-3ed8-46e5-b4f9-d64e2fec021b',
-  scanQR: '2c8b0a8e-5f3d-4a9b-8e7c-1d4f6a8b9c2e',
-  pair: '4fafc201-1fb5-459e-8fcc-c5c9c331914b',
-  wifiNetworks: 'c2be2bc9-cee3-40ae-af50-f9959f25ee5b',
-  wifi: 'beb5483e-36e1-4688-b7f5-ea07361b26a8',
-  relay: 'cba1d466-344c-4be3-ab3f-189f80dd7518'
+	getCode: "51ff12bb-3ed8-46e5-b4f9-d64e2fec021b",
+	scanQR: "2c8b0a8e-5f3d-4a9b-8e7c-1d4f6a8b9c2e",
+	pair: "4fafc201-1fb5-459e-8fcc-c5c9c331914b",
+	productPublicKey: "2d7c0e8f-5a3b-4c1d-8e6a-0f4b9d2c7e1a",
+	wifiNetworks: "c2be2bc9-cee3-40ae-af50-f9959f25ee5b",
+	wifiStatus: "d96453d5-1f49-47d6-8cbd-ac5547fc51a9",
+	wifiConnect: "beb5483e-36e1-4688-b7f5-ea07361b26a8",
+	relayStatus: "a9988b7b-e4ea-49b1-b9d1-548aeb0ec5ab",
+	relaySet: "cba1d466-344c-4be3-ab3f-189f80dd7518"
 };
 
+let initialized = false;
+
+async function ensureInitialized() {
+	if (initialized) return;
+
+	// Check for Bluetooth support on web
+	if (Capacitor.getPlatform() === "web" && !navigator.bluetooth) {
+		throw new Error("Bluetooth not supported in this environment!");
+	}
+
+	await BleClient.initialize({ androidNeverForLocation: true });
+	initialized = true;
+}
+
 export class Bluetooth {
-  #device = null;
-  #server = null;
-  #service = null;
-  #chars = {};
+	#deviceId = null;
+	#deviceName = null;
 
-  async scan() {
-    if (!navigator.bluetooth) {
-      throw new Error('Web Bluetooth not supported in this environment!');
-    }
-    this.#device = await navigator.bluetooth.requestDevice({
-      filters: [{ namePrefix: 'ROOT-' }],
-      optionalServices: [SERVICE_UUID]
-    });
-    return {
-      id: this.#device.id,
-      name: this.#device.name
-    };
-  }
+	async scan() {
+		await ensureInitialized();
 
-  async connect() {
-    if (!this.#device) throw new Error('Not initialized!');
+		const device = await BleClient.requestDevice({
+			// namePrefix: 'ROOT-',
+			optionalServices: [SERVICE_UUID]
+		});
 
-    this.#server = await this.#device.gatt.connect();
-    this.#service = await this.#server.getPrimaryService(SERVICE_UUID);
+		this.#deviceId = device.deviceId;
+		this.#deviceName = device.name;
 
-    for (const [name, uuid] of Object.entries(CHAR_UUIDS)) {
-      this.#chars[name] = await this.#service.getCharacteristic(uuid);
-    }
-  }
+		return {
+			id: device.deviceId,
+			name: device.name
+		};
+	}
 
-  async disconnect() {
-    if (this.#server?.connected) {
-      this.#server.disconnect();
-    }
-    this.#device = null;
-    this.#server = null;
-    this.#service = null;
-    this.#chars = {};
-  }
+	async connect() {
+		await ensureInitialized();
+		if (!this.#deviceId) throw new Error("No device selected. Call scan() first!");
 
-  async read(charName) {
-    if (!Object.keys(this.#chars).length) throw new Error('No BLE characteristics available!');
-    const value = await this.#chars[charName].readValue();
-    const text = new TextDecoder().decode(value);
-    const response = JSON.parse(text);
-    if (!response.success) throw new Error(response.error || "No error provided!");
-    return response;
-  }
+		await BleClient.connect(this.#deviceId, (deviceId) => {
+			console.log(`Bluetooth device ${deviceId} disconnected!`);
+		});
+	}
 
-  async write(charName, data) {
-    if (!Object.keys(this.#chars).length) throw new Error('No BLE characteristics available!');
-    const json = JSON.stringify(data);
-    const bytes = new TextEncoder().encode(json);
-    await this.#chars[charName].writeValue(bytes);
-  }
+	async disconnect() {
+		await ensureInitialized();
+		if (this.#deviceId) {
+			await BleClient.disconnect(this.#deviceId);
+		}
+		this.#deviceId = null;
+		this.#deviceName = null;
+	}
+
+	async read(charName) {
+		await ensureInitialized();
+		if (!this.#deviceId) throw new Error("No BLE device connected!");
+
+		const uuid = CHAR_UUIDS[charName];
+		if (!uuid) throw new Error(`Unknown characteristic: ${charName}`);
+
+		const value = await BleClient.read(this.#deviceId, SERVICE_UUID, uuid);
+		const text = new TextDecoder().decode(value);
+
+		let response;
+		try {
+			response = JSON.parse(text);
+		} catch (e) {
+			console.error("Failed to parse BLE response (read):", text);
+			throw new Error(`Invalid JSON response from device: ${text.substring(0, 100)}`);
+		}
+
+		if (!response.success) throw new Error(response.error || "No error provided!");
+		return response;
+	}
+
+	async writeAndRead(charName, data) {
+		await ensureInitialized();
+		if (!this.#deviceId) throw new Error("No BLE device connected!");
+
+		const uuid = CHAR_UUIDS[charName];
+		if (!uuid) throw new Error(`Unknown characteristic: ${charName}`);
+
+		const json = JSON.stringify(data);
+		const bytes = new TextEncoder().encode(json);
+		const dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+		await BleClient.write(this.#deviceId, SERVICE_UUID, uuid, dataView);
+
+		// Read the response from the same characteristic
+		const value = await BleClient.read(this.#deviceId, SERVICE_UUID, uuid);
+		const text = new TextDecoder().decode(value);
+
+		let response;
+		try {
+			response = JSON.parse(text);
+		} catch (e) {
+			console.error("Failed to parse BLE response (write/read):", text);
+			throw new Error(`Invalid JSON response from device: ${text.substring(0, 100)}`);
+		}
+
+		if (!response.success) throw new Error(response.error || "No error provided!");
+		return response;
+	}
 }

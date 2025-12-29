@@ -7,24 +7,24 @@
 	import { encodeKey, Encryption } from "$lib/utils/encryption";
 	import { saveProduct } from "$lib/utils/pairedProductsStorage";
 	import { encryptPayload } from "$lib/utils/payloadEncryptionBle";
-	import { RiArrowLeftLine, RiArrowRightLine, RiLock2Line, RiLockUnlockLine } from "svelte-remixicon";
+	import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiCheckLine, RiLock2Line, RiLockUnlockLine } from "svelte-remixicon";
 	import * as NativeSelect from "$lib/components/ui/native-select/index.js";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
 	import { toast } from "svelte-sonner";
 	import QrCode from "svelte-qrcode";
+	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
+	import { onMount } from "svelte";
 
 	let step = $state(1);
 	let stepAmount = $state(6);
 	let stepConditionMet = $derived.by(() => {
-		if (step == 2 && (!selectedBluetoothDevice || !paringCode)) return false;
+		if (step == 2 && (!connectedBleDevice || !pairingCode)) return false;
 		if (step == 3 && !successfulScan) return false;
-		if (step == 4 && !pairingSuccess) return false;
-		if (step == 5 && !wifiConfiured) return false;
+		if (step == 4 && !successfulPair) return false;
+		if (step == 5 && !wifiConfigured) return false;
 		if (step == 6 && !relayConfigured) return false;
 		return true;
 	});
-
-	$inspect(stepConditionMet);
 
 	let stepTitle = [
 		"Plug your ROOT product in.",
@@ -34,44 +34,59 @@
 		"Configure WiFi.",
 		"Set the relay server."
 	];
-	let stepImage = ["/images/connect/charge-image.jpg", "/images/connect/wireless-image.jpg"];
+	let stepImage = [
+		"/images/connect/charge-image.jpg",
+		"/images/connect/wireless-image.jpg",
+		"no-image-display-qr-code",
+		"/images/connect/label-image.jpg",
+		"/images/connect/internet-image.jpg",
+		"/images/connect/settings-image.jpg"
+	];
+
+	const DEFAULT_RELAY_DOMAIN = "relay.rootprivacy.com";
 
 	// Instances
 	let bluetoothInstance = new Bluetooth();
 
 	// State
-	let selectedBluetoothDevice = $state();
-	let paringCode = $state();
+	let connectedBleDevice = $state();
+	let pairingCode = $state();
 	let successfulScan = $state(false);
 	let deviceNameInput = $state("My phone");
-	let pairingSuccess = $state(false);
+	let successfulPair = $state(false);
 	let relayConfigured = $state(false);
-	let wifiConfiured = $state(false);
+	let wifiConfigured = $state(false);
 	let wifiNetworks = $state([]);
 	let selectedWiFiSSID = $state("");
-	let relayDomainInput = $state("relay.rootprivacy.com"); // Default relay
+	let relayDomainInput = $state(DEFAULT_RELAY_DOMAIN);
 	let wifiConnectDialogOpen = $state(false);
 	let wifiPasswordInput = $state("");
 	let wifiCountryCode = $state("");
 	let pendingWifiNetwork = $state(null);
 	let currentProductId = $state(null);
 
+	// Busy state
+	let currentlyConnectingViaBle = $state(false);
+	let currentlyScanning = $state(false);
+	let currentlyPairing = $state(false);
+	let currentlyConnectingWifi = $state(false);
+	let currentlyRefreshingWifi = $state(false);
+	let currentlySettingRelay = $state(false);
+
 	// Data
 	let countryCodes = $state({});
 
-	// React to step changes
-	$effect(async () => {
-		if (step == 6) getWifiNetworks();
-		if (step == 5) {
-			fetch("/json/wifi-country-codes.json")
-				.then((res) => res.json())
-				.then((data) => (countryCodes = data))
-				.catch((err) => console.error("Failed to load country codes:", err));
-		}
+	// Load WiFi country code list
+	onMount(() => {
+		fetch("/json/wifi-country-codes.json")
+			.then((res) => res.json())
+			.then((data) => (countryCodes = data))
+			.catch((err) => console.error("Failed to load country codes:", err));
 	});
 
 	async function getWifiNetworks() {
 		try {
+			currentlyRefreshingWifi = true;
 			wifiNetworks = [];
 
 			// Limit to 100
@@ -83,54 +98,60 @@
 			}
 		} catch (error) {
 			toast.error("Error getting WiFi networks from product: " + error.message);
+		} finally {
+			currentlyRefreshingWifi = false;
 		}
 	}
 
 	async function connectToWifi() {
 		try {
+			currentlyConnectingWifi = true;
+
 			const encryptedPayload = await encryptPayload(currentProductId, {
 				ssid: pendingWifiNetwork.ssid,
 				password: wifiPasswordInput,
 				countryCode: wifiCountryCode
 			});
 
-			const response = await bluetoothInstance.write("wifi", {
+			const response = await bluetoothInstance.writeAndRead("wifiConnect", {
 				deviceId: localStorage.getItem("deviceId"),
 				encryptedPayload
 			});
 
 			if (response.success) {
-				wifiConfiured = true;
+				wifiConfigured = true;
 				selectedWiFiSSID = pendingWifiNetwork.ssid;
 				wifiConnectDialogOpen = false;
-				toast.success("Connected to " + pendingWifiNetwork.ssid);
+				toast.success("Connected to " + pendingWifiNetwork.ssid + "!");
 			}
 		} catch (error) {
 			toast.error("Error connecting to WiFi: " + error.message);
+		} finally {
+			currentlyConnectingWifi = false;
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Add new device</title>
+	<title>Add product</title>
 </svelte:head>
 
-<div class="min-h-svh w-full justify-center">
-	{#if stepImage[step - 1]}
-		<div class="h-[50svh] w-full overflow-hidden border-b">
+<div class="flex min-h-svh w-full flex-col justify-center">
+	{#if stepImage[step - 1] && step !== 3}
+		<div class="h-[50svh] max-h-[60svw] w-full overflow-hidden border-b">
 			<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover" />
 		</div>
-	{/if}
-	{#if step == 3}
-		<div class="flex min-h-[50svh] w-full items-center justify-center overflow-hidden border-b bg-white">
-			{#if paringCode}
-				<QrCode value={paringCode} size={300} />
+	{:else if step === 3}
+		<div class="flex w-full items-center justify-center overflow-hidden border-b bg-white! py-12">
+			{#if pairingCode}
+				<QrCode value={pairingCode} size={300} errorCorrection="H" />
 			{:else}
 				<p>No pairing code received.</p>
 			{/if}
 		</div>
 	{/if}
-	<div class="flex min-h-[50svh] flex-col space-y-8 p-6 lg:p-8">
+
+	<div class="flex grow flex-col space-y-8 p-6 lg:p-8">
 		<h3 class="font-display text-3xl font-medium tracking-wide">{step}. {stepTitle[step - 1] || "Default."}</h3>
 
 		{#if step == 1}
@@ -146,44 +167,78 @@
 			</p>
 			<Button
 				class="w-fit"
+				disabled={currentlyConnectingViaBle || connectedBleDevice}
 				onclick={async () => {
-					// Connect to product
+					// Scan for and select a device (opens system prompt)
 					try {
-						selectedBluetoothDevice = await bluetoothInstance.scan();
+						connectedBleDevice = await bluetoothInstance.scan();
 					} catch (error) {
+						toast.error("Error selecting bluetooth device: " + error.message);
+						return;
+					}
+
+					currentlyConnectingViaBle = true;
+
+					// Connect to the selected device
+					try {
+						await bluetoothInstance.connect();
+						toast.success("Product connected!");
+					} catch (error) {
+						currentlyConnectingViaBle = false;
+						connectedBleDevice = null;
 						toast.error("Error connecting to bluetooth device: " + error.message);
+						return;
 					}
 
 					// Get pairing code
-					if (selectedBluetoothDevice) {
-						try {
-							pairingCode = await bluetoothInstance.read("getCode");
-						} catch (error) {
-							toast.error("Error requesting pairing code: " + error.message);
-						}
+					try {
+						const result = await bluetoothInstance.read("getCode");
+						pairingCode = result.code;
+					} catch (error) {
+						currentlyConnectingViaBle = false;
+						toast.error("Error getting pairing code: " + error.message);
 					}
+
+					currentlyConnectingViaBle = false;
 				}}
 			>
+				{#if currentlyConnectingViaBle}
+					<Spinner />
+				{/if}
 				Open Bluetooth
+				{#if connectedBleDevice}
+					<RiCheckLine class="w-4! h-4!" />
+				{/if}
 			</Button>
 		{/if}
 
 		{#if step == 3}
 			<p class="max-w-3xl">
-				Point your ROOT camera towards the QR code displayed on your phone. Then, click "SCAN CODE".
+				Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE".
 			</p>
 			<Button
 				class="w-fit"
+				disabled={currentlyScanning || successfulScan}
 				onclick={async () => {
 					try {
-						const response = await bluetoothInstance.read("scanQR");
-						if (response.success) successfulScan = true;
+						currentlyScanning = true;
+						await bluetoothInstance.read("scanQR");
+						toast.success("Code scanned and verified!");
+						successfulScan = true;
 					} catch (error) {
-						toast.error("Error requesting QR scan: " + error.message);
+						toast.error("Error scanning code: " + error.message);
+					} finally {
+						currentlyScanning = false;
 					}
 				}}
 			>
+				{#if currentlyScanning}
+					<Spinner />
+				{/if}
 				Scan code
+				{#if successfulScan}
+					<RiCheckLine class="w-4! h-4!" />
+				{/if}
 			</Button>
 		{/if}
 
@@ -196,9 +251,11 @@
 				</div>
 				<Button
 					class="w-fit"
-					disabled={deviceNameInput?.length < 3}
+					disabled={deviceNameInput?.length < 3 || currentlyPairing || successfulPair}
 					onclick={async () => {
 						try {
+							currentlyPairing = true;
+
 							// Get or create device ID
 							const deviceId = localStorage.getItem("deviceId") ?? crypto.randomUUID();
 							localStorage.setItem("deviceId", deviceId);
@@ -206,38 +263,67 @@
 							// Generate keypair for this device
 							const keypair = await Encryption.generateKeypair();
 
-							const response = await bluetoothInstance.write("pair", {
+							const pairingResponse = await bluetoothInstance.writeAndRead("pair", {
 								deviceId,
 								deviceName: deviceNameInput.trim(),
 								devicePublicKey: encodeKey(keypair.publicKey)
 							});
-							if (response.success) {
-								currentProductId = response.data.productId;
-								saveProduct({
-									id: response.data.productId,
-									name: "My ROOT Observer",
-									productPublicKey: response.data.cameraPublicKey,
-									devicePublicKey: encodeKey(keypair.publicKey),
-									devicePrivateKey: encodeKey(keypair.privateKey),
-									type: "observer"
-								});
-								if (response.currentWifiSSID) {
-									wifiConfiured = true;
-									selectedWiFiSSID = response.currentWifiSSID;
-								}
-								if (response.relayDomain) relayConfigured = true;
-								pairingSuccess = true;
+
+							// Set for lookups
+							currentProductId = pairingResponse.productId;
+
+							// Get camera public key
+							const publicKeyResponse = await bluetoothInstance.read("productPublicKey");
+
+							// Save product after successful pairing
+							saveProduct({
+								id: pairingResponse.productId,
+								name: "My ROOT Observer",
+								productPublicKey: publicKeyResponse.publicKey,
+								devicePublicKey: encodeKey(keypair.publicKey),
+								devicePrivateKey: encodeKey(keypair.privateKey),
+								type: "observer"
+							});
+
+							// Get WiFi status
+							const wifiStatusResponse = await bluetoothInstance.read("wifiStatus");
+							wifiConfigured = Boolean(wifiStatusResponse.connected);
+							if (wifiStatusResponse.ssid) selectedWiFiSSID = wifiStatusResponse.ssid;
+
+							// Get relay status
+							const relayStatusResponse = await bluetoothInstance.read("relayStatus");
+							if (relayStatusResponse.relayDomain) {
+								relayConfigured = true;
+								relayDomainInput = relayStatusResponse.relayDomain;
 							}
+
+							toast.success("Product paired!")
+							successfulPair = true;
+
+							// Load wifi networks for next step
+							getWifiNetworks();
+
 						} catch (error) {
 							toast.error("Error pairing device: " + error.message);
+						} finally {
+							currentlyPairing = false;
 						}
-					}}>Pair device</Button
+					}}
+				>
+					{#if currentlyPairing}
+						<Spinner />
+					{/if}
+					Pair device
+					{#if successfulPair}
+						<RiCheckLine class="w-4! h-4!" />
+					{/if}
+					</Button
 				>
 			</div>
 		{/if}
 
 		{#if step == 5}
-			{#if !wifiConfiured}
+			{#if !wifiConfigured}
 				<p class="max-w-3xl">Please choose a WiFi network that the ROOT product can connect to.</p>
 			{:else}
 				<p class="max-w-3xl">Wifi is already configured, but can be changed below (optional).</p>
@@ -257,19 +343,20 @@
 										wifiCountryCode = "";
 										wifiConnectDialogOpen = true;
 									}}
-									class="flex w-full justify-between gap-2 p-2 hover:bg-accent/50 {network.unsupported
+									class="flex w-full justify-between items-center gap-2 p-2 hover:bg-accent/50 {network.unsupported
 										? 'pointer-events-none opacity-50'
 										: ''}"
 									class:bg-accent={network.ssid === selectedWiFiSSID}
 								>
-									<span class="inline-flex gap-1">
+									<span class="inline-flex gap-1 items-center">
 										{#if network.secured}
 											<RiLock2Line class="h-4! w-4!" />
 										{:else}
 											<RiLockUnlockLine class="h-4! w-4!" />
 										{/if}
+										<p class="text-sm">{network.ssid}</p>
 									</span>
-									<span>{network.signal} / 100</span>
+									<span class="text-sm">{network.signal} / 100</span>
 								</div>
 							{/each}
 						{:else}
@@ -277,22 +364,25 @@
 						{/if}
 					</div>
 				</div>
-				<Button variant="outline" onclick={getWifiNetworks} class="w-fit">Refresh</Button>
+				<Button variant="outline" onclick={getWifiNetworks} class="w-fit" disabled={currentlyRefreshingWifi}>
+					{#if currentlyRefreshingWifi}
+						<Spinner />
+					{/if}
+					Refresh</Button
+				>
 			</div>
 		{/if}
 
-		<!-- This is heavily WIP -->
 		<AlertDialog.Root bind:open={wifiConnectDialogOpen}>
 			<AlertDialog.Content>
 				<AlertDialog.Header>
-					<AlertDialog.Title>Connect to {pendingWifiNetwork?.ssid}</AlertDialog.Title>
+					<AlertDialog.Title>Connect to {pendingWifiNetwork?.ssid || "default SSID"}</AlertDialog.Title>
 					<AlertDialog.Description>
-						Please input the WiFi password and choose the country that this WiFi is located in (processed on-device
-						only).
+						Please input the WiFi password and choose the country that this WiFi network is located in.
 					</AlertDialog.Description>
 				</AlertDialog.Header>
-				<div class="space-y-4">
-					<Input type="password" bind:value={wifiPasswordInput} placeholder="WiFi password" />
+				<div class="space-y-4 mb-4">
+					<Input type="text" bind:value={wifiPasswordInput} placeholder="wifi-password-123" />
 					<NativeSelect.Root bind:value={wifiCountryCode}>
 						<NativeSelect.Option value="">Select country</NativeSelect.Option>
 						{#each Object.entries(countryCodes) as [code, name]}
@@ -304,7 +394,12 @@
 					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
 					<AlertDialog.Action
 						onclick={connectToWifi}
-						disabled={!pendingWifiNetwork || !wifiPasswordInput || !wifiCountryCode}>Connect</AlertDialog.Action
+						disabled={!pendingWifiNetwork || !wifiPasswordInput || !wifiCountryCode || currentlyConnectingWifi}
+					>
+						{#if currentlyConnectingWifi}
+							<Spinner />
+						{/if}
+						Connect</AlertDialog.Action
 					>
 				</AlertDialog.Footer>
 			</AlertDialog.Content>
@@ -320,27 +415,46 @@
 			{/if}
 
 			<div class="space-y-4">
+				{#if relayDomainInput !== DEFAULT_RELAY_DOMAIN}
+						<div class="border p-4 flex gap-2 text-sm max-w-lg flex-col justify-center">
+						<span class="inline-flex items-center gap-2"><RiAlertLine class="w-4! h-4!" /> Warning:</span>
+						<p>Potentially less private, use at your own risk!</p>
+					</div>
+				{/if}
 				<div class="space-y-2">
 					<Label for="relay-domain">Domain</Label>
 					<Input type="text" placeholder="relay.com" class="max-w-xs" id="relay-domain" bind:value={relayDomainInput} />
 				</div>
 				<Button
 					class="w-fit"
+					variant={relayConfigured ? "outline" : "default"}
+					disabled={currentlySettingRelay}
 					onclick={async () => {
 						try {
+							currentlySettingRelay = true;
 							const payload = { relayDomain: relayDomainInput.trim() };
 							const encryptedPayload = await encryptPayload(currentProductId, payload);
-							const response = await bluetoothInstance.write("relay", {
+							const response = await bluetoothInstance.writeAndRead("relaySet", {
 								deviceId: localStorage.getItem("deviceId"),
 								encryptedPayload
 							});
 							if (response.success) relayConfigured = true;
+							toast.success("Relay domain set!");
 						} catch (error) {
-							toast.error("Error requesting relay domain set " + error.message);
+							toast.error("Error setting relay domain: " + error.message);
+						} finally {
+							currentlySettingRelay = false;
 						}
 					}}
 				>
-					Set domain
+					{#if currentlySettingRelay}
+						<Spinner />
+					{/if}
+					{#if !relayConfigured}
+						Set domain
+					{:else}
+						Edit domain
+					{/if}
 				</Button>
 			</div>
 		{/if}

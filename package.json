@@ -6,12 +6,15 @@
 	"scripts": {
 		"dev": "vite dev --port 3000 --host",
 		"build": "vite build",
+		"build:mobile": "vite build && npx cap sync",
+		"build:mobile-assets": "npx capacitor-assets generate --ios --android --assetPath ./store-assets",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"format": "prettier --write .",
 		"lint": "prettier --check ."
 	},
 	"devDependencies": {
+		"@capacitor/cli": "^8.0.0",
 		"@internationalized/date": "^3.10.0",
 		"@lucide/svelte": "^0.561.0",
 		"@sveltejs/adapter-static": "^3.0.8",
@@ -24,7 +27,7 @@
 		"mode-watcher": "^1.1.0",
 		"prettier": "^3.4.2",
 		"prettier-plugin-svelte": "^3.3.3",
-		"prettier-plugin-tailwindcss": "^0.6.11",
+		"prettier-plugin-tailwindcss": "^0.7.2",
 		"svelte": "^5.0.0",
 		"svelte-remixicon": "^2.7.0",
 		"svelte-sonner": "^1.0.7",
@@ -35,6 +38,10 @@
 		"vite": "^7.0.4"
 	},
 	"dependencies": {
+		"@capacitor-community/bluetooth-le": "^7.3.0",
+		"@capacitor/app": "^8.0.0",
+		"@capacitor/core": "^8.0.0",
+		"@capacitor/haptics": "^8.0.0",
 		"overfade": "^0.0.7",
 		"svelte-qrcode": "^1.0.1"
 	}

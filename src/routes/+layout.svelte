@@ -1,14 +1,17 @@
 <script>
 	import "../app.css";
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import init from "overfade";
 	import Navbar from "$lib/components/Navbar.svelte";
 	import Footer from "$lib/components/Footer.svelte";
 	import { Toaster } from "$lib/components/ui/sonner/index.js";
+	import { initializeBackGestureHandler, removeBackGestureHandler } from "$lib/utils/back-gesture";
 
 	let { children } = $props();
 
 	onMount(init);
+	onMount(initializeBackGestureHandler);
+	onDestroy(removeBackGestureHandler);
 </script>
 
 <svelte:head>
@@ -21,7 +24,7 @@
 	/>
 </svelte:head>
 
-<Toaster />
+<Toaster position="bottom-left" />
 
 <main class="items-start-safe relative container mx-auto flex">
 	<Navbar />

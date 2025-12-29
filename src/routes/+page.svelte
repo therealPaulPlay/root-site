@@ -200,7 +200,7 @@
 			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
 		<Dialog.Root>
-			<Dialog.Trigger class="text-start text-muted-foreground hover:underline mt-4"
+			<Dialog.Trigger class="mt-4 text-start text-muted-foreground hover:underline"
 				>&gt; I have nothing to hide – why should I care?</Dialog.Trigger
 			>
 			<Dialog.Content class="w-full max-w-250!">
@@ -281,7 +281,7 @@
 		class="relative flex min-h-60 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
 	>
 		<div
-			class="absolute inset-0 transition-transform duration-700 ease-in-out ml-15"
+			class="absolute inset-0 ml-15 transition-transform duration-700 ease-in-out"
 			style:transform="translateY({trackingExampleIndex * -60 + 30}px)"
 		>
 			{#each exampleTrackingInfo as info, i}
@@ -315,7 +315,7 @@
 	</div>
 </section>
 
-<section class="relative mb-20 border-y lg:p-8 p-6">
+<section class="relative mb-20 border-y p-6 lg:p-8">
 	<div class="mb-6 text-center">
 		<h3 class="font-display text-3xl font-medium tracking-wide">Don't give up control.</h3>
 	</div>

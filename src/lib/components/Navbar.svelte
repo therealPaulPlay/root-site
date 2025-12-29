@@ -27,14 +27,14 @@
 	let showMobileNavbar = $state(false);
 </script>
 
-<div class="fixed top-0 right-0 z-100 text-xl sm:hidden pointer-events-none" class:hidden={showMobileNavbar}>
+<div class="pointer-events-none fixed top-0 right-0 z-100 text-xl sm:hidden" class:hidden={showMobileNavbar}>
 	<Button
-		class="h-20! p-6! pointer-events-auto"
+		class="pointer-events-auto h-20! p-6!"
 		onclick={() => {
 			showMobileNavbar = true;
 		}}
 	>
-		<RiMenuLine class="h-8! w-8! shape-crisp" />
+		<RiMenuLine class="shape-crisp h-8! w-8!" />
 	</Button>
 </div>
 
@@ -58,7 +58,11 @@
 		{/if}
 	</div>
 	<div class="hover-reveal" onpointermove={handlePointerMove} onpointerleave={resetPointerMove} role="img">
-		<img src="/images/navbar/grainy-tech-dots-1.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
+		<img
+			src="/images/navbar/grainy-tech-dots-1.jpg"
+			class="pointer-events-none h-30 w-full object-cover"
+			alt="grainy tech"
+		/>
 	</div>
 	<nav class="flex flex-col items-start gap-2 border-y py-4">
 		{#each navigationEntries as entry}
@@ -92,7 +96,11 @@
 		{/each}
 	</nav>
 	<div class="hover-reveal" onpointermove={handlePointerMove} onpointerleave={resetPointerMove} role="img">
-		<img src="/images/navbar/grainy-tech-dots-2.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
+		<img
+			src="/images/navbar/grainy-tech-dots-2.jpg"
+			class="pointer-events-none h-30 w-full object-cover"
+			alt="grainy tech"
+		/>
 	</div>
 	<div class="relative min-h-160 border-y">
 		<div class="absolute inset-0 overflow-hidden">
@@ -117,12 +125,14 @@
 		</div>
 	</div>
 	<div class="hover-reveal border-b" onpointermove={handlePointerMove} onpointerleave={resetPointerMove} role="img">
-		<img src="/images/navbar/grainy-tech-dots-3.jpg" class="pointer-events-none h-30 w-full object-cover" alt="grainy tech" />
+		<img
+			src="/images/navbar/grainy-tech-dots-3.jpg"
+			class="pointer-events-none h-30 w-full object-cover"
+			alt="grainy tech"
+		/>
 	</div>
 	<div class="flex justify-center p-4">
-		<Button href="/source-code" variant="link" class="text-wrap"
-			>Source code</Button
-		>
+		<Button href="/source-code" variant="link" class="text-wrap">Source code</Button>
 	</div>
 </aside>
 

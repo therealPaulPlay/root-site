@@ -4,13 +4,7 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { RiArrowLeftLine } from "svelte-remixicon";
 
-	let {
-		ref = $bindable(null),
-		class: className,
-		variant = "outline",
-		size = "icon",
-		...restProps
-	} = $props();
+	let { ref = $bindable(null), class: className, variant = "outline", size = "icon", ...restProps } = $props();
 
 	const emblaCtx = getEmblaContext("<Carousel.Previous/>");
 </script>
@@ -21,9 +15,9 @@
 	{size}
 	aria-disabled={!emblaCtx.canScrollPrev}
 	class={cn(
-		"absolute size-8 flex justify-center",
+		"absolute flex size-8 justify-center",
 		emblaCtx.orientation === "horizontal"
-			? "-left-12 top-1/2 -translate-y-1/2"
+			? "top-1/2 -left-12 -translate-y-1/2"
 			: "-top-12 left-1/2 -translate-x-1/2 rotate-90",
 		className
 	)}

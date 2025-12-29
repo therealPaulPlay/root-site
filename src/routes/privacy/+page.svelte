@@ -2,35 +2,41 @@
 	<title>Privacy Policy</title>
 </svelte:head>
 
-<div class="p-8 pb-16 max-w-4xl min-h-screen">
+<div class="min-h-screen max-w-4xl p-8 pb-16">
 	<h1 class="font-display text-3xl font-medium uppercase">Privacy Policy</h1>
 	<br />
+	<p>By using this site, you agree to the collection and use of information as described in this policy.</p>
+	<br /><br />
+
+	<h2 class="mb-4 uppercase">What data we collect</h2>
 	<p>
-		By using this site, you agree to the collection and use of information as described in this policy.
+		We collect server logs and error reports that may include technical information such as IP addresses, browser
+		details, pages visited, and timestamps. This data helps us maintain the website and ensure security.
 	</p>
 	<br /><br />
 
-	<h2 class="uppercase mb-4">What data we collect</h2>
+	<h2 class="mb-4 uppercase">How we use your data</h2>
 	<p>
-		We collect server logs and error reports that may include technical information such as IP addresses, browser details, pages visited, and timestamps. This data helps us maintain the website and ensure security.
+		Server logs and error reports are used to monitor security, debug technical issues, and maintain website
+		functionality. This data may be shared with our hosting and infrastructure providers as necessary for service
+		operation.
 	</p>
 	<br /><br />
 
-	<h2 class="uppercase mb-4">How we use your data</h2>
+	<h2 class="mb-4 uppercase">Why we collect data</h2>
 	<p>
-		Server logs and error reports are used to monitor security, debug technical issues, and maintain website functionality. This data may be shared with our hosting and infrastructure providers as necessary for service operation.
+		Data collection is necessary to ensure website security, diagnose technical problems, and provide a reliable service
+		to our users.
 	</p>
 	<br /><br />
 
-	<h2 class="uppercase mb-4">Why we collect data</h2>
+	<h2 class="mb-4 uppercase">Contact</h2>
 	<p>
-		Data collection is necessary to ensure website security, diagnose technical problems, and provide a reliable service to our users.
-	</p>
-	<br /><br />
-
-	<h2 class="uppercase mb-4">Contact</h2>
-	<p>
-		For questions about this privacy policy, please reach out via the contact form at the bottom of <a href="https://paulplay.studio/legal" target="_blank" class="underline">this page</a>.
+		For questions about this privacy policy, please reach out via the contact form at the bottom of <a
+			href="https://paulplay.studio/legal"
+			target="_blank"
+			class="underline">this page</a
+		>.
 		<br /><br />
 		Last updated: October 5, 2025
 	</p>

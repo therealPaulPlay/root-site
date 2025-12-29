@@ -1,5 +1,6 @@
 <script module>
 	import { cn } from "$lib/utils.js";
+	import { vibrate } from "$lib/utils/haptics";
 	import { tv } from "tailwind-variants";
 
 	export const buttonVariants = tv({
@@ -38,6 +39,7 @@
 		href = undefined,
 		type = "button",
 		disabled,
+		onclick: execFunc,
 		children,
 		...restProps
 	} = $props();
@@ -63,6 +65,10 @@
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
 		{disabled}
+		onclick={() => {
+			if (variant == "default" || variant == "destructive") vibrate.light();
+			execFunc?.();
+		}}
 		{...restProps}
 	>
 		{@render children?.()}

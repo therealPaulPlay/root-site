@@ -11,7 +11,9 @@
 	<p>Based in the EU.</p>
 </div>
 
-<section class="relative mb-20 mt-10 flex w-full items-center justify-center gap-8 overflow-hidden border-y max-xl:flex-wrap">
+<section
+	class="relative mt-10 mb-20 flex w-full items-center justify-center gap-8 overflow-hidden border-y max-xl:flex-wrap"
+>
 	<div class="w-full space-y-4 p-6 xl:p-8">
 		<h1 class="font-display text-3xl font-medium tracking-wide uppercase">About</h1>
 		<p>
@@ -32,7 +34,11 @@
 		onpointerleave={resetPointerMove}
 		role="img"
 	>
-		<img alt="Paul" src="/images/about/about-image.jpg" class="absolute h-full w-full object-cover not-hover:grayscale" />
+		<img
+			alt="Paul"
+			src="/images/about/about-image.jpg"
+			class="absolute h-full w-full object-cover not-hover:grayscale"
+		/>
 	</div>
 </section>
 

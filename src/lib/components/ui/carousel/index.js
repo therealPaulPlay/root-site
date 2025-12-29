@@ -14,5 +14,5 @@ export {
 	Content as CarouselContent,
 	Item as CarouselItem,
 	Previous as CarouselPrevious,
-	Next as CarouselNext,
+	Next as CarouselNext
 };

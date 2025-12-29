@@ -26,7 +26,7 @@
 		onInit,
 		scrollSnaps: [],
 		selectedIndex: 0,
-		scrollTo,
+		scrollTo
 	});
 
 	setEmblaContext(carouselState);
