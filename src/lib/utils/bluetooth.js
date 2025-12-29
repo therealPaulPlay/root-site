@@ -19,6 +19,9 @@ export class Bluetooth {
   #chars = {};
 
   async scan() {
+    if (!navigator.bluetooth) {
+      throw new Error('Web Bluetooth not supported in this environment!');
+    }
     this.#device = await navigator.bluetooth.requestDevice({
       filters: [{ namePrefix: 'ROOT-' }],
       optionalServices: [SERVICE_UUID]
@@ -30,7 +33,7 @@ export class Bluetooth {
   }
 
   async connect() {
-    if (!this.#device) throw new Error('No device - call scan() first');
+    if (!this.#device) throw new Error('Not initialized!');
 
     this.#server = await this.#device.gatt.connect();
     this.#service = await this.#server.getPrimaryService(SERVICE_UUID);
@@ -51,6 +54,7 @@ export class Bluetooth {
   }
 
   async read(charName) {
+    if (!Object.keys(this.#chars).length) throw new Error('No BLE characteristics available!');
     const value = await this.#chars[charName].readValue();
     const text = new TextDecoder().decode(value);
     const response = JSON.parse(text);
@@ -59,6 +63,7 @@ export class Bluetooth {
   }
 
   async write(charName, data) {
+    if (!Object.keys(this.#chars).length) throw new Error('No BLE characteristics available!');
     const json = JSON.stringify(data);
     const bytes = new TextEncoder().encode(json);
     await this.#chars[charName].writeValue(bytes);

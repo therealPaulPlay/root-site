@@ -2,7 +2,12 @@ const STORAGE_KEY = "pairedProducts";
 
 export function getAllProducts() {
     const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    try {
+        return data ? JSON.parse(data) : [];
+    } catch (error) {
+        console.error("Error getting all products:", error);
+        return [];
+    }
 }
 
 export function getProduct(productId) {
@@ -10,8 +15,8 @@ export function getProduct(productId) {
 }
 
 export function saveProduct(product) {
-    if (!product.id || !product.name || !product.productPublicKey || !product.devicePublicKey || !product.type) {
-        throw new Error("Product must have id, name, productPublicKey, devicePublicKey, and type");
+    if (!product.id || !product.name || !product.productPublicKey || !product.devicePublicKey || !product.devicePrivateKey || !product.type) {
+        throw new Error("Product must have id, name, productPublicKey, devicePublicKey, devicePrivateKey, and type");
     }
 
     const products = getAllProducts();
@@ -23,10 +28,18 @@ export function saveProduct(product) {
         products.push(product);
     }
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    } catch (error) {
+        console.error("Failed to save product:", error);
+    }
 }
 
 export function removeProduct(productId) {
     const products = getAllProducts().filter(p => p.id !== productId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    } catch (error) {
+        console.error("Failed to remove product:", error);
+    }
 }

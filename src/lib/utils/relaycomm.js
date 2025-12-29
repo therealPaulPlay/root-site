@@ -1,26 +1,20 @@
-/**
- * RelayComm WebSocket client with automatic key renewal
- */
-
-import { Encryption, encodePublicKey } from './encryption.js';
+import { Encryption, encodeKey, decodeKey } from './encryption.js';
+import { getProduct, saveProduct } from './pairedProductsStorage.js';
 
 export class RelayComm {
   #ws = null;
-  #encryption = null;
-  #pendingMessages = [];
+  #encryptions = new Map();
+  #pendingMessages = new Map(); // productId -> single message to retry
+  #renewingKeys = new Set(); // Track which products are currently renewing keys
   #handlers = new Map();
 
-  constructor(relayDomain, deviceId, privateKey, cameraPublicKey) {
+  constructor(relayDomain, deviceId) {
     this.relayDomain = relayDomain;
     this.deviceId = deviceId;
-    this.privateKey = privateKey;
-    this.cameraPublicKey = cameraPublicKey;
   }
 
   async connect() {
     if (this.#ws?.readyState === WebSocket.OPEN) return;
-
-    await this.#updateEncryption();
 
     return new Promise((resolve, reject) => {
       this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?device-id=${this.deviceId}`);
@@ -31,50 +25,78 @@ export class RelayComm {
     });
   }
 
-  async #updateEncryption() {
-    const secret = await Encryption.deriveSharedSecret(this.privateKey, this.cameraPublicKey);
-    this.#encryption = new Encryption(secret);
-    await this.#encryption.ready;
+  async #getEncryption(productId) {
+    if (this.#encryptions.has(productId)) return this.#encryptions.get(productId);
+
+    const product = getProduct(productId);
+    if (!product) throw new Error('Product not found');
+
+    const secret = await Encryption.deriveSharedSecret(
+      decodeKey(product.devicePrivateKey),
+      decodeKey(product.productPublicKey)
+    );
+
+    const encryption = new Encryption(secret);
+    await encryption.ready;
+    this.#encryptions.set(productId, encryption);
+    return encryption;
   }
 
   async #handleMessage(msg) {
+    const encryption = await this.#getEncryption(msg.productId);
     const payload = JSON.parse(
-      new TextDecoder().decode(await this.#encryption.decrypt(msg.encryptedPayload))
+      new TextDecoder().decode(await encryption.decrypt(msg.encryptedPayload))
     );
 
     if (!payload.success && payload.error?.includes('expired')) {
+      // If already renewing keys for this product, skip
+      if (this.#renewingKeys.has(msg.productId)) return;
+      this.#renewingKeys.add(msg.productId);
+
       const newKeypair = await Encryption.generateKeypair();
 
-      await this.send('renewKey', { newPublicKey: encodePublicKey(newKeypair.publicKey) });
+      // Get the pending message if any
+      const pendingMessage = this.#pendingMessages.get(msg.productId);
+      this.#pendingMessages.delete(msg.productId);
 
-      this.privateKey = newKeypair.privateKey;
-      await this.#updateEncryption();
+      // Renew the key
+      await this.send(msg.productId, 'renewKey', { newPublicKey: encodeKey(newKeypair.publicKey) });
 
-      // Retry all pending messages after key renewal
-      const messagesToRetry = [...this.#pendingMessages];
-      this.#pendingMessages = [];
-      for (const { type, data } of messagesToRetry) {
-        await this.send(type, data);
-      }
+      const product = getProduct(msg.productId);
+      product.devicePrivateKey = encodeKey(newKeypair.privateKey);
+      saveProduct(product);
+
+      this.#encryptions.delete(msg.productId);
+      this.#renewingKeys.delete(msg.productId);
+
+      // Retry the pending message if there was one
+      if (pendingMessage) await this.send(msg.productId, pendingMessage.type, pendingMessage.data);
       return;
     }
 
-    // Clear pending messages on successful response
-    this.#pendingMessages = [];
+    // Check if this message is a response to our pending request
+    const pendingMessage = this.#pendingMessages.get(msg.productId);
+    if (pendingMessage && msg.type === pendingMessage.type + 'Result') {
+      this.#pendingMessages.delete(msg.productId);
+    }
 
     const handlers = this.#handlers.get(msg.type);
     if (handlers) handlers.forEach(handler => handler(payload));
   }
 
-  async send(type, data = {}) {
+  async send(productId, type, data = {}) {
     if (this.#ws?.readyState !== WebSocket.OPEN) throw new Error('Not connected');
 
-    this.#pendingMessages.push({ type, data });
-    const encrypted = await this.#encryption.encrypt(JSON.stringify(data));
+    // Store message in pending
+    this.#pendingMessages.set(productId, { type, data });
+
+    const encryption = await this.#getEncryption(productId);
+    const encrypted = await encryption.encrypt(JSON.stringify(data));
 
     this.#ws.send(JSON.stringify({
       type,
       target: 'product',
+      productId,
       deviceId: this.deviceId,
       encryptedPayload: encrypted
     }));
@@ -100,5 +122,8 @@ export class RelayComm {
   disconnect() {
     this.#ws?.close();
     this.#ws = null;
+    this.#encryptions.clear();
+    this.#pendingMessages.clear();
+    this.#renewingKeys.clear();
   }
 }

@@ -13,11 +13,8 @@ export class Encryption {
     const publicKey = await crypto.subtle.exportKey('raw', keyPair.publicKey);
     const privateKeyPKCS8 = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
 
-    // Extract raw 32-byte key from PKCS#8 wrapper with validation
+    // Extract raw 32-byte key from PKCS#8 wrapper
     const privateKeyBytes = new Uint8Array(privateKeyPKCS8);
-    if (privateKeyBytes.length !== 48) {
-      throw new Error('Unexpected PKCS#8 private key length');
-    }
     const privateKey = privateKeyBytes.slice(-32);
 
     return {
@@ -56,9 +53,7 @@ export class Encryption {
     const sharedSecret = new Uint8Array(sharedSecretBits);
 
     // Check for all-zero shared secret (weak key)
-    if (sharedSecret.every(b => b === 0)) {
-      throw new Error('Weak shared secret detected');
-    }
+    if (sharedSecret.every(b => b === 0)) throw new Error('Weak shared secret detected');
 
     const hkdfKey = await crypto.subtle.importKey(
       'raw',
@@ -127,8 +122,8 @@ export class Encryption {
   }
 }
 
-export const encodePublicKey = (key) => btoa(String.fromCharCode(...key));
-export const decodePublicKey = (str) => Uint8Array.from(atob(str), c => c.charCodeAt(0));
+export const encodeKey = (key) => btoa(String.fromCharCode(...key));
+export const decodeKey = (str) => Uint8Array.from(atob(str), c => c.charCodeAt(0));
 
 function addPKCS8Wrapper(rawKey) {
   const prefix = new Uint8Array([
