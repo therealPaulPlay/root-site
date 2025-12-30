@@ -279,17 +279,20 @@
 							// Set for lookups
 							currentProductId = pairingResponse.productId;
 
+							// Get model name
+							const modelResponse = await bluetoothInstance.read("productModel");
+
 							// Get camera public key
 							const publicKeyResponse = await bluetoothInstance.read("productPublicKey");
 
 							// Save product after successful pairing
 							saveProduct({
 								id: pairingResponse.productId,
-								name: "My ROOT Observer",
+								name: "My ROOT " + modelResponse.model?.[0]?.toUpperCase() + modelResponse.model?.slice(1),
 								productPublicKey: publicKeyResponse.publicKey,
 								devicePublicKey: encodeKey(keypair.publicKey),
 								devicePrivateKey: encodeKey(keypair.privateKey),
-								model: "observer"
+								model: modelResponse.model
 							});
 
 							// Get WiFi status
