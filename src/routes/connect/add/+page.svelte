@@ -330,11 +330,11 @@
 			{#if !wifiConfigured}
 				<p class="max-w-3xl">Please choose a WiFi network that the ROOT product can connect to.</p>
 			{:else}
-				<p class="max-w-3xl">The device is connected to Wifi. The selected network can be changed below.</p>
+				<p class="max-w-3xl">The product is connected to Wifi. The selected network can be changed below if needed.</p>
 			{/if}
 			<div class="space-y-4">
 				<div class="relative h-32 w-full max-w-xl overflow-hidden border">
-					<div class="of-top of-bottom no-scrollbar h-full w-full overflow-y-auto">
+					<div class="of-top of-bottom no-scrollbar h-full w-full divide-y overflow-y-auto">
 						{#if wifiNetworks.length}
 							{#each wifiNetworks as network}
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -347,9 +347,11 @@
 										wifiCountryCode = "";
 										wifiConnectDialogOpen = true;
 									}}
-									class="flex w-full items-center justify-between gap-2 divide-y p-2 hover:bg-accent/50 {network.unsupported
+									class="flex w-full items-center justify-between gap-2 p-2 hover:bg-accent/50 {network.unsupported
 										? 'pointer-events-none opacity-50'
-										: ''} {network.ssid === selectedWiFiSSID ? 'pointer-events-none bg-background text-foreground' : ''}"
+										: ''} {network.ssid === selectedWiFiSSID
+										? 'pointer-events-none bg-foreground text-background'
+										: ''}"
 								>
 									<span class="inline-flex items-center gap-2 overflow-hidden">
 										{#if network.secured}
@@ -357,13 +359,19 @@
 										{:else}
 											<RiLockUnlockLine class="h-4! w-4!" />
 										{/if}
-										<p class="truncate text-sm text-nowrap">{network.ssid}</p>
+										<p class="truncate text-sm text-nowrap">
+											{network.ssid}
+											{network.ssid === selectedWiFiSSID ? "(Connected)" : ""}
+											{network.unsupported ? "(Unsupported)" : ""}
+										</p>
 									</span>
 									<span class="text-sm text-nowrap">{network.signal}/100</span>
 								</div>
 							{/each}
 						{:else}
-							<p class="p-4 text-sm w-full h-full text-center">{currentlyRefreshingWifi ? "Loading..." : "No networks found."}"</p>
+							<div class="flex h-full w-full items-center justify-center p-4">
+								<p class="text-center text-sm">{currentlyRefreshingWifi ? "Loading..." : "No networks found."}</p>
+							</div>
 						{/if}
 					</div>
 				</div>
