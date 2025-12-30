@@ -27,7 +27,10 @@
 	let showMobileNavbar = $state(false);
 </script>
 
-<div class="pointer-events-none fixed top-0 right-0 z-100 text-xl sm:hidden" class:hidden={showMobileNavbar}>
+<div
+	class="pointer-events-none fixed top-0 right-0 z-100 text-xl sm:hidden"
+	class:hidden={showMobileNavbar || page.url.pathname.startsWith("/connect")}
+>
 	<Button
 		class="pointer-events-auto h-20! p-6!"
 		onclick={() => {

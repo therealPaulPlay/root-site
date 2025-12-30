@@ -24,7 +24,7 @@
 	/>
 </svelte:head>
 
-<Toaster position="bottom-left" />
+<Toaster position="top-right" />
 
 <main class="items-start-safe relative container mx-auto flex">
 	<Navbar />

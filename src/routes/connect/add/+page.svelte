@@ -7,7 +7,14 @@
 	import { encodeKey, Encryption } from "$lib/utils/encryption";
 	import { saveProduct } from "$lib/utils/pairedProductsStorage";
 	import { encryptPayload } from "$lib/utils/payloadEncryptionBle";
-	import { RiAlertLine, RiArrowLeftLine, RiArrowRightLine, RiCheckLine, RiLock2Line, RiLockUnlockLine } from "svelte-remixicon";
+	import {
+		RiAlertLine,
+		RiArrowLeftLine,
+		RiArrowRightLine,
+		RiCheckLine,
+		RiLock2Line,
+		RiLockUnlockLine
+	} from "svelte-remixicon";
 	import * as NativeSelect from "$lib/components/ui/native-select/index.js";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
 	import { toast } from "svelte-sonner";
@@ -142,9 +149,13 @@
 			<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover" />
 		</div>
 	{:else if step === 3}
-		<div class="flex w-full items-center justify-center overflow-hidden border-b bg-white! py-12">
+		<div
+			class="flex min-h-[calc(min(50svh,60svh))] w-full items-center justify-center overflow-hidden border-b bg-white! py-12"
+		>
 			{#if pairingCode}
-				<QrCode value={pairingCode} size={300} errorCorrection="H" />
+				<div class="pt-4 pl-4">
+					<QrCode value={pairingCode} size={275} errorCorrection="H" />
+				</div>
 			{:else}
 				<p>No pairing code received.</p>
 			{/if}
@@ -182,7 +193,6 @@
 					// Connect to the selected device
 					try {
 						await bluetoothInstance.connect();
-						toast.success("Product connected!");
 					} catch (error) {
 						currentlyConnectingViaBle = false;
 						connectedBleDevice = null;
@@ -206,16 +216,14 @@
 					<Spinner />
 				{/if}
 				Open Bluetooth
-				{#if connectedBleDevice}
-					<RiCheckLine class="w-4! h-4!" />
+				{#if connectedBleDevice && !currentlyConnectingViaBle}
+					<RiCheckLine class="h-4! w-4!" />
 				{/if}
 			</Button>
 		{/if}
 
 		{#if step == 3}
-			<p class="max-w-3xl">
-				Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE".
-			</p>
+			<p class="max-w-3xl">Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE".</p>
 			<Button
 				class="w-fit"
 				disabled={currentlyScanning || successfulScan}
@@ -223,7 +231,6 @@
 					try {
 						currentlyScanning = true;
 						await bluetoothInstance.read("scanQR");
-						toast.success("Code scanned and verified!");
 						successfulScan = true;
 					} catch (error) {
 						toast.error("Error scanning code: " + error.message);
@@ -237,7 +244,7 @@
 				{/if}
 				Scan code
 				{#if successfulScan}
-					<RiCheckLine class="w-4! h-4!" />
+					<RiCheckLine class="h-4! w-4!" />
 				{/if}
 			</Button>
 		{/if}
@@ -297,12 +304,10 @@
 								relayDomainInput = relayStatusResponse.relayDomain;
 							}
 
-							toast.success("Product paired!")
 							successfulPair = true;
 
 							// Load wifi networks for next step
 							getWifiNetworks();
-
 						} catch (error) {
 							toast.error("Error pairing device: " + error.message);
 						} finally {
@@ -315,10 +320,9 @@
 					{/if}
 					Pair device
 					{#if successfulPair}
-						<RiCheckLine class="w-4! h-4!" />
+						<RiCheckLine class="h-4! w-4!" />
 					{/if}
-					</Button
-				>
+				</Button>
 			</div>
 		{/if}
 
@@ -329,8 +333,8 @@
 				<p class="max-w-3xl">Wifi is already configured, but can be changed below (optional).</p>
 			{/if}
 			<div class="space-y-4">
-				<div class="h-3xl relative w-full max-w-xl border">
-					<div class="of-top of-bottom h-full w-full overflow-y-auto">
+				<div class="relative h-32 w-full max-w-xl overflow-hidden border">
+					<div class="of-top of-bottom no-scrollbar h-full w-full overflow-y-auto">
 						{#if wifiNetworks.length}
 							{#each wifiNetworks as network}
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -343,20 +347,19 @@
 										wifiCountryCode = "";
 										wifiConnectDialogOpen = true;
 									}}
-									class="flex w-full justify-between items-center gap-2 p-2 hover:bg-accent/50 {network.unsupported
-										? 'pointer-events-none opacity-50'
-										: ''}"
-									class:bg-accent={network.ssid === selectedWiFiSSID}
+									class="flex w-full items-center justify-between gap-2 divide-y p-2 hover:bg-accent/50 {network.unsupported
+										? 'pointer-events-none opacity-50 '
+										: ''}{network.ssid === selectedWiFiSSID ? 'pointer-events-none bg-background text-foreground' : ''}"
 								>
-									<span class="inline-flex gap-1 items-center">
+									<span class="inline-flex items-center gap-2 overflow-hidden">
 										{#if network.secured}
 											<RiLock2Line class="h-4! w-4!" />
 										{:else}
 											<RiLockUnlockLine class="h-4! w-4!" />
 										{/if}
-										<p class="text-sm">{network.ssid}</p>
+										<p class="truncate text-sm text-nowrap">{network.ssid}</p>
 									</span>
-									<span class="text-sm">{network.signal} / 100</span>
+									<span class="text-sm text-nowrap">{network.signal} / 100</span>
 								</div>
 							{/each}
 						{:else}
@@ -381,7 +384,7 @@
 						Please input the WiFi password and choose the country that this WiFi network is located in.
 					</AlertDialog.Description>
 				</AlertDialog.Header>
-				<div class="space-y-4 mb-4">
+				<div class="mb-4 space-y-4">
 					<Input type="text" bind:value={wifiPasswordInput} placeholder="wifi-password-123" />
 					<NativeSelect.Root bind:value={wifiCountryCode}>
 						<NativeSelect.Option value="">Select country</NativeSelect.Option>
@@ -416,8 +419,8 @@
 
 			<div class="space-y-4">
 				{#if relayDomainInput !== DEFAULT_RELAY_DOMAIN}
-						<div class="border p-4 flex gap-2 text-sm max-w-lg flex-col justify-center">
-						<span class="inline-flex items-center gap-2"><RiAlertLine class="w-4! h-4!" /> Warning:</span>
+					<div class="flex max-w-lg flex-col justify-center gap-2 border p-4 text-sm">
+						<span class="inline-flex items-center gap-2"><RiAlertLine class="h-4! w-4!" /> Warning:</span>
 						<p>Potentially less private, use at your own risk!</p>
 					</div>
 				{/if}
@@ -439,7 +442,6 @@
 								encryptedPayload
 							});
 							if (response.success) relayConfigured = true;
-							toast.success("Relay domain set!");
 						} catch (error) {
 							toast.error("Error setting relay domain: " + error.message);
 						} finally {
