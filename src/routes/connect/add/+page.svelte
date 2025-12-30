@@ -330,7 +330,7 @@
 			{#if !wifiConfigured}
 				<p class="max-w-3xl">Please choose a WiFi network that the ROOT product can connect to.</p>
 			{:else}
-				<p class="max-w-3xl">Wifi is already configured, but can be changed below (optional).</p>
+				<p class="max-w-3xl">The device is connected to Wifi. The selected network can be changed below.</p>
 			{/if}
 			<div class="space-y-4">
 				<div class="relative h-32 w-full max-w-xl overflow-hidden border">
@@ -348,8 +348,8 @@
 										wifiConnectDialogOpen = true;
 									}}
 									class="flex w-full items-center justify-between gap-2 divide-y p-2 hover:bg-accent/50 {network.unsupported
-										? 'pointer-events-none opacity-50 '
-										: ''}{network.ssid === selectedWiFiSSID ? 'pointer-events-none bg-background text-foreground' : ''}"
+										? 'pointer-events-none opacity-50'
+										: ''} {network.ssid === selectedWiFiSSID ? 'pointer-events-none bg-background text-foreground' : ''}"
 								>
 									<span class="inline-flex items-center gap-2 overflow-hidden">
 										{#if network.secured}
@@ -359,11 +359,11 @@
 										{/if}
 										<p class="truncate text-sm text-nowrap">{network.ssid}</p>
 									</span>
-									<span class="text-sm text-nowrap">{network.signal} / 100</span>
+									<span class="text-sm text-nowrap">{network.signal}/100</span>
 								</div>
 							{/each}
 						{:else}
-							<p class="p-4">No networks found.</p>
+							<p class="p-4 text-sm w-full h-full text-center">{currentlyRefreshingWifi ? "Loading..." : "No networks found."}"</p>
 						{/if}
 					</div>
 				</div>
@@ -414,7 +414,7 @@
 					Please set a relay domain. Custom relay servers give extra flexibility for advanced users.
 				</p>
 			{:else}
-				<p class="max-w-3xl">Relay domain is already configured, but can be changed below (optional).</p>
+				<p class="max-w-3xl">The relay domain is configured. It can be edited below if needed.</p>
 			{/if}
 
 			<div class="space-y-4">
