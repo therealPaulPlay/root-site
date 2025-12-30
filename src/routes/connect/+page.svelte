@@ -24,22 +24,26 @@
 </div>
 
 {#snippet productItem(product)}
-	<div class="relative flex h-32 w-full overflow-hidden border-y">
+	<div class="relative flex h-fit min-h-32 w-full border-y max-md:flex-wrap">
 		<!-- preview image -->
-		<div class="h-full w-1/3 content-center bg-foreground text-center text-background">
+		<div class="aspect-16/9 w-full content-center bg-foreground text-center text-background md:w-1/3">
 			<!-- todo -->
 			<Spinner class="mx-auto size-8" />
 		</div>
-		<div class="flex grow flex-col overflow-hidden p-4">
-			<span class="inline-flex items-center gap-1 overflow-hidden text-nowrap"
-				><h3 class="truncate font-display text-xl font-medium tracking-wide">{product.name}</h3>
-				<Button variant="ghost" class="h-fit! px-2"><RiEdit2Line /></Button>
-			</span>
-			<p class="text-muted-forerground text-sm uppercase">{product.type}</p>
-			<p class="text-muted-forerground mt-auto text-xs opacity-25">ID: {product.id}</p>
-		</div>
-		<div class="h-full border-l">
-			<Button variant="ghost" class="h-full"><RiArrowRightSLine class="h-8! w-8!" /></Button>
+		<div class="flex grow overflow-hidden">
+			<div class="flex grow flex-col overflow-hidden p-4">
+				<span class="inline-flex items-center gap-1 overflow-hidden text-nowrap"
+					><h3 class="truncate font-display text-xl font-medium tracking-wide">{product.name}</h3>
+					<Button variant="ghost" class="h-fit! px-2"><RiEdit2Line /></Button>
+				</span>
+				<p class="text-muted-forerground text-sm uppercase mb-4">{product.model}</p>
+				<p class="mt-auto overflow-hidden text-xs text-nowrap text-neutral-300 hover:truncate">
+					ID: <span class="truncate not-hover:bg-neutral-300/35 not-hover:text-transparent">{product.id}</span>
+				</p>
+			</div>
+			<div class="h-full border-l">
+				<Button variant="ghost" class="h-full"><RiArrowRightSLine class="h-8! w-8!" /></Button>
+			</div>
 		</div>
 	</div>
 {/snippet}
@@ -50,6 +54,6 @@
 			{@render productItem(product)}
 		{/each}
 	{:else}
-		<p class="text-center">No devices connected.</p>
+		<p class="text-center my-auto truncate">No devices connected.</p>
 	{/if}
 </div>

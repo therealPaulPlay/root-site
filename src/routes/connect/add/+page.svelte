@@ -289,7 +289,7 @@
 								productPublicKey: publicKeyResponse.publicKey,
 								devicePublicKey: encodeKey(keypair.publicKey),
 								devicePrivateKey: encodeKey(keypair.privateKey),
-								type: "observer"
+								model: "observer"
 							});
 
 							// Get WiFi status
