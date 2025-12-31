@@ -2,13 +2,45 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { getAllProducts } from "$lib/utils/pairedProductsStorage";
+	import { RelayComm } from "$lib/utils/relaycomm";
 	import { onMount } from "svelte";
 	import { RiAddLargeLine, RiArrowRightSLine, RiEdit2Line } from "svelte-remixicon";
 
 	let products = [];
+	let relayDomain = "relay.rootprivacy.com"; // TODO: Make customizable
+	let relayCommInstance;
 
-	onMount(() => {
+	onMount(async () => {
 		products = getAllProducts();
+
+		// If the user has products, connect to relay
+		if (products.length) {
+			try {
+				const deviceId = localStorage.getItem("deviceId");
+				if (!deviceId) throw new Error("No device ID set! Cannot connect to relay.");
+				relayCommInstance = new RelayComm(relayDomain, localStorage.getItem("deviceId"));
+				await relayCommInstance.connect();
+
+				products.forEach((p) => {
+					try {
+						relayCommInstance.send(p.id, "getPreview"); // Send to get preview image
+					} catch (error) {
+						console.error(`Failed to send message to relay server for device ${p.id}:`, error);
+					}
+				});
+
+				relayCommInstance.on("getPreviewResult", (data) => {
+					console.log(data);
+				});
+			} catch (error) {
+				console.error("Error connecting to relay and getting data from products:", error);
+			}
+		}
+
+		// Cleanup
+		return () => {
+			if (relayCommInstance) relayCommInstance.disconnect();
+		};
 	});
 </script>
 
@@ -36,7 +68,7 @@
 					><h3 class="truncate font-display text-xl font-medium tracking-wide">{product.name}</h3>
 					<Button variant="ghost" class="h-fit! px-2"><RiEdit2Line /></Button>
 				</span>
-				<p class="text-muted-forerground text-sm uppercase mb-4">{product.model}</p>
+				<p class="text-muted-forerground mb-4 text-sm uppercase">{product.model}</p>
 				<p class="mt-auto overflow-hidden text-xs text-nowrap text-neutral-300 hover:truncate">
 					ID: <span class="truncate not-hover:bg-neutral-300/35 not-hover:text-transparent">{product.id}</span>
 				</p>
@@ -54,6 +86,6 @@
 			{@render productItem(product)}
 		{/each}
 	{:else}
-		<p class="text-center my-auto truncate">No devices connected.</p>
+		<p class="my-auto truncate text-center">No devices connected.</p>
 	{/if}
 </div>

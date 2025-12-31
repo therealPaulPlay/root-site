@@ -1,11 +1,13 @@
+import { toast } from "svelte-sonner";
 import { Encryption, encodeKey, decodeKey } from "./encryption.js";
 import { getProduct, saveProduct } from "./pairedProductsStorage.js";
+
+const RESULT_SUFFIX = "Result";
 
 export class RelayComm {
 	#ws = null;
 	#encryptions = new Map();
-	#pendingMessages = new Map(); // productId -> single message to retry
-	#renewingKeys = new Set(); // Track which products are currently renewing keys
+	#renewalPromises = new Map(); // productId -> Promise (for ongoing renewals)
 	#handlers = new Map();
 
 	constructor(relayDomain, deviceId) {
@@ -16,12 +18,31 @@ export class RelayComm {
 	async connect() {
 		if (this.#ws?.readyState === WebSocket.OPEN) return;
 
+		// Clean up any existing connection
+		if (this.#ws) this.disconnect();
+
 		return new Promise((resolve, reject) => {
 			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?device-id=${this.deviceId}`);
 			this.#ws.onopen = () => resolve();
-			this.#ws.onerror = reject;
-			this.#ws.onmessage = (e) => this.#handleMessage(JSON.parse(e.data));
-			this.#ws.onclose = () => setTimeout(() => this.connect().catch(() => {}), 5000);
+			this.#ws.onerror = (e) => {
+				toast.error("Websocket relay server error: " + e.msg);
+				console.error("WebSocket relay server error:", e);
+			}
+			this.#ws.onmessage = async (e) => {
+				try {
+					const msg = JSON.parse(e.data);
+					await this.#handleMessage(msg);
+				} catch (err) {
+					if (err.name === "OperationError") return; // Ignore decryption errors (common on hot reload with stale messages)
+					console.error("Failed to handle WebSocket message:", err);
+				}
+			};
+			this.#ws.onclose = () => {
+				toast.error("Relay connection closed, attempting reconnect.");
+				console.warn("Relay connection closed. Attempting to reconnect in 5s...");
+				this.#ws = null;
+				setTimeout(() => this.connect().catch((e) => { console.error("Reconnecting to the relay failed:", e) }), 5000)
+			}
 		});
 	}
 
@@ -42,52 +63,83 @@ export class RelayComm {
 		return encryption;
 	}
 
+	async #ensureKeyFresh(productId) {
+		const product = getProduct(productId);
+		if (!product) throw new Error("Product not found");
+
+		// Check if key needs renewal (>5 minutes old)
+		const keyAge = Date.now() - (product.keyCreatedAt || 0);
+		if (keyAge < 5 * 60 * 1000) return;
+
+		// Wait for existing renewal or start new one
+		if (!this.#renewalPromises.has(productId)) {
+			this.#renewalPromises.set(productId, this.#renewKey(productId).finally(() => {
+				this.#renewalPromises.delete(productId);
+			}));
+		}
+		await this.#renewalPromises.get(productId);
+	}
+
+	async #renewKey(productId) {
+		const newKeypair = await Encryption.generateKeypair();
+
+		// Encrypt with OLD key, then immediately switch to NEW key
+		const oldEncryption = await this.#getEncryption(productId);
+		const encrypted = await oldEncryption.encrypt(JSON.stringify({ newPublicKey: encodeKey(newKeypair.publicKey) }));
+
+		const product = getProduct(productId);
+		product.devicePrivateKey = encodeKey(newKeypair.privateKey);
+		product.keyCreatedAt = Date.now();
+		saveProduct(product);
+		this.#encryptions.delete(productId); // Clear cache so next call uses new key for session
+
+		// Send and wait for confirmation
+		this.#ws.send(JSON.stringify({
+			type: "renewKey",
+			target: "product",
+			productId,
+			deviceId: this.deviceId,
+			encryptedPayload: encrypted
+		}));
+
+		return new Promise((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				this.off("renewKeyResult", handler);
+				reject(new Error("Key renewal timeout"));
+			}, 10000);
+
+			const handler = (payload) => {
+				clearTimeout(timeout);
+				this.off("renewKeyResult", handler);
+				payload.success ? resolve() : reject(new Error(payload.error || "Key renewal failed"));
+			};
+
+			this.on("renewKeyResult", handler);
+		});
+	}
+
 	async #handleMessage(msg) {
-		const encryption = await this.#getEncryption(msg.productId);
-		const payload = JSON.parse(new TextDecoder().decode(await encryption.decrypt(msg.encryptedPayload)));
+		let payload;
 
-		// Handle key expiration using error code
-		if (!payload.success && payload.errorCode === "KEY_EXPIRED") {
-			// If already renewing keys for this product, skip
-			if (this.#renewingKeys.has(msg.productId)) return;
-			this.#renewingKeys.add(msg.productId);
-
-			const newKeypair = await Encryption.generateKeypair();
-
-			// Get the pending message if any
-			const pendingMessage = this.#pendingMessages.get(msg.productId);
-			this.#pendingMessages.delete(msg.productId);
-
-			// Renew the key
-			await this.send(msg.productId, "renewKey", { newPublicKey: encodeKey(newKeypair.publicKey) });
-
-			const product = getProduct(msg.productId);
-			product.devicePrivateKey = encodeKey(newKeypair.privateKey);
-			saveProduct(product);
-
-			this.#encryptions.delete(msg.productId);
-			this.#renewingKeys.delete(msg.productId);
-
-			// Retry the pending message if there was one
-			if (pendingMessage) await this.send(msg.productId, pendingMessage.type, pendingMessage.data);
-			return;
+		// Try to parse as unencrypted JSON first (firmware sends encryption-related errors this way)
+		try {
+			payload = JSON.parse(msg.encryptedPayload);
+		} catch {
+			// Not plain JSON - decrypt it
+			const encryption = await this.#getEncryption(msg.productId);
+			payload = JSON.parse(new TextDecoder().decode(await encryption.decrypt(msg.encryptedPayload)));
 		}
 
-		// Check if this message is a response to our pending request
-		const pendingMessage = this.#pendingMessages.get(msg.productId);
-		if (pendingMessage && msg.type === pendingMessage.type + "Result") {
-			this.#pendingMessages.delete(msg.productId);
-		}
-
+		// Route to handlers
 		const handlers = this.#handlers.get(msg.type);
 		if (handlers) handlers.forEach((handler) => handler(payload));
 	}
 
 	async send(productId, type, data = {}) {
 		if (this.#ws?.readyState !== WebSocket.OPEN) throw new Error("Not connected");
+		if (type === "renewKey") throw new Error("Use #renewKey() internally - do not call send() with renewKey type");
 
-		// Store message in pending
-		this.#pendingMessages.set(productId, { type, data });
+		await this.#ensureKeyFresh(productId);
 
 		const encryption = await this.#getEncryption(productId);
 		const encrypted = await encryption.encrypt(JSON.stringify(data));
@@ -124,7 +176,6 @@ export class RelayComm {
 		this.#ws?.close();
 		this.#ws = null;
 		this.#encryptions.clear();
-		this.#pendingMessages.clear();
-		this.#renewingKeys.clear();
+		this.#renewalPromises.clear();
 	}
 }

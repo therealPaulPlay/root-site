@@ -21,9 +21,10 @@ export function saveProduct(product) {
 		!product.productPublicKey ||
 		!product.devicePublicKey ||
 		!product.devicePrivateKey ||
+		!product.keyCreatedAt ||
 		!product.model
 	) {
-		throw new Error("Product must have id, name, productPublicKey, devicePublicKey, devicePrivateKey, and model");
+		throw new Error("Product must have id, name, productPublicKey, devicePublicKey, devicePrivateKey, keyCreatedAt, and model");
 	}
 
 	const products = getAllProducts();

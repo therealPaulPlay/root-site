@@ -75,12 +75,12 @@ export class Encryption {
 		result.set(nonce);
 		result.set(new Uint8Array(ciphertext), nonce.length);
 
-		return btoa(String.fromCharCode(...result));
+		return bytesToBase64(result);
 	}
 
 	async decrypt(ciphertextB64) {
 		await this.ready;
-		const ciphertext = Uint8Array.from(atob(ciphertextB64), (c) => c.charCodeAt(0));
+		const ciphertext = base64ToBytes(ciphertextB64);
 
 		const plaintext = await crypto.subtle.decrypt(
 			{ name: "AES-GCM", iv: ciphertext.slice(0, 12) },
@@ -92,5 +92,14 @@ export class Encryption {
 	}
 }
 
-export const encodeKey = (key) => btoa(String.fromCharCode(...key));
-export const decodeKey = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+function base64ToBytes(base64) {
+	const binString = atob(base64);
+	return Uint8Array.from(binString, (m) => m.charCodeAt(0));
+}
+
+function bytesToBase64(bytes) {
+	return btoa(String.fromCharCode(...bytes));
+}
+
+export const encodeKey = (key) => bytesToBase64(key);
+export const decodeKey = (str) => base64ToBytes(str);

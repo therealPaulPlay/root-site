@@ -292,6 +292,7 @@
 								productPublicKey: publicKeyResponse.publicKey,
 								devicePublicKey: encodeKey(keypair.publicKey),
 								devicePrivateKey: encodeKey(keypair.privateKey),
+								keyCreatedAt: Date.now(),
 								model: modelResponse.model
 							});
 
