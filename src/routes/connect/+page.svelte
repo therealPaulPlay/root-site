@@ -2,13 +2,18 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { getAllProducts } from "$lib/utils/pairedProductsStorage";
-	import { RelayComm } from "$lib/utils/relaycomm";
+	import { RelayComm, RELAY_REQUEST_TIMEOUT } from "$lib/utils/relaycomm";
+	import { error } from "@sveltejs/kit";
 	import { onMount } from "svelte";
-	import { RiAddLargeLine, RiArrowRightSLine, RiEdit2Line } from "svelte-remixicon";
+	import { RiAddLargeLine, RiArrowRightSLine, RiEdit2Line, RiErrorWarningLine } from "svelte-remixicon";
+	import { toast } from "svelte-sonner";
 
-	let products = [];
+	let products = $state([]);
 	let relayDomain = "relay.rootprivacy.com"; // TODO: Make customizable
 	let relayCommInstance;
+
+	let previewTimeoutOver = $state(false);
+	let previewTimeout;
 
 	onMount(async () => {
 		products = getAllProducts();
@@ -22,16 +27,25 @@
 				await relayCommInstance.connect();
 
 				products.forEach((p) => {
-					try {
-						relayCommInstance.send(p.id, "getPreview"); // Send to get preview image
-					} catch (error) {
-						console.error(`Failed to send message to relay server for device ${p.id}:`, error);
-					}
+					relayCommInstance.send(p.id, "getPreview").catch((error) => {
+						console.error(`Failed to send message for product ${p.id}:`, error);
+					});
 				});
 
-				relayCommInstance.on("getPreviewResult", (data) => {
-					console.log(data);
+				relayCommInstance.on("getPreviewResult", (msg) => {
+					if (!msg.payload.success) {
+						const error = `${msg.type} failed for product ${msg.productId}: ${msg.payload.error || "Unknown error"}`;
+						toast.error(error);
+						console.error(error);
+						return;
+					}
+					console.log(msg.payload);
 				});
+
+				previewTimeout = setTimeout(() => {
+					previewTimeoutOver = true;
+					previewTimeout = null;
+				}, RELAY_REQUEST_TIMEOUT);
 			} catch (error) {
 				console.error("Error connecting to relay and getting data from products:", error);
 			}
@@ -40,6 +54,7 @@
 		// Cleanup
 		return () => {
 			if (relayCommInstance) relayCommInstance.disconnect();
+			if (previewTimeout) clearTimeout(previewTimeout);
 		};
 	});
 </script>
@@ -60,7 +75,11 @@
 		<!-- preview image -->
 		<div class="aspect-16/9 w-full content-center bg-foreground text-center text-background md:w-1/3">
 			<!-- todo -->
-			<Spinner class="mx-auto size-8" />
+			{#if !previewTimeoutOver}
+				<Spinner class="mx-auto size-8" />
+			{:else}
+				<RiErrorWarningLine class="mx-auto size-8" />
+			{/if}
 		</div>
 		<div class="flex grow overflow-hidden">
 			<div class="flex grow flex-col overflow-hidden p-4">

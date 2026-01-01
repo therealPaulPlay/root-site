@@ -2,13 +2,14 @@ import { toast } from "svelte-sonner";
 import { Encryption, encodeKey, decodeKey } from "./encryption.js";
 import { getProduct, saveProduct } from "./pairedProductsStorage.js";
 
-const RESULT_SUFFIX = "Result";
+export const RELAY_REQUEST_TIMEOUT = 10_000;
 
 export class RelayComm {
 	#ws = null;
 	#encryptions = new Map();
 	#renewalPromises = new Map(); // productId -> Promise (for ongoing renewals)
 	#handlers = new Map();
+	#pendingRequestTimeouts = new Map(); // requestId -> timeout handle
 
 	constructor(relayDomain, deviceId) {
 		this.relayDomain = relayDomain;
@@ -67,7 +68,7 @@ export class RelayComm {
 		const product = getProduct(productId);
 		if (!product) throw new Error("Product not found");
 
-		// Check if key needs renewal (>5 minutes old)
+		// Check if key should be renewed (>5 minutes old)
 		const keyAge = Date.now() - (product.keyCreatedAt || 0);
 		if (keyAge < 5 * 60 * 1000) return;
 
@@ -99,40 +100,43 @@ export class RelayComm {
 			target: "product",
 			productId,
 			deviceId: this.deviceId,
-			encryptedPayload: encrypted
+			payload: encrypted
 		}));
 
 		return new Promise((resolve, reject) => {
 			const timeout = setTimeout(() => {
-				this.off("renewKeyResult", handler);
-				reject(new Error("Key renewal timeout"));
-			}, 10000);
+				this.off("renewKeyResult", onRenewHandler);
+				reject(new Error(`Key renewal for product ${productId} timed out`));
+			}, RELAY_REQUEST_TIMEOUT);
 
-			const handler = (payload) => {
+			const onRenewHandler = (msg) => {
 				clearTimeout(timeout);
-				this.off("renewKeyResult", handler);
-				payload.success ? resolve() : reject(new Error(payload.error || "Key renewal failed"));
+				this.off("renewKeyResult", onRenewHandler);
+				msg.payload.success ? resolve() : reject(new Error(`Key renewal for product ${productId} failed: ` + (msg.payload.error || "Unknown error")));
 			};
 
-			this.on("renewKeyResult", handler);
+			this.on("renewKeyResult", onRenewHandler);
 		});
 	}
 
 	async #handleMessage(msg) {
-		let payload;
-
-		// Try to parse as unencrypted JSON first (firmware sends encryption-related errors this way)
+		// Decrypt payload
 		try {
-			payload = JSON.parse(msg.encryptedPayload);
+			msg.payload = JSON.parse(msg.payload);
 		} catch {
-			// Not plain JSON - decrypt it
 			const encryption = await this.#getEncryption(msg.productId);
-			payload = JSON.parse(new TextDecoder().decode(await encryption.decrypt(msg.encryptedPayload)));
+			msg.payload = JSON.parse(new TextDecoder().decode(await encryption.decrypt(msg.payload)));
+		}
+
+		// Clear pending request timeout if exists
+		if (msg.requestId && this.#pendingRequestTimeouts.has(msg.requestId)) {
+			clearTimeout(this.#pendingRequestTimeouts.get(msg.requestId));
+			this.#pendingRequestTimeouts.delete(msg.requestId);
 		}
 
 		// Route to handlers
 		const handlers = this.#handlers.get(msg.type);
-		if (handlers) handlers.forEach((handler) => handler(payload));
+		if (handlers) handlers.forEach((handler) => handler(msg));
 	}
 
 	async send(productId, type, data = {}) {
@@ -144,13 +148,24 @@ export class RelayComm {
 		const encryption = await this.#getEncryption(productId);
 		const encrypted = await encryption.encrypt(JSON.stringify(data));
 
+		const requestId = crypto.randomUUID();
+		const timeout = setTimeout(() => {
+			this.#pendingRequestTimeouts.delete(requestId);
+			const errorMsg = `RelayComm request ${type} to product ${productId} timed out`;
+			console.error(errorMsg);
+			toast.error(errorMsg);
+		}, RELAY_REQUEST_TIMEOUT);
+
+		this.#pendingRequestTimeouts.set(requestId, timeout);
+
 		this.#ws.send(
 			JSON.stringify({
 				type,
 				target: "product",
 				productId,
 				deviceId: this.deviceId,
-				encryptedPayload: encrypted
+				requestId,
+				payload: encrypted
 			})
 		);
 	}
@@ -177,5 +192,9 @@ export class RelayComm {
 		this.#ws = null;
 		this.#encryptions.clear();
 		this.#renewalPromises.clear();
+
+		// Clear all pending request timeouts
+		this.#pendingRequestTimeouts.forEach(timeout => clearTimeout(timeout));
+		this.#pendingRequestTimeouts.clear();
 	}
 }

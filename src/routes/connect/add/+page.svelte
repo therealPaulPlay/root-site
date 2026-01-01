@@ -114,7 +114,7 @@
 		try {
 			currentlyConnectingWifi = true;
 
-			const encryptedPayload = await encryptPayload(currentProductId, {
+			const payload = await encryptPayload(currentProductId, {
 				ssid: pendingWifiNetwork.ssid,
 				password: wifiPasswordInput,
 				countryCode: wifiCountryCode
@@ -122,7 +122,7 @@
 
 			const response = await bluetoothInstance.writeAndRead("wifiConnect", {
 				deviceId: localStorage.getItem("deviceId"),
-				encryptedPayload
+				payload
 			});
 
 			if (response.success) {
@@ -447,11 +447,10 @@
 					onclick={async () => {
 						try {
 							currentlySettingRelay = true;
-							const payload = { relayDomain: relayDomainInput.trim() };
-							const encryptedPayload = await encryptPayload(currentProductId, payload);
+							const payload = await encryptPayload(currentProductId, { relayDomain: relayDomainInput.trim() });
 							const response = await bluetoothInstance.writeAndRead("relaySet", {
 								deviceId: localStorage.getItem("deviceId"),
-								encryptedPayload
+								payload
 							});
 							if (response.success) relayConfigured = true;
 						} catch (error) {
