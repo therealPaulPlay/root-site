@@ -133,7 +133,8 @@
 		@apply touch-none;
 	}
 
-	img {
+	img,
+	svg {
 		/* Prevent haptic touch previews */
 		-webkit-touch-callout: none;
 		-webkit-user-drag: none;
