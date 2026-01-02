@@ -29,7 +29,7 @@
 <div class="min-h-screen">
 	<section class="mt-30 w-full space-y-4 border-y p-6 lg:p-8">
 		<div>
-			<h1 class="font-display text-3xl font-medium tracking-wide uppercase">Settings</h1>
+			<h1 class="font-display text-3xl font-medium tracking-wide">Settings</h1>
 		</div>
 	</section>
 
