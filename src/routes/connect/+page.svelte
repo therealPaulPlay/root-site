@@ -5,14 +5,19 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { getAllProducts, saveProduct } from "$lib/utils/pairedProductsStorage";
 	import { RelayComm, RELAY_REQUEST_TIMEOUT } from "$lib/utils/relaycomm";
+	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 	import { error } from "@sveltejs/kit";
-	import { onMount } from "svelte";
-	import { RiAddLargeLine, RiArrowRightSLine, RiEdit2Line, RiErrorWarningLine } from "svelte-remixicon";
+	import { onDestroy, onMount } from "svelte";
+	import {
+		RiAddLargeLine,
+		RiArrowRightSLine,
+		RiEdit2Line,
+		RiErrorWarningLine,
+		RiSettings3Line
+	} from "svelte-remixicon";
 	import { toast } from "svelte-sonner";
-	import Settings from "$lib/components/Settings.svelte";
 
 	let products = $state([]);
-	let relayDomain = "relay.rootprivacy.com"; // TODO: Make customizable
 	let relayCommInstance;
 
 	let previewTimeoutOver = $state(false);
@@ -23,6 +28,7 @@
 	let renameValue = $state({});
 
 	onMount(async () => {
+		const relayDomain = localStorage.getItem("relayDomain") || DEFAULT_RELAY_DOMAIN;
 		products = getAllProducts();
 
 		// If the user has products, connect to relay
@@ -57,12 +63,11 @@
 				console.error("Error connecting to relay and getting data from products:", error);
 			}
 		}
+	});
 
-		// Cleanup
-		return () => {
-			if (relayCommInstance) relayCommInstance.disconnect();
-			if (previewTimeout) clearTimeout(previewTimeout);
-		};
+	onDestroy(() => {
+		if (relayCommInstance) relayCommInstance.disconnect();
+		if (previewTimeout) clearTimeout(previewTimeout);
 	});
 
 	function handleRename(product) {
@@ -93,8 +98,10 @@
 	<meta name="description" content="Connect and interface with your Root device." />
 </svelte:head>
 
-<div class="flex absolute top-0 right-0 text-xl">
-	<Settings />
+<div class="absolute top-0 right-0 flex text-xl">
+	<Button class="h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/settings">
+		<RiSettings3Line class="shape-crisp h-8! w-8!" />
+	</Button>
 	<Button class="h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/add">
 		<RiAddLargeLine class="shape-crisp h-8! w-8!" />
 	</Button>

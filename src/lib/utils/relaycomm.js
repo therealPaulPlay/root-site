@@ -10,6 +10,8 @@ export class RelayComm {
 	#renewalPromises = new Map(); // productId -> Promise (for ongoing renewals)
 	#handlers = new Map();
 	#pendingRequestTimeouts = new Map(); // requestId -> timeout handle
+	#muteConnectionErrors = false;
+	#reconnectTimeout;
 
 	constructor(relayDomain, deviceId) {
 		this.relayDomain = relayDomain;
@@ -24,10 +26,13 @@ export class RelayComm {
 
 		return new Promise((resolve, reject) => {
 			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?device-id=${this.deviceId}`);
-			this.#ws.onopen = () => resolve();
+			this.#ws.onopen = () => {
+				this.#muteConnectionErrors = false;
+				resolve();
+			}
 			this.#ws.onerror = (e) => {
-				toast.error("Websocket relay server error: " + e.msg);
-				console.error("WebSocket relay server error:", e);
+				if (!this.#muteConnectionErrors) toast.error("Websocket relay connection error.");
+				console.error("WebSocket relay connection error:", e);
 			}
 			this.#ws.onmessage = async (e) => {
 				try {
@@ -39,10 +44,11 @@ export class RelayComm {
 				}
 			};
 			this.#ws.onclose = () => {
-				toast.error("Relay connection closed, attempting reconnect.");
-				console.warn("Relay connection closed. Attempting to reconnect in 5s...");
+				if (!this.#muteConnectionErrors) toast.error("Relay connection closed, attempting reconnect.");
+				console.warn("Relay connection closed.");
+				this.#muteConnectionErrors = true;
 				this.#ws = null;
-				setTimeout(() => this.connect().catch((e) => { console.error("Reconnecting to the relay failed:", e) }), 5000)
+				this.#reconnectTimeout = setTimeout(() => this.connect().catch((e) => { console.error("Reconnecting to the relay failed – retrying in 5s:", e) }), 5000); // Attempt reconnect
 			}
 		});
 	}
@@ -151,7 +157,7 @@ export class RelayComm {
 		const requestId = crypto.randomUUID();
 		const timeout = setTimeout(() => {
 			this.#pendingRequestTimeouts.delete(requestId);
-			const errorMsg = `RelayComm request ${type} to product ${productId} timed out`;
+			const errorMsg = `Request ${type} to product ${productId} timed out`;
 			console.error(errorMsg);
 			toast.error(errorMsg);
 		}, RELAY_REQUEST_TIMEOUT);
@@ -188,6 +194,7 @@ export class RelayComm {
 	}
 
 	disconnect() {
+		this.#muteConnectionErrors = true; // Do not toast the close event
 		this.#ws?.close();
 		this.#ws = null;
 		this.#encryptions.clear();
@@ -196,5 +203,6 @@ export class RelayComm {
 		// Clear all pending request timeouts
 		this.#pendingRequestTimeouts.forEach(timeout => clearTimeout(timeout));
 		this.#pendingRequestTimeouts.clear();
+		clearTimeout(this.#reconnectTimeout);
 	}
 }

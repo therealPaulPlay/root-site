@@ -21,6 +21,7 @@
 	import QrCode from "svelte-qrcode";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { onMount } from "svelte";
+	import { DEFAULT_RELAY_DOMAIN } from "$lib/config.js";
 
 	let step = $state(1);
 	let stepAmount = $state(6);
@@ -49,8 +50,6 @@
 		"/images/connect/internet-image.jpg",
 		"/images/connect/settings-image.jpg"
 	];
-
-	const DEFAULT_RELAY_DOMAIN = "relay.rootprivacy.com";
 
 	// Instances
 	let bluetoothInstance = new Bluetooth();

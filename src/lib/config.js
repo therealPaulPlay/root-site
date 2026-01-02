@@ -1,0 +1,1 @@
+export const DEFAULT_RELAY_DOMAIN = "relay.rootprivacy.com";
