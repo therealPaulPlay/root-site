@@ -1,12 +1,15 @@
 <script>
-	import Button from "$lib/components/ui/button/button.svelte";
+	import Button, { buttonVariants } from "$lib/components/ui/button/button.svelte";
+	import Input from "$lib/components/ui/input/input.svelte";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
-	import { getAllProducts } from "$lib/utils/pairedProductsStorage";
+	import * as Dialog from "$lib/components/ui/dialog";
+	import { getAllProducts, saveProduct } from "$lib/utils/pairedProductsStorage";
 	import { RelayComm, RELAY_REQUEST_TIMEOUT } from "$lib/utils/relaycomm";
 	import { error } from "@sveltejs/kit";
 	import { onMount } from "svelte";
 	import { RiAddLargeLine, RiArrowRightSLine, RiEdit2Line, RiErrorWarningLine } from "svelte-remixicon";
 	import { toast } from "svelte-sonner";
+	import Settings from "$lib/components/Settings.svelte";
 
 	let products = $state([]);
 	let relayDomain = "relay.rootprivacy.com"; // TODO: Make customizable
@@ -14,6 +17,10 @@
 
 	let previewTimeoutOver = $state(false);
 	let previewTimeout;
+	let previewImages = $state({});
+
+	let renameDialogOpen = $state({});
+	let renameValue = $state({});
 
 	onMount(async () => {
 		products = getAllProducts();
@@ -39,7 +46,7 @@
 						console.error(error);
 						return;
 					}
-					console.log(msg.payload);
+					previewImages[msg.productId] = msg.payload.image;
 				});
 
 				previewTimeout = setTimeout(() => {
@@ -57,6 +64,28 @@
 			if (previewTimeout) clearTimeout(previewTimeout);
 		};
 	});
+
+	function handleRename(product) {
+		const newName = renameValue[product.id]?.trim();
+		if (!newName) {
+			toast.error("Product name cannot be empty");
+			return;
+		}
+
+		try {
+			const updatedProduct = { ...product, name: newName };
+			saveProduct(updatedProduct);
+
+			// Update local products array
+			const index = products.findIndex((p) => p.id === product.id);
+			if (index >= 0) products[index] = updatedProduct;
+
+			renameDialogOpen[product.id] = false;
+		} catch (error) {
+			toast.error(`Failed to rename product: ${error.message}`);
+			console.error("Error renaming product:", error);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -64,28 +93,72 @@
 	<meta name="description" content="Connect and interface with your Root device." />
 </svelte:head>
 
-<div class="pointer-events-none absolute top-0 right-0 text-xl">
-	<Button class="pointer-events-auto h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/add">
+<div class="flex absolute top-0 right-0 text-xl">
+	<Settings />
+	<Button class="h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/add">
 		<RiAddLargeLine class="shape-crisp h-8! w-8!" />
 	</Button>
 </div>
 
 {#snippet productItem(product)}
+	{@const dialogOpen = renameDialogOpen[product.id] ?? false}
 	<div class="relative flex h-fit min-h-32 w-full border-y max-md:flex-wrap">
 		<!-- preview image -->
-		<div class="aspect-16/9 w-full content-center bg-foreground text-center text-background md:w-1/3">
+		<div
+			class="aspect-16/9 w-full content-center bg-foreground text-center text-background max-md:border-b md:w-1/3 md:border-r"
+		>
 			<!-- todo -->
-			{#if !previewTimeoutOver}
-				<Spinner class="mx-auto size-8" />
+			{#if !previewImages[product.id]}
+				{#if !previewTimeoutOver}
+					<Spinner class="mx-auto size-8" />
+				{:else}
+					<RiErrorWarningLine class="mx-auto size-8" />
+				{/if}
 			{:else}
-				<RiErrorWarningLine class="mx-auto size-8" />
+				<img
+					alt="preview"
+					class="h-full w-full object-cover"
+					src={"data:image/jpg;base64," + previewImages[product.id]}
+				/>
 			{/if}
 		</div>
 		<div class="flex grow overflow-hidden">
 			<div class="flex grow flex-col overflow-hidden p-4">
 				<span class="inline-flex items-center gap-1 overflow-hidden text-nowrap"
 					><h3 class="truncate font-display text-xl font-medium tracking-wide">{product.name}</h3>
-					<Button variant="ghost" class="h-fit! px-2"><RiEdit2Line /></Button>
+					<Dialog.Root
+						open={dialogOpen}
+						onOpenChange={(open) => {
+							renameDialogOpen[product.id] = open;
+						}}
+					>
+						<Dialog.Trigger
+							class="{buttonVariants({ variant: 'ghost' })} h-fit! px-2!"
+							onclick={() => {
+								renameValue[product.id] = product.name;
+							}}
+						>
+							<RiEdit2Line />
+						</Dialog.Trigger>
+						<Dialog.Content>
+							<Dialog.Header>
+								<Dialog.Title>Rename "{product.name}"</Dialog.Title>
+							</Dialog.Header>
+							<div class="flex flex-col gap-4">
+								<Input
+									type="text"
+									bind:value={renameValue[product.id]}
+									placeholder="New name"
+									onkeydown={(e) => {
+										if (e.key === "Enter") handleRename(product);
+									}}
+								/>
+								<div class="flex justify-end gap-2">
+									<Button onclick={() => handleRename(product)}>Set name</Button>
+								</div>
+							</div>
+						</Dialog.Content>
+					</Dialog.Root>
 				</span>
 				<p class="text-muted-forerground mb-4 text-sm uppercase">{product.model}</p>
 				<p class="mt-auto overflow-hidden text-xs text-nowrap text-neutral-300 hover:truncate">

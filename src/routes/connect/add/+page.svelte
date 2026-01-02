@@ -482,7 +482,12 @@
 					<AlertDialog.Header>
 						<AlertDialog.Title>Abort?</AlertDialog.Title>
 						<AlertDialog.Description>
-							All progress will be lost and you will return to the connect panel.
+							{#if successfulPair}
+								WARNING: Aborting the setup with an already paired device will NOT reset the full pairing progress.
+								Finishing the WiFi and Relay setup is highly recommended.
+							{:else}
+								All progress will be lost and you will return to the connect panel.
+							{/if}
 						</AlertDialog.Description>
 					</AlertDialog.Header>
 					<AlertDialog.Footer>

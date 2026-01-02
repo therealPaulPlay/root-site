@@ -30,11 +30,8 @@ export function saveProduct(product) {
 	const products = getAllProducts();
 	const index = products.findIndex((p) => p.id === product.id);
 
-	if (index >= 0) {
-		products[index] = product;
-	} else {
-		products.push(product);
-	}
+	if (index >= 0) products[index] = product;
+	else products.push(product);
 
 	try {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
