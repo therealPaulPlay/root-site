@@ -5,6 +5,7 @@
 
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { Capacitor } from "@capacitor/core";
+import { toast } from "svelte-sonner";
 
 const SERVICE_UUID = "a07498ca-ad5b-474e-940d-16f1fbe7e8cd";
 const CHAR_UUIDS = {
@@ -22,13 +23,15 @@ const CHAR_UUIDS = {
 
 let initialized = false;
 
+export function bluetoothSupported() {
+	return Capacitor.getPlatform() !== "web" || navigator.bluetooth;
+}
+
 async function ensureInitialized() {
 	if (initialized) return;
 
 	// Check for Bluetooth support on web
-	if (Capacitor.getPlatform() === "web" && !navigator.bluetooth) {
-		throw new Error("Bluetooth not supported in this environment!");
-	}
+	if (!bluetoothSupported) throw new Error("Bluetooth is not supported in this environment!");
 
 	await BleClient.initialize({ androidNeverForLocation: true });
 	initialized = true;
@@ -60,6 +63,7 @@ export class Bluetooth {
 		if (!this.#deviceId) throw new Error("No device selected. Call scan() first!");
 
 		await BleClient.connect(this.#deviceId, (deviceId) => {
+			toast.info("Bluetooth device disconnected.");
 			console.log(`Bluetooth device ${deviceId} disconnected!`);
 		});
 	}

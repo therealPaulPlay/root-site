@@ -35,7 +35,7 @@
 	});
 
 	let stepTitle = [
-		"Plug your ROOT product in.",
+		"Plug in the product.",
 		"Connect via Bluetooth.",
 		"Scan this QR code.",
 		"Pair your device.",
@@ -161,12 +161,12 @@
 		</div>
 	{/if}
 
-	<div class="flex grow flex-col space-y-8 p-6 lg:p-8">
+	<div class="flex grow flex-col space-y-4 p-6 lg:p-8">
 		<h3 class="font-display text-3xl font-medium tracking-wide">{step}. {stepTitle[step - 1] || "Default."}</h3>
 
 		{#if step == 1}
 			<p class="max-w-3xl">
-				Use the USB charger to plug your ROOT product into a wall outlet. Wait until a startup sound plays. Rarely, this
+				Use the USB charger to plug your ROOT camera into a wall outlet. Wait until a startup sound plays. Rarely, this
 				can take up to 5 minutes.
 			</p>
 		{/if}
@@ -176,7 +176,7 @@
 				Ensure Bluetooth is enabled on your device. Then, click "OPEN BLUETOOTH" and pick the new ROOT product.
 			</p>
 			<Button
-				class="w-fit"
+				class="mt-4 w-fit"
 				disabled={currentlyConnectingViaBle || connectedBleDevice}
 				onclick={async () => {
 					// Scan for and select a device (opens system prompt)
@@ -222,9 +222,11 @@
 		{/if}
 
 		{#if step == 3}
-			<p class="max-w-3xl">Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE".</p>
+			<p class="max-w-3xl">
+				Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE" and hold the product still.
+			</p>
 			<Button
-				class="w-fit"
+				class="mt-4 w-fit"
 				disabled={currentlyScanning || successfulScan}
 				onclick={async () => {
 					try {
@@ -250,8 +252,8 @@
 
 		{#if step == 4}
 			<p class="max-w-3xl">Please give this device a name and click "PAIR DEVICE".</p>
-			<div class="space-y-4">
-				<div class="space-y-2">
+			<div class="mt-4 space-y-8">
+				<div class="space-y-1">
 					<Label for="device-name">Min. 3 characters</Label>
 					<Input type="text" placeholder="My device" class="max-w-xs" id="device-name" bind:value={deviceNameInput} />
 				</div>
@@ -335,7 +337,7 @@
 			{:else}
 				<p class="max-w-3xl">The product is connected to Wifi. The selected network can be changed below if needed.</p>
 			{/if}
-			<div class="space-y-4">
+			<div class="mt-4 space-y-8">
 				<div class="relative h-32 w-full max-w-xl overflow-hidden border">
 					<div class="of-top of-bottom no-scrollbar h-full w-full divide-y overflow-y-auto">
 						{#if wifiNetworks.length}
@@ -378,7 +380,7 @@
 						{/if}
 					</div>
 				</div>
-				<Button variant="outline" onclick={getWifiNetworks} class="w-fit" disabled={currentlyRefreshingWifi}>
+				<Button class="w-fit" variant="outline" onclick={getWifiNetworks} disabled={currentlyRefreshingWifi}>
 					{#if currentlyRefreshingWifi}
 						<Spinner />
 					{/if}
@@ -396,13 +398,19 @@
 					</AlertDialog.Description>
 				</AlertDialog.Header>
 				<div class="mb-4 space-y-4">
-					<Input type="text" bind:value={wifiPasswordInput} placeholder="wifi-password-123" />
-					<NativeSelect.Root bind:value={wifiCountryCode}>
-						<NativeSelect.Option value="">Select country</NativeSelect.Option>
-						{#each Object.entries(countryCodes) as [code, name]}
-							<NativeSelect.Option value={code}>{name}</NativeSelect.Option>
-						{/each}
-					</NativeSelect.Root>
+					<div class="space-y-1">
+						<Label for="password-input" class="text-sm font-medium">Password</Label>
+						<Input id="password-input" type="text" bind:value={wifiPasswordInput} placeholder="wifi-password-123" />
+					</div>
+					<div class="space-y-1">
+						<Label for="country-select" class="text-sm font-medium">Country</Label>
+						<NativeSelect.Root id="country-select" bind:value={wifiCountryCode}>
+							<NativeSelect.Option value="">Select country</NativeSelect.Option>
+							{#each Object.entries(countryCodes) as [code, name]}
+								<NativeSelect.Option value={code}>{name}</NativeSelect.Option>
+							{/each}
+						</NativeSelect.Root>
+					</div>
 				</div>
 				<AlertDialog.Footer>
 					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
@@ -428,14 +436,14 @@
 				<p class="max-w-3xl">The relay domain is configured. It can be edited below if needed.</p>
 			{/if}
 
-			<div class="space-y-4">
+			<div class="mt-4 space-y-8">
 				{#if relayDomainInput !== DEFAULT_RELAY_DOMAIN}
-					<div class="flex max-w-lg flex-col justify-center gap-2 border p-4 text-sm">
-						<span class="inline-flex items-center gap-2"><RiAlertLine class="h-4! w-4!" /> Warning:</span>
-						<p>Potentially less private, use at your own risk!</p>
+					<div class="flex max-w-lg gap-2 border p-4 text-sm">
+						<RiAlertLine class="h-4! w-4!" />
+						<p>Potentially less private!</p>
 					</div>
 				{/if}
-				<div class="space-y-2">
+				<div class="space-y-1">
 					<Label for="relay-domain">Domain</Label>
 					<Input type="text" placeholder="relay.com" class="max-w-xs" id="relay-domain" bind:value={relayDomainInput} />
 				</div>

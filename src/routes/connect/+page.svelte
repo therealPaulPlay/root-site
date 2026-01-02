@@ -9,13 +9,14 @@
 	import { error } from "@sveltejs/kit";
 	import { onDestroy, onMount } from "svelte";
 	import {
-		RiAddLargeLine,
 		RiArrowRightSLine,
 		RiEdit2Line,
 		RiErrorWarningLine,
-		RiSettings3Line
+		RiSettings3Line,
+		RiVideoAddLine
 	} from "svelte-remixicon";
 	import { toast } from "svelte-sonner";
+	import Label from "$lib/components/ui/label/label.svelte";
 
 	let products = $state([]);
 	let relayCommInstance;
@@ -100,10 +101,10 @@
 
 <div class="absolute top-0 right-0 flex text-xl">
 	<Button class="h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/settings">
-		<RiSettings3Line class="shape-crisp h-8! w-8!" />
+		<RiSettings3Line class="h-8! w-8!" />
 	</Button>
 	<Button class="h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/add">
-		<RiAddLargeLine class="shape-crisp h-8! w-8!" />
+		<RiVideoAddLine class="h-8! w-8!" />
 	</Button>
 </div>
 
@@ -152,14 +153,18 @@
 								<Dialog.Title>Rename "{product.name}"</Dialog.Title>
 							</Dialog.Header>
 							<div class="flex flex-col gap-4">
-								<Input
-									type="text"
-									bind:value={renameValue[product.id]}
-									placeholder="New name"
-									onkeydown={(e) => {
-										if (e.key === "Enter") handleRename(product);
-									}}
-								/>
+								<div class="space-y-1">
+									<Label for="product-name" class="text-sm font-medium">Name</Label>
+									<Input
+										type="text"
+										id="product-name"
+										bind:value={renameValue[product.id]}
+										placeholder="New name"
+										onkeydown={(e) => {
+											if (e.key === "Enter") handleRename(product);
+										}}
+									/>
+								</div>
 								<div class="flex justify-end gap-2">
 									<Button onclick={() => handleRename(product)}>Set name</Button>
 								</div>
@@ -173,7 +178,9 @@
 				</p>
 			</div>
 			<div class="h-full border-l">
-				<Button variant="ghost" class="h-full"><RiArrowRightSLine class="h-8! w-8!" /></Button>
+				<Button variant="ghost" class="h-full" href={"/connect/product/" + product.id}
+					><RiArrowRightSLine class="h-8! w-8!" /></Button
+				>
 			</div>
 		</div>
 	</div>
@@ -185,6 +192,6 @@
 			{@render productItem(product)}
 		{/each}
 	{:else}
-		<p class="my-auto truncate text-center">No devices connected.</p>
+		<p class="my-auto truncate text-center">No cameras connected.</p>
 	{/if}
 </div>

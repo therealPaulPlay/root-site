@@ -5,6 +5,7 @@
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { RiArrowLeftLine } from "svelte-remixicon";
+	import Label from "$lib/components/ui/label/label.svelte";
 
 	let relayDomain = $state("");
 	let relayDomainInput = $state("");
@@ -26,18 +27,20 @@
 </div>
 
 <div class="min-h-screen">
-	<section class="mt-30 w-full space-y-4 border-y p-6 xl:p-8">
+	<section class="mt-30 w-full space-y-4 border-y p-6 lg:p-8">
 		<div>
 			<h1 class="font-display text-3xl font-medium tracking-wide uppercase">Settings</h1>
 		</div>
 	</section>
 
-	<section class="mt-10 w-full space-y-8 border-y p-6 xl:p-8">
-		<div class="flex max-w-lg flex-col gap-2">
-			<label for="relay-domain" class="text-sm font-medium">Relay domain</label>
-			<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={DEFAULT_RELAY_DOMAIN} />
+	<section class="mt-10 w-full space-y-8 border-y p-6 lg:p-8">
+		<div class="flex max-w-lg flex-col gap-4">
+			<div class="space-y-1">
+				<Label for="relay-domain" class="text-sm font-medium">Relay domain</Label>
+				<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={DEFAULT_RELAY_DOMAIN} />
+			</div>
 			<p class="text-xs text-muted-foreground">
-				The relay server domain that the connect panel will use. Connected devices must be configured to use the same
+				The relay server domain that the connect panel will use. Connected products must be configured to use the same
 				domain.
 			</p>
 		</div>

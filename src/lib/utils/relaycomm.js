@@ -199,6 +199,7 @@ export class RelayComm {
 		this.#ws = null;
 		this.#encryptions.clear();
 		this.#renewalPromises.clear();
+		this.#handlers.clear();
 
 		// Clear all pending request timeouts
 		this.#pendingRequestTimeouts.forEach(timeout => clearTimeout(timeout));
