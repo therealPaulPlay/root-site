@@ -1,7 +1,7 @@
 <script>
 	import { page } from "$app/state";
 	import { slide } from "svelte/transition";
-	import Button from "./ui/button/button.svelte";
+	import Button, { buttonVariants } from "./ui/button/button.svelte";
 	import { RiCircleFill, RiCloseLargeLine, RiCornerDownRightLine, RiMenuLine } from "svelte-remixicon";
 	import { afterNavigate } from "$app/navigation";
 	import { handlePointerMove, resetPointerMove } from "$lib/utils/trackPointer";
@@ -82,15 +82,14 @@
 				{#if page.url.pathname == entry.href && entry.anchors?.length}
 					<div transition:slide>
 						{#each entry.anchors as subEntry}
-							<Button
+							<a
 								href={entry.href + subEntry.anchor}
-								variant="link"
-								class="w-full bg-accent pl-1"
+								class={buttonVariants({ variant: "link", class: "w-full bg-accent pl-1" })}
 								onclick={() => {
 									showMobileNavbar = false;
 								}}
 							>
-								<RiCornerDownRightLine />{subEntry.name}</Button
+								<RiCornerDownRightLine />{subEntry.name}</a
 							>
 						{/each}
 					</div>
