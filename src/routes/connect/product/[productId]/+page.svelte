@@ -100,9 +100,9 @@
 	// Events handlers
 	function loadEvents() {
 		eventsLoading = true;
-		relayCommInstance.send(productId, "getEvents").catch((err) => {
-			toast.error("Failed to load events");
-			console.error(err);
+		relayCommInstance.send(productId, "getEvents").catch((error) => {
+			toast.error("Failed to load events: " + error.message);
+			console.error(error);
 		});
 	}
 
@@ -131,9 +131,9 @@
 	function viewRecording(event) {
 		selectedEvent = event;
 		viewRecordingDialog = true;
-		relayCommInstance.send(productId, "getRecording", { id: event.id }).catch((err) => {
-			toast.error("Failed to load recording");
-			console.error(err);
+		relayCommInstance.send(productId, "getRecording", { id: event.id }).catch((error) => {
+			toast.error("Failed to load recording: " + error.message);
+			console.error(error);
 		});
 	}
 
@@ -160,17 +160,17 @@
 	// Streaming handlers
 	function startStream() {
 		streamLoading = true;
-		relayCommInstance.send(productId, "startStream").catch((err) => {
-			toast.error("Failed to start stream");
-			console.error(err);
+		relayCommInstance.send(productId, "startStream").catch((error) => {
+			toast.error("Failed to start stream: " + error.message);
+			console.error(error);
 			streamLoading = false;
 		});
 	}
 
 	function stopStream() {
-		relayCommInstance.send(productId, "stopStream").catch((err) => {
-			toast.error("Failed to stop stream");
-			console.error(err);
+		relayCommInstance.send(productId, "stopStream").catch((error) => {
+			toast.error("Failed to stop stream: " + error.message);
+			console.error(error);
 		});
 	}
 
@@ -195,9 +195,9 @@
 	function toggleMicrophone() {
 		controlsLoading.mic = true;
 		const newValue = !micEnabled;
-		relayCommInstance.send(productId, "setMicrophone", { enabled: newValue }).catch((err) => {
-			toast.error("Failed to toggle microphone");
-			console.error(err);
+		relayCommInstance.send(productId, "setMicrophone", { enabled: newValue }).catch((error) => {
+			toast.error("Failed to toggle microphone: " + error.message);
+			console.error(error);
 			controlsLoading.mic = false;
 		});
 	}
@@ -214,9 +214,9 @@
 	function toggleRecordingSound() {
 		controlsLoading.sound = true;
 		const newValue = !recordingSoundEnabled;
-		relayCommInstance.send(productId, "setRecordingSound", { enabled: newValue }).catch((err) => {
-			toast.error("Failed to toggle recording sound");
-			console.error(err);
+		relayCommInstance.send(productId, "setRecordingSound", { enabled: newValue }).catch((error) => {
+			toast.error("Failed to toggle recording sound: " + error.message);
+			console.error(error);
 			controlsLoading.sound = false;
 		});
 	}
@@ -232,9 +232,9 @@
 
 	function restartDevice() {
 		controlsLoading.restart = true;
-		relayCommInstance.send(productId, "restart").catch((err) => {
-			toast.error("Failed to restart device");
-			console.error(err);
+		relayCommInstance.send(productId, "restart").catch((error) => {
+			toast.error("Failed to restart device: " + error.message);
+			console.error(error);
 			controlsLoading.restart = false;
 		});
 	}
@@ -250,9 +250,9 @@
 
 	function resetDevice() {
 		controlsLoading.reset = true;
-		relayCommInstance.send(productId, "reset").catch((err) => {
-			toast.error("Failed to reset device");
-			console.error(err);
+		relayCommInstance.send(productId, "reset").catch((error) => {
+			toast.error("Failed to reset device: " + error.message);
+			console.error(error);
 			controlsLoading.reset = false;
 		});
 	}
@@ -272,9 +272,9 @@
 	// Health handlers
 	function loadHealth() {
 		healthLoading = true;
-		relayCommInstance.send(productId, "getHealth").catch((err) => {
-			toast.error("Failed to load health data");
-			console.error(err);
+		relayCommInstance.send(productId, "getHealth").catch((error) => {
+			toast.error("Failed to load health data: " + error.message);
+			console.error(error);
 			healthLoading = false;
 		});
 	}
@@ -305,9 +305,9 @@
 
 	function startUpdate() {
 		controlsLoading.update = true;
-		relayCommInstance.send(productId, "startUpdate").catch((err) => {
-			toast.error("Failed to start update");
-			console.error(err);
+		relayCommInstance.send(productId, "startUpdate").catch((error) => {
+			toast.error("Failed to start update: " + error.message);
+			console.error(error);
 			controlsLoading.update = false;
 		});
 	}
