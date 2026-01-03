@@ -374,7 +374,7 @@
 				</div>
 				<div class="of-top of-bottom no-scrollbar max-h-[50svh] w-full divide-y overflow-y-auto border">
 					{#if events.length === 0}
-						<div class="p-8 text-center text-muted-foreground">No events recorded yet.</div>
+						<div class="p-4 text-center text-muted-foreground">No events recorded yet.</div>
 					{:else}
 						{#each events as event}
 							<div class="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50">
@@ -411,7 +411,7 @@
 					<div class="flex items-center justify-between rounded-lg border p-4">
 						<div>
 							<Label class="text-base">Microphone</Label>
-							<p class="text-sm text-muted-foreground">Record audio with video.</p>
+							<p class="text-sm text-muted-foreground">Record audio together with video.</p>
 						</div>
 						<Button onclick={toggleMicrophone} variant="outline" disabled={controlsLoading.mic}>
 							{#if controlsLoading.mic}
@@ -424,7 +424,7 @@
 					<div class="flex items-center justify-between rounded-lg border p-4">
 						<div>
 							<Label class="text-base">Recording sound</Label>
-							<p class="text-sm text-muted-foreground">Play sound when recording starts.</p>
+							<p class="text-sm text-muted-foreground">Play sound when recording or streaming.</p>
 						</div>
 						<Button onclick={toggleRecordingSound} variant="outline" disabled={controlsLoading.sound}>
 							{#if controlsLoading.sound}
