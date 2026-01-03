@@ -1,7 +1,7 @@
 <script>
 	import { page } from "$app/state";
 	import { onMount, onDestroy, tick } from "svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
+	import Button, { buttonVariants } from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
@@ -435,15 +435,16 @@
 						</Button>
 					</div>
 					<AlertDialog.Root>
-						<AlertDialog.Trigger class="w-full">
-							<Button variant="outline" class="w-full gap-2" disabled={controlsLoading.restart}>
-								{#if controlsLoading.restart}
-									<Spinner class="size-4" />
-								{:else}
-									<RiRestartLine class="size-4" />
-								{/if}
-								Restart
-							</Button>
+						<AlertDialog.Trigger
+							class="{buttonVariants({ variant: 'outline' })} w-full gap-2"
+							disabled={controlsLoading.restart}
+						>
+							{#if controlsLoading.restart}
+								<Spinner class="size-4" />
+							{:else}
+								<RiRestartLine class="size-4" />
+							{/if}
+							Restart
 						</AlertDialog.Trigger>
 						<AlertDialog.Content>
 							<AlertDialog.Header>

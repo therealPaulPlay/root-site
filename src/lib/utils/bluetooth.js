@@ -45,7 +45,7 @@ export class Bluetooth {
 		await ensureInitialized();
 
 		const device = await BleClient.requestDevice({
-			// namePrefix: 'ROOT-',
+			namePrefix: 'ROOT',
 			optionalServices: [SERVICE_UUID]
 		});
 

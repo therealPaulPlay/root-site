@@ -131,7 +131,7 @@
 			{/if}
 		</div>
 		<div class="flex grow overflow-hidden">
-			<div class="flex grow flex-col overflow-hidden p-4">
+			<div class="flex grow flex-col overflow-hidden p-4" class:opacity-50={!previewImages[product.id]}>
 				<span class="inline-flex items-center gap-1 overflow-hidden text-nowrap"
 					><h3 class="truncate font-display text-xl font-medium tracking-wide">{product.name}</h3>
 					<Dialog.Root
@@ -178,8 +178,10 @@
 				</p>
 			</div>
 			<div class="h-full border-l">
-				<Button variant="ghost" class="h-full" href={"/connect/product/" + product.id}
-					><RiArrowRightSLine class="h-8! w-8!" /></Button
+				<Button
+					variant="ghost"
+					class="h-full {!previewImages[product.id] ? 'opacity-50' : ''}"
+					href={"/connect/product/" + product.id}><RiArrowRightSLine class="h-8! w-8!" /></Button
 				>
 			</div>
 		</div>
