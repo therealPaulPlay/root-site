@@ -12,6 +12,7 @@ export class RelayComm {
 	#pendingRequestTimeouts = new Map(); // requestId -> timeout handle
 	#muteConnectionErrors = false;
 	#reconnectTimeout;
+	#intentionalDisconnect = false;
 
 	constructor(relayDomain, deviceId) {
 		this.relayDomain = relayDomain;
@@ -24,10 +25,13 @@ export class RelayComm {
 		// Clean up any existing connection
 		if (this.#ws) this.disconnect();
 
+		this.#intentionalDisconnect = false;
+
 		return new Promise((resolve, reject) => {
 			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?device-id=${this.deviceId}`);
 			this.#ws.onopen = () => {
 				this.#muteConnectionErrors = false;
+				console.info("Relay connection opened.");
 				resolve();
 			}
 			this.#ws.onerror = (e) => {
@@ -39,16 +43,19 @@ export class RelayComm {
 					const msg = JSON.parse(e.data);
 					await this.#handleMessage(msg);
 				} catch (err) {
-					if (err.name === "OperationError") return; // Ignore decryption errors (common on hot reload with stale messages)
 					console.error("Failed to handle WebSocket message:", err);
 				}
 			};
 			this.#ws.onclose = () => {
-				if (!this.#muteConnectionErrors) toast.error("Relay connection closed, attempting reconnect.");
 				console.warn("Relay connection closed.");
-				this.#muteConnectionErrors = true;
-				this.#ws = null;
-				this.#reconnectTimeout = setTimeout(() => this.connect().catch((e) => { console.error("Reconnecting to the relay failed – retrying in 5s:", e) }), 5000); // Attempt reconnect
+
+				// Only attempt reconnect if this was not an intentional disconnect
+				if (!this.#intentionalDisconnect) {
+					if (!this.#muteConnectionErrors) toast.error("Relay connection closed, attempting reconnect.");
+					this.#muteConnectionErrors = true;
+					this.#ws = null; // To prevent .disconnect() attempt on .connect() - not needed, since we are already disconnected
+					this.#reconnectTimeout = setTimeout(() => this.connect().catch((e) => { console.error("Reconnecting to the relay failed – retrying in 5s:", e) }), 5000);
+				}
 			}
 		});
 	}
@@ -194,7 +201,10 @@ export class RelayComm {
 	}
 
 	disconnect() {
-		this.#muteConnectionErrors = true; // Do not toast the close event
+		this.#intentionalDisconnect = true;
+		this.#muteConnectionErrors = true;
+		clearTimeout(this.#reconnectTimeout);
+
 		this.#ws?.close();
 		this.#ws = null;
 		this.#encryptions.clear();
@@ -204,6 +214,5 @@ export class RelayComm {
 		// Clear all pending request timeouts
 		this.#pendingRequestTimeouts.forEach(timeout => clearTimeout(timeout));
 		this.#pendingRequestTimeouts.clear();
-		clearTimeout(this.#reconnectTimeout);
 	}
 }

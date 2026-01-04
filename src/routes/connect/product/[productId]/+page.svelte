@@ -28,7 +28,8 @@
 	let product = $state(null);
 	let relayCommInstance;
 	let isStreaming = $state(false);
-	let streamLoading = $state(false);
+	let streamLoading = $state(true);
+	let heartbeatInterval;
 
 	// Events
 	let events = $state([]);
@@ -66,6 +67,9 @@
 		if (!deviceId) return toast.error("No device ID set!");
 
 		try {
+			// Set up MediaSource early so it's ready when chunks arrive
+			setupMediaSource();
+
 			relayCommInstance = new RelayComm(relayDomain, deviceId);
 			await relayCommInstance.connect();
 
@@ -80,12 +84,15 @@
 			relayCommInstance.on("restartResult", handleRestartResult);
 			relayCommInstance.on("resetResult", handleResetResult);
 			relayCommInstance.on("startStreamResult", handleStartStreamResult);
-			relayCommInstance.on("stopStreamResult", handleStopStreamResult);
+			relayCommInstance.on("continueStreamResult", (msg) => {
+				if (!msg.payload.success) toast.error(msg.payload.error || "Stream heartbeat failed");
+			});
 			relayCommInstance.on("streamVideoChunkResult", handleStreamVideoChunk);
 
-			// Load initial data
+			// Load initial data and start stream
 			loadEvents();
 			loadHealth();
+			startStream();
 		} catch (error) {
 			toast.error("Failed to connect to relay: " + error.message);
 			console.error("Failed to connect to relay:", error);
@@ -93,7 +100,12 @@
 	});
 
 	onDestroy(() => {
-		if (isStreaming) stopStream();
+		if (heartbeatInterval) clearInterval(heartbeatInterval);
+		if (mediaSource) {
+			if (videoElement) videoElement.src = "";
+			mediaSource = null;
+			sourceBuffer = null;
+		}
 		if (relayCommInstance) relayCommInstance.disconnect();
 	});
 
@@ -158,8 +170,24 @@
 	}
 
 	// Streaming handlers
+	function setupMediaSource() {
+		mediaSource = new MediaSource();
+		videoElement.src = URL.createObjectURL(mediaSource);
+
+		mediaSource.addEventListener("sourceopen", () => {
+			sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001f"');
+			sourceBuffer.mode = "sequence";
+		});
+
+		videoElement.addEventListener("error", () => {
+			if (videoElement?.error) {
+				console.error("Video playback error:", videoElement.error);
+				streamLoading = false;
+			}
+		});
+	}
+
 	function startStream() {
-		streamLoading = true;
 		relayCommInstance.send(productId, "startStream").catch((error) => {
 			toast.error("Failed to start stream: " + error.message);
 			console.error(error);
@@ -167,28 +195,42 @@
 		});
 	}
 
-	function stopStream() {
-		relayCommInstance.send(productId, "stopStream").catch((error) => {
-			toast.error("Failed to stop stream: " + error.message);
-			console.error(error);
+	function sendHeartbeat() {
+		relayCommInstance.send(productId, "continueStream").catch((error) => {
+			console.error("Failed to send heartbeat:", error);
 		});
 	}
 
 	function handleStartStreamResult(msg) {
-		streamLoading = false;
-		if (!msg.payload.success) return toast.error(msg.payload.error || "Failed to start stream");
-		isStreaming = true;
-	}
+		if (!msg.payload.success) {
+			streamLoading = false;
+			return toast.error(msg.payload.error || "Failed to start stream");
+		}
 
-	function handleStopStreamResult(msg) {
-		if (!msg.payload.success) return toast.error(msg.payload.error || "Failed to stop stream");
-		isStreaming = false;
+		isStreaming = true;
+		heartbeatInterval = setInterval(sendHeartbeat, 2000);
 	}
 
 	function handleStreamVideoChunk(msg) {
-		console.log(msg);
 		if (!msg.payload.success) return;
-		// TODO: Handle stream chunks and display them in <video>
+
+		// Wait for MediaSource to be ready
+		if (mediaSource.readyState !== "open" || !sourceBuffer) return;
+
+		if (videoElement?.error) return; // Stop processing if video has an error
+		if (streamLoading) streamLoading = false; // Hide loading spinner on first chunk
+
+		const bytes = atob(msg.payload.chunk);
+		const buffer = new Uint8Array(bytes.length);
+		for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
+
+		if (!sourceBuffer.updating) {
+			try {
+				sourceBuffer.appendBuffer(buffer);
+			} catch (err) {
+				console.error("Failed to append buffer:", err);
+			}
+		}
 	}
 
 	// Controls handlers
@@ -331,26 +373,12 @@
 
 <div class="flex min-h-svh w-full flex-col divide-y pt-20">
 	<div class="relative aspect-16/9 w-full border-t bg-black">
-		{#if !isStreaming}
-			<div class="absolute inset-0 flex items-center justify-center">
-				<Button onclick={startStream} disabled={streamLoading} size="lg" class="gap-2">
-					{#if streamLoading}
-						<Spinner class="size-5" />
-					{:else}
-						<RiPlayCircleLine class="size-6" />
-					{/if}
-					Start live stream
-				</Button>
-			</div>
-		{:else}
-			<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted></video>
-			<div class="absolute right-4 bottom-4">
-				<Button onclick={stopStream} variant="destructive" size="lg" class="gap-2">
-					<RiStopCircleLine class="size-6" />
-					Stop stream
-				</Button>
+		{#if streamLoading}
+			<div class="absolute inset-0 flex items-center justify-center text-background">
+				<Spinner class="size-8" />
 			</div>
 		{/if}
+		<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted></video>
 	</div>
 	<div class="w-full basis-full">
 		<Tabs.Root value="events" onValueChange={(v) => (activeTab = v)}>
@@ -461,15 +489,16 @@
 					</AlertDialog.Root>
 
 					<AlertDialog.Root>
-						<AlertDialog.Trigger class="w-full">
-							<Button variant="outline" class="w-full gap-2" disabled={controlsLoading.reset}>
-								{#if controlsLoading.reset}
-									<Spinner class="size-4" />
-								{:else}
-									<RiDeleteBinLine class="size-4" />
-								{/if}
-								Factory reset
-							</Button>
+						<AlertDialog.Trigger
+							class="{buttonVariants({ variant: 'outline' })} w-full gap-2"
+							disabled={controlsLoading.reset}
+						>
+							{#if controlsLoading.reset}
+								<Spinner class="size-4" />
+							{:else}
+								<RiDeleteBinLine class="size-4" />
+							{/if}
+							Factory reset
 						</AlertDialog.Trigger>
 						<AlertDialog.Content>
 							<AlertDialog.Header>
@@ -596,7 +625,7 @@
 								<div class="relative h-60 overflow-hidden border bg-muted p-4 text-xs">
 									<div
 										bind:this={logsContainer}
-										class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto whitespace-break-spaces"
+										class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto break-all"
 									>
 										{#each health.logs as log}
 											<div><span class="text-muted-foreground">[{log.time}]</span> {log.msg}</div>
