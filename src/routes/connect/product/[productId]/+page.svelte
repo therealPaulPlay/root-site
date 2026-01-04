@@ -20,7 +20,6 @@
 	let product = $state(null);
 	let relayCommInstance;
 	let isStreaming = $state(false);
-	let streamLoading = $state(true);
 	let heartbeatInterval;
 
 	// Events
@@ -173,7 +172,6 @@
 
 		videoElement.addEventListener("error", () => {
 			console.error("Video playback error:", videoElement.error);
-			streamLoading = false;
 		});
 	}
 
@@ -181,7 +179,6 @@
 		relayCommInstance.send(productId, "startStream").catch((error) => {
 			toast.error("Failed to start stream: " + error.message);
 			console.error(error);
-			streamLoading = false;
 		});
 	}
 
@@ -193,7 +190,6 @@
 
 	function handleStartStreamResult(msg) {
 		if (!msg.payload.success) {
-			streamLoading = false;
 			return toast.error(msg.payload.error || "Failed to start stream");
 		}
 
@@ -206,14 +202,13 @@
 
 		// Wait for MediaSource to be ready
 		if (mediaSource.readyState !== "open" || !sourceBuffer) return;
-
 		if (videoElement?.error) return; // Stop processing if video has an error
-		streamLoading = false; // Hide loading spinner on first chunk
 
 		const bytes = atob(msg.payload.chunk);
 		const buffer = new Uint8Array(bytes.length);
 		for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
 
+		// Only append if not currently updating
 		if (!sourceBuffer.updating) {
 			try {
 				sourceBuffer.appendBuffer(buffer);
@@ -363,12 +358,7 @@
 
 <div class="flex min-h-svh w-full flex-col divide-y pt-20">
 	<div class="relative aspect-16/9 w-full border-t bg-black">
-		{#if streamLoading}
-			<div class="absolute inset-0 flex items-center justify-center text-background">
-				<Spinner class="size-8" />
-			</div>
-		{/if}
-		<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted></video>
+		<video bind:this={videoElement} class="h-full w-full" controls autoplay playsinline muted></video>
 	</div>
 	<div class="w-full basis-full">
 		<Tabs.Root value="events" onValueChange={(v) => (activeTab = v)}>

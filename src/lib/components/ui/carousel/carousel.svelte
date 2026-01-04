@@ -17,11 +17,15 @@
 		api: undefined,
 		scrollPrev,
 		scrollNext,
+		// svelte-ignore state_referenced_locally
 		orientation,
 		canScrollNext: false,
 		canScrollPrev: false,
+		// svelte-ignore state_referenced_locally
 		handleKeyDown,
+		// svelte-ignore state_referenced_locally
 		options: opts,
+		// svelte-ignore state_referenced_locally
 		plugins,
 		onInit,
 		scrollSnaps: [],
