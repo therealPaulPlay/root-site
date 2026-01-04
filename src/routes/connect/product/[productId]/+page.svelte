@@ -1,6 +1,6 @@
 <script>
 	import { page } from "$app/state";
-	import { onMount, onDestroy, tick } from "svelte";
+	import { onMount, onDestroy } from "svelte";
 	import Button, { buttonVariants } from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
@@ -13,15 +13,7 @@
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
-	import {
-		RiArrowLeftLine,
-		RiPlayCircleLine,
-		RiStopCircleLine,
-		RiRestartLine,
-		RiDeleteBinLine,
-		RiDownloadLine,
-		RiRefreshLine
-	} from "svelte-remixicon";
+	import { RiArrowLeftLine, RiRestartLine, RiDeleteBinLine, RiDownloadLine, RiRefreshLine } from "svelte-remixicon";
 
 	const productId = page.params.productId;
 
@@ -180,10 +172,8 @@
 		});
 
 		videoElement.addEventListener("error", () => {
-			if (videoElement?.error) {
-				console.error("Video playback error:", videoElement.error);
-				streamLoading = false;
-			}
+			console.error("Video playback error:", videoElement.error);
+			streamLoading = false;
 		});
 	}
 
@@ -218,7 +208,7 @@
 		if (mediaSource.readyState !== "open" || !sourceBuffer) return;
 
 		if (videoElement?.error) return; // Stop processing if video has an error
-		if (streamLoading) streamLoading = false; // Hide loading spinner on first chunk
+		streamLoading = false; // Hide loading spinner on first chunk
 
 		const bytes = atob(msg.payload.chunk);
 		const buffer = new Uint8Array(bytes.length);
