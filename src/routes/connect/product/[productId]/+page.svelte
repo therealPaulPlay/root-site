@@ -392,7 +392,7 @@
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
 		</Button>
 	</div>
-	<div class="relative aspect-16/9 w-full bg-black">
+	<div class="relative aspect-16/9 w-full max-h-[55svh] bg-black">
 		{#if streamLoading}
 			<div class="flex h-full w-full items-center justify-center text-background">
 				<Spinner class="size-8" />
