@@ -19,7 +19,7 @@
 
 	let product = $state(null);
 	let relayCommInstance;
-	let isStreaming = $state(false);
+	let streamLoading = $state(true);
 	let heartbeatInterval;
 
 	// Events
@@ -91,7 +91,7 @@
 	});
 
 	onDestroy(() => {
-		if (heartbeatInterval) clearInterval(heartbeatInterval);
+		stopStreamHeartbeat();
 		if (mediaSource) {
 			if (videoElement) videoElement.src = "";
 			mediaSource = null;
@@ -171,52 +171,88 @@
 		});
 
 		videoElement.addEventListener("error", () => {
-			console.error("Video playback error:", videoElement.error);
+			if (videoElement) console.error("Video playback error:", videoElement.error);
 		});
 	}
 
 	function startStream() {
 		relayCommInstance.send(productId, "startStream").catch((error) => {
-			toast.error("Failed to start stream: " + error.message);
-			console.error(error);
+			stopStream(error);
 		});
 	}
 
-	function sendHeartbeat() {
-		relayCommInstance.send(productId, "continueStream").catch((error) => {
-			console.error("Failed to send heartbeat:", error);
-		});
+	function stopStream(reason) {
+		toast.error("Stream failed: " + reason);
+		console.error("Stream failed: ", error);
+		stopStreamHeartbeat();
+		streamLoading = false;
+	}
+
+	function startStreamHeartbeat() {
+		heartbeatInterval = setInterval(() => {
+			relayCommInstance.send(productId, "continueStream").catch((error) => {
+				console.error("Failed to send heartbeat:", error);
+			});
+		}, 2000);
+	}
+
+	function stopStreamHeartbeat() {
+		if (heartbeatInterval) {
+			clearInterval(heartbeatInterval);
+			heartbeatInterval = null;
+		}
 	}
 
 	function handleStartStreamResult(msg) {
 		if (!msg.payload.success) {
 			return toast.error(msg.payload.error || "Failed to start stream");
 		}
-
-		isStreaming = true;
-		heartbeatInterval = setInterval(sendHeartbeat, 2000);
+		startStreamHeartbeat();
 	}
 
+	let pendingChunks = $state([]);
+
 	function handleStreamVideoChunk(msg) {
-		if (!msg.payload.success) return;
+		if (!msg.payload.success) {
+			stopStream(msg.payload.error);
+			return;
+		}
+
+		if (streamLoading && msg.payload.chunkIndex !== 0) return console.warn("Received chunk with wrong index, waiting for index 0.");
 
 		// Wait for MediaSource to be ready
 		if (mediaSource.readyState !== "open" || !sourceBuffer) return;
-		if (videoElement?.error) return; // Stop processing if video has an error
+		if (videoElement?.error) return;
+		streamLoading = false;
 
 		const bytes = atob(msg.payload.chunk);
 		const buffer = new Uint8Array(bytes.length);
 		for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
 
-		// Only append if not currently updating
+		// Just append every chunk directly - no special logic needed!
 		if (!sourceBuffer.updating) {
 			try {
 				sourceBuffer.appendBuffer(buffer);
 			} catch (err) {
 				console.error("Failed to append buffer:", err);
 			}
+		} else {
+			// Queue if SourceBuffer is busy
+			pendingChunks.push(buffer);
 		}
 	}
+
+	// Handle queued chunks
+	sourceBuffer?.addEventListener("updateend", () => {
+		if (pendingChunks.length > 0 && !sourceBuffer.updating) {
+			const next = pendingChunks.shift();
+			try {
+				sourceBuffer.appendBuffer(next);
+			} catch (err) {
+				console.error("Failed to append queued buffer:", err);
+			}
+		}
+	});
 
 	// Controls handlers
 	function toggleMicrophone() {
@@ -357,10 +393,15 @@
 		</Button>
 	</div>
 	<div class="relative aspect-16/9 w-full bg-black">
-		<video bind:this={videoElement} class="h-full w-full" controls autoplay playsinline muted></video>
+		{#if streamLoading}
+			<div class="flex h-full w-full items-center justify-center text-background">
+				<Spinner class="size-8" />
+			</div>
+		{/if}
+		<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted></video>
 	</div>
 	<div class="w-full basis-full overflow-hidden">
-		<Tabs.Root value="events" onValueChange={(v) => (activeTab = v)} class="max-h-full relative">
+		<Tabs.Root value="events" onValueChange={(v) => (activeTab = v)} class="relative max-h-full">
 			<div class="w-full">
 				<Tabs.List class="w-full">
 					<Tabs.Trigger value="events">Events</Tabs.Trigger>
@@ -368,7 +409,7 @@
 					<Tabs.Trigger value="health">Health</Tabs.Trigger>
 				</Tabs.List>
 			</div>
-			<Tabs.Content value="events" class="space-y-6 p-6 overflow-y-auto of-top of-bottom">
+			<Tabs.Content value="events" class="of-top of-bottom space-y-6 overflow-y-auto p-6">
 				<div class="flex items-center justify-end">
 					<Button onclick={loadEvents} variant="outline" size="sm" disabled={eventsLoading}>
 						Refresh
@@ -413,7 +454,7 @@
 					{/if}
 				</div>
 			</Tabs.Content>
-			<Tabs.Content value="controls" class="space-y-6 p-6 overflow-y-auto of-top of-bottom">
+			<Tabs.Content value="controls" class="of-top of-bottom space-y-6 overflow-y-auto p-6">
 				<div class="space-y-6">
 					<div class="flex items-center justify-between rounded-lg border p-4">
 						<div>
@@ -494,7 +535,7 @@
 					</AlertDialog.Root>
 				</div>
 			</Tabs.Content>
-			<Tabs.Content value="health" class="space-y-6 p-6 overflow-y-auto of-top of-bottom">
+			<Tabs.Content value="health" class="of-top of-bottom space-y-6 overflow-y-auto p-6">
 				<div class="flex items-center justify-end">
 					<Button onclick={loadHealth} variant="outline" size="sm" disabled={healthLoading}>
 						Refresh
