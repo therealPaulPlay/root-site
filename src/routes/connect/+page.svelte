@@ -26,6 +26,7 @@
 	let previewImages = $state({});
 
 	let renameDialogOpen = $state({});
+	let idForProductVisible = $state();
 	let renameValue = $state({});
 
 	onMount(async () => {
@@ -99,7 +100,7 @@
 	<meta name="description" content="Connect and interface with your Root device." />
 </svelte:head>
 
-<div class="absolute top-0 right-0 flex text-xl">
+<div class="absolute top-0 right-0 flex text-xl bg-background z-1">
 	<Button class="h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/settings">
 		<RiSettings3Line class="h-8! w-8!" />
 	</Button>
@@ -110,7 +111,7 @@
 
 {#snippet productItem(product)}
 	{@const dialogOpen = renameDialogOpen[product.id] ?? false}
-	<div class="relative flex h-fit min-h-32 w-full border-y max-md:flex-wrap">
+	<div class="relative flex h-fit min-h-32 shrink-0 w-full border-y max-md:flex-wrap">
 		<!-- preview image -->
 		<div
 			class="aspect-16/9 w-full content-center bg-foreground text-center text-background max-md:border-b md:w-1/3 md:border-r"
@@ -131,6 +132,7 @@
 			{/if}
 		</div>
 		<div class="flex grow overflow-hidden">
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<div class="flex grow flex-col overflow-hidden p-4" class:opacity-50={!previewImages[product.id]}>
 				<span class="inline-flex items-center gap-1 overflow-hidden text-nowrap"
 					><h3 class="truncate font-display text-xl font-medium tracking-wide">{product.name}</h3>
@@ -173,8 +175,16 @@
 					</Dialog.Root>
 				</span>
 				<p class="text-muted-forerground mb-4 text-sm uppercase">{product.model}</p>
-				<p class="mt-auto overflow-hidden text-xs text-nowrap text-neutral-300 hover:truncate">
-					ID: <span class="truncate not-hover:bg-neutral-300/35 not-hover:text-transparent">{product.id}</span>
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<p
+					class="mt-auto overflow-hidden text-xs text-nowrap text-neutral-300 hover:truncate w-fit max-w-full"
+					onclick={() => (idForProductVisible = product.id)}
+					onmouseenter={() => (idForProductVisible = product.id)}
+					onmouseleave={() => (idForProductVisible = null)}
+				>
+					ID: <span class="{idForProductVisible == product.id ? '' : 'bg-neutral-300/35 text-transparent'}"
+						>{product.id}</span
+					>
 				</p>
 			</div>
 			<div class="h-full border-l">
@@ -188,7 +198,7 @@
 	</div>
 {/snippet}
 
-<div class="flex min-h-screen w-full flex-col items-center justify-start gap-8 py-30">
+<div class="of-top of-bottom flex h-screen w-full flex-col items-center justify-start gap-8 overflow-y-auto py-30">
 	{#if products.length}
 		{#each products as product}
 			{@render productItem(product)}

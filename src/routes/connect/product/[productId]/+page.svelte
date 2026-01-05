@@ -350,18 +350,17 @@
 	}
 </script>
 
-<div class="absolute top-0 left-0 flex text-xl">
-	<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" href="/connect">
-		<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
-	</Button>
-</div>
-
-<div class="flex min-h-svh w-full flex-col divide-y pt-20">
-	<div class="relative aspect-16/9 w-full border-t bg-black">
+<div class="flex h-svh w-full flex-col divide-y overflow-hidden">
+	<div class="flex text-xl">
+		<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" href="/connect">
+			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
+		</Button>
+	</div>
+	<div class="relative aspect-16/9 w-full bg-black">
 		<video bind:this={videoElement} class="h-full w-full" controls autoplay playsinline muted></video>
 	</div>
-	<div class="w-full basis-full">
-		<Tabs.Root value="events" onValueChange={(v) => (activeTab = v)}>
+	<div class="w-full basis-full overflow-hidden">
+		<Tabs.Root value="events" onValueChange={(v) => (activeTab = v)} class="max-h-full relative">
 			<div class="w-full">
 				<Tabs.List class="w-full">
 					<Tabs.Trigger value="events">Events</Tabs.Trigger>
@@ -369,7 +368,7 @@
 					<Tabs.Trigger value="health">Health</Tabs.Trigger>
 				</Tabs.List>
 			</div>
-			<Tabs.Content value="events" class="relative space-y-6 p-6">
+			<Tabs.Content value="events" class="space-y-6 p-6 overflow-y-auto of-top of-bottom">
 				<div class="flex items-center justify-end">
 					<Button onclick={loadEvents} variant="outline" size="sm" disabled={eventsLoading}>
 						Refresh
@@ -414,7 +413,7 @@
 					{/if}
 				</div>
 			</Tabs.Content>
-			<Tabs.Content value="controls" class="space-y-6 p-6">
+			<Tabs.Content value="controls" class="space-y-6 p-6 overflow-y-auto of-top of-bottom">
 				<div class="space-y-6">
 					<div class="flex items-center justify-between rounded-lg border p-4">
 						<div>
@@ -495,7 +494,7 @@
 					</AlertDialog.Root>
 				</div>
 			</Tabs.Content>
-			<Tabs.Content value="health" class="space-y-6 p-6">
+			<Tabs.Content value="health" class="space-y-6 p-6 overflow-y-auto of-top of-bottom">
 				<div class="flex items-center justify-end">
 					<Button onclick={loadHealth} variant="outline" size="sm" disabled={healthLoading}>
 						Refresh
