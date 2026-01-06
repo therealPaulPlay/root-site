@@ -7,6 +7,7 @@ export const RELAY_REQUEST_TIMEOUT = 10_000;
 export class RelayComm {
 	#ws = null;
 	#encryptions = new Map();
+	#prevEncryptions = new Map(); // productId -> previous encryption (temporary during key renewal)
 	#renewalPromises = new Map(); // productId -> Promise (for ongoing renewals)
 	#handlers = new Map();
 	#pendingRequestTimeouts = new Map(); // requestId -> timeout handle
@@ -97,17 +98,11 @@ export class RelayComm {
 	async #renewKey(productId) {
 		const newKeypair = await Encryption.generateKeypair();
 
-		// Encrypt with OLD key, then immediately switch to NEW key
+		// Step 1: Encrypt with OLD key
 		const oldEncryption = await this.#getEncryption(productId);
 		const encrypted = await oldEncryption.encrypt(JSON.stringify({ newPublicKey: encodeKey(newKeypair.publicKey) }));
 
-		const product = getProduct(productId);
-		product.devicePrivateKey = encodeKey(newKeypair.privateKey);
-		product.keyCreatedAt = Date.now();
-		saveProduct(product);
-		this.#encryptions.delete(productId); // Clear cache so next call uses new key for session
-
-		// Send and wait for confirmation
+		// Send renewal request (encrypted with OLD key)
 		this.#ws.send(JSON.stringify({
 			type: "renewKey",
 			target: "product",
@@ -116,16 +111,75 @@ export class RelayComm {
 			payload: encrypted
 		}));
 
+		// Step 2: Wait for camera to confirm it's ready (encrypted with NEW key)
 		return new Promise((resolve, reject) => {
 			const timeout = setTimeout(() => {
 				this.off("renewKeyResult", onRenewHandler);
 				reject(new Error(`Key renewal for product ${productId} timed out`));
 			}, RELAY_REQUEST_TIMEOUT);
 
-			const onRenewHandler = (msg) => {
+			const onRenewHandler = async (msg) => {
 				clearTimeout(timeout);
 				this.off("renewKeyResult", onRenewHandler);
-				msg.payload.success ? resolve() : reject(new Error(`Key renewal for product ${productId} failed: ` + (msg.payload.error || "Unknown error")));
+
+				if (!msg.payload.success) {
+					reject(new Error(`Key renewal for product ${productId} failed: ` + (msg.payload.error || "Unknown error")));
+					return;
+				}
+
+				// Step 3: Store old encryption temporarily for in-flight chunks
+				const oldEncryption = this.#encryptions.get(productId);
+				if (oldEncryption) {
+					this.#prevEncryptions.set(productId, oldEncryption);
+					// Clear after 30 second grace period for in-flight chunks
+					setTimeout(() => {
+						this.#prevEncryptions.delete(productId);
+					}, 30_000);
+				}
+
+				// Step 4: Switch to NEW key locally
+				const product = getProduct(productId);
+				product.devicePrivateKey = encodeKey(newKeypair.privateKey);
+				product.keyCreatedAt = Date.now();
+				saveProduct(product);
+				this.#encryptions.delete(productId); // Clear cache so next call uses new key
+
+				// Step 5: Send ACK to camera (encrypted with NEW key) and wait for confirmation
+				try {
+					const newEncryption = await this.#getEncryption(productId); // Will use new key
+					const ackEncrypted = await newEncryption.encrypt(JSON.stringify({ ack: true }));
+
+					this.#ws.send(JSON.stringify({
+						type: "renewKeyAck",
+						target: "product",
+						productId,
+						deviceId: this.deviceId,
+						payload: ackEncrypted
+					}));
+
+					// Wait for ACK confirmation before resolving
+					const ackTimeout = setTimeout(() => {
+						this.off("renewKeyAckResult", onAckHandler);
+						reject(new Error(`Key renewal ACK for product ${productId} timed out`));
+					}, RELAY_REQUEST_TIMEOUT);
+
+					const onAckHandler = (ackMsg) => {
+						clearTimeout(ackTimeout);
+						this.off("renewKeyAckResult", onAckHandler);
+
+						if (!ackMsg.payload.success) {
+							reject(new Error(`Key renewal ACK failed: ` + (ackMsg.payload.error || "Unknown error")));
+							return;
+						}
+
+						console.log(`RelayComm: Key renewed for device ${productId}`);
+						resolve();
+					};
+
+					this.on("renewKeyAckResult", onAckHandler);
+				} catch (error) {
+					reject(new Error(`Failed to send renewal ACK: ${error.message}`));
+				}
 			};
 
 			this.on("renewKeyResult", onRenewHandler);
@@ -138,7 +192,21 @@ export class RelayComm {
 			msg.payload = JSON.parse(msg.payload);
 		} catch {
 			const encryption = await this.#getEncryption(msg.productId);
-			msg.payload = JSON.parse(new TextDecoder().decode(await encryption.decrypt(msg.payload)));
+			try {
+				msg.payload = JSON.parse(new TextDecoder().decode(await encryption.decrypt(msg.payload)));
+			} catch (decryptError) {
+				// Retry with old key if available (for in-flight chunks during key renewal)
+				const prevEncryption = this.#prevEncryptions.get(msg.productId);
+				if (prevEncryption) {
+					try {
+						msg.payload = JSON.parse(new TextDecoder().decode(await prevEncryption.decrypt(msg.payload)));
+					} catch (oldDecryptError) {
+						throw decryptError; // Both keys failed, throw original error
+					}
+				} else {
+					throw decryptError;
+				}
+			}
 		}
 
 		// Clear pending request timeout if exists
@@ -208,6 +276,7 @@ export class RelayComm {
 		this.#ws?.close();
 		this.#ws = null;
 		this.#encryptions.clear();
+		this.#prevEncryptions.clear();
 		this.#renewalPromises.clear();
 		this.#handlers.clear();
 
