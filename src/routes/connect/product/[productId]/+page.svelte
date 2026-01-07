@@ -13,7 +13,15 @@
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
-	import { RiArrowLeftLine, RiRestartLine, RiDeleteBinLine, RiDownloadLine, RiRefreshLine } from "svelte-remixicon";
+	import {
+		RiArrowLeftLine,
+		RiRestartLine,
+		RiDeleteBinLine,
+		RiDownloadLine,
+		RiRefreshLine,
+		RiVolumeUpLine,
+		RiVolumeMuteLine
+	} from "svelte-remixicon";
 
 	const productId = page.params.productId;
 
@@ -51,6 +59,8 @@
 	let videoElement = $state();
 	let mediaSource;
 	let sourceBuffer;
+	let streamHasAudio = $state(false);
+	let videoMuted = $state(true);
 
 	onMount(async () => {
 		product = getProduct(productId);
@@ -65,9 +75,6 @@
 		if (!deviceId) return toast.error("No device ID set!");
 
 		try {
-			// Set up MediaSource early so it's ready when chunks arrive
-			setupMediaSource();
-
 			relayCommInstance = new RelayComm(relayDomain, deviceId);
 			await relayCommInstance.connect();
 
@@ -134,7 +141,7 @@
 
 		// Load thumbnails for events
 		events.forEach((event) => {
-			relayCommInstance.send(productId, "getThumbnail", { id: event.id }).catch((console.error));
+			relayCommInstance.send(productId, "getThumbnail", { id: event.id }).catch(console.error);
 		});
 	}
 
@@ -180,8 +187,11 @@
 		videoElement.src = URL.createObjectURL(mediaSource);
 
 		mediaSource.addEventListener("sourceopen", () => {
-			sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001f"');
+			sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001f"'); // Specify codec
 			sourceBuffer.mode = "sequence";
+
+			processPendingChunks(); // Process chunks that arrived while or before MediaSource was opening
+			sourceBuffer.addEventListener("updateend", processPendingChunks); // Process pending chunks every time the buffer is done updating
 		});
 
 		videoElement.addEventListener("error", () => {
@@ -220,7 +230,10 @@
 	function handleStartStreamResult(msg) {
 		if (!msg.payload.success) {
 			toast.error("Failed to start stream: " + msg.payload.error || "Unknown error");
+			return;
 		}
+
+		setupMediaSource();
 		startStreamHeartbeat();
 	}
 
@@ -235,31 +248,26 @@
 		if (streamLoading && msg.payload.chunkIndex !== 0)
 			return console.warn("Received chunk with wrong index, waiting for index 0.");
 
-		// Wait for MediaSource to be ready
-		if (mediaSource.readyState !== "open" || !sourceBuffer) return;
 		if (videoElement?.error) return;
-		streamLoading = false;
 
 		const bytes = atob(msg.payload.chunk);
 		const buffer = new Uint8Array(bytes.length);
 		for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
 
-		// Just append every chunk directly - no special logic needed!
-		if (!sourceBuffer.updating) {
-			try {
-				sourceBuffer.appendBuffer(buffer);
-			} catch (err) {
-				console.error("Failed to append buffer:", err);
-			}
-		} else {
-			// Queue if SourceBuffer is busy
+		// Queue chunks if MediaSource isn't ready yet
+		if (mediaSource.readyState !== "open" || !sourceBuffer) {
 			pendingChunks.push(buffer);
+			return;
 		}
+
+		// Always queue chunks and let processPendingChunks handle them sequentially
+		streamLoading = false; // Hide loading spinner, now that chunks are coming in and displaying
+		pendingChunks.push(buffer);
+		processPendingChunks();
 	}
 
-	// Handle queued chunks
-	sourceBuffer?.addEventListener("updateend", () => {
-		if (pendingChunks.length > 0 && !sourceBuffer.updating) {
+	function processPendingChunks() {
+		if (pendingChunks.length > 0 && sourceBuffer && !sourceBuffer.updating) {
 			const next = pendingChunks.shift();
 			try {
 				sourceBuffer.appendBuffer(next);
@@ -267,7 +275,7 @@
 				console.error("Failed to append queued buffer:", err);
 			}
 		}
-	});
+	}
 
 	// Controls handlers
 	function loadMicrophone() {
@@ -484,7 +492,20 @@
 				<Spinner class="size-8" />
 			</div>
 		{/if}
-		<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted></video>
+		<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted={videoMuted}></video>
+		{#if streamHasAudio}
+			<Button
+				onclick={() => (videoMuted = !videoMuted)}
+				class="absolute right-4 bottom-4 px-3 opacity-50 transition-none hover:opacity-100"
+				variant="outline"
+			>
+				{#if videoMuted}
+					<RiVolumeMuteLine class="size-4" />
+				{:else}
+					<RiVolumeUpLine class="size-4" />
+				{/if}
+			</Button>
+		{/if}
 	</div>
 	<div class="w-full basis-full overflow-hidden">
 		<Tabs.Root value="events" onValueChange={(v) => (activeTab = v)} class="relative max-h-full">
