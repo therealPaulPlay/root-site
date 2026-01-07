@@ -33,6 +33,13 @@
 	let micEnabled = $state(false);
 	let recordingSoundEnabled = $state(false);
 	let controlsLoading = $state({});
+	let restartDialogOpen = $state(false);
+	let resetDialogOpen = $state(false);
+
+	// Devices
+	let devices = $state([]);
+	let devicesLoading = $state(false);
+	let removeDeviceDialogOpen = $state({});
 
 	// Health
 	let health = $state(null);
@@ -68,8 +75,12 @@
 			relayCommInstance.on("getEventsResult", handleEventsResult);
 			relayCommInstance.on("getThumbnailResult", handleThumbnailResult);
 			relayCommInstance.on("getRecordingResult", handleRecordingResult);
+			relayCommInstance.on("getMicrophoneResult", handleGetMicrophoneResult);
 			relayCommInstance.on("setMicrophoneResult", handleSetMicrophoneResult);
+			relayCommInstance.on("getRecordingSoundResult", handleGetRecordingSoundResult);
 			relayCommInstance.on("setRecordingSoundResult", handleSetRecordingSoundResult);
+			relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
+			relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
 			relayCommInstance.on("getHealthResult", handleHealthResult);
 			relayCommInstance.on("startUpdateResult", handleStartUpdateResult);
 			relayCommInstance.on("restartResult", handleRestartResult);
@@ -83,6 +94,9 @@
 			// Load initial data and start stream
 			loadEvents();
 			loadHealth();
+			loadMicrophone();
+			loadRecordingSound();
+			loadDevices();
 			startStream();
 		} catch (error) {
 			toast.error("Failed to connect to relay: " + error.message);
@@ -111,7 +125,7 @@
 
 	function handleEventsResult(msg) {
 		if (!msg.payload.success) {
-			toast.error(msg.payload.error || "Failed to load events");
+			toast.error("Failed to load events: " + msg.payload.error || "Unknown error");
 			eventsLoading = false;
 			return;
 		}
@@ -120,12 +134,12 @@
 
 		// Load thumbnails for events
 		events.forEach((event) => {
-			relayCommInstance.send(productId, "getThumbnail", { id: event.id }).catch(console.error);
+			relayCommInstance.send(productId, "getThumbnail", { id: event.id }).catch((console.error));
 		});
 	}
 
 	function handleThumbnailResult(msg) {
-		if (!msg.payload.success) return;
+		if (!msg.payload.success) return toast.error("Failed to get thumbnail: " + msg.payload.error || "Unknown error");
 
 		const eventId = msg.payload.id || Object.keys(eventThumbnails).length;
 		eventThumbnails[eventId] = msg.payload.data;
@@ -141,7 +155,7 @@
 	}
 
 	function handleRecordingResult(msg) {
-		if (!msg.payload.success) return toast.error(msg.payload.error || "Failed to load recording");
+		if (!msg.payload.success) return toast.error("Failed to load recoring: " + msg.payload.error || "Unknown error");
 
 		// Create blob and download
 		const byteCharacters = atob(msg.payload.data);
@@ -205,7 +219,7 @@
 
 	function handleStartStreamResult(msg) {
 		if (!msg.payload.success) {
-			return toast.error(msg.payload.error || "Failed to start stream");
+			toast.error("Failed to start stream: " + msg.payload.error || "Unknown error");
 		}
 		startStreamHeartbeat();
 	}
@@ -218,7 +232,8 @@
 			return;
 		}
 
-		if (streamLoading && msg.payload.chunkIndex !== 0) return console.warn("Received chunk with wrong index, waiting for index 0.");
+		if (streamLoading && msg.payload.chunkIndex !== 0)
+			return console.warn("Received chunk with wrong index, waiting for index 0.");
 
 		// Wait for MediaSource to be ready
 		if (mediaSource.readyState !== "open" || !sourceBuffer) return;
@@ -255,11 +270,25 @@
 	});
 
 	// Controls handlers
+	function loadMicrophone() {
+		relayCommInstance.send(productId, "getMicrophone").catch((error) => {
+			console.error("Failed to load microphone setting:", error);
+		});
+	}
+
+	function handleGetMicrophoneResult(msg) {
+		if (!msg.payload.success) {
+			toast.error("Failed to load microphone setting: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		micEnabled = msg.payload.enabled;
+	}
+
 	function toggleMicrophone() {
 		controlsLoading.mic = true;
 		const newValue = !micEnabled;
 		relayCommInstance.send(productId, "setMicrophone", { enabled: newValue }).catch((error) => {
-			toast.error("Failed to toggle microphone: " + error.message);
+			toast.error("Failed to set microphone: " + error.message);
 			console.error(error);
 			controlsLoading.mic = false;
 		});
@@ -268,10 +297,24 @@
 	function handleSetMicrophoneResult(msg) {
 		controlsLoading.mic = false;
 		if (!msg.payload.success) {
-			toast.error(msg.payload.error || "Failed to set microphone");
+			toast.error("Failed to set microphone: " + msg.payload.error || "Unknown error");
 			return;
 		}
 		micEnabled = msg.payload.enabled;
+	}
+
+	function loadRecordingSound() {
+		relayCommInstance.send(productId, "getRecordingSound").catch((error) => {
+			console.error("Failed to load recording sound setting:", error);
+		});
+	}
+
+	function handleGetRecordingSoundResult(msg) {
+		if (!msg.payload.success) {
+			toast.error("Failed to load recording sound setting: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		recordingSoundEnabled = msg.payload.enabled;
 	}
 
 	function toggleRecordingSound() {
@@ -287,13 +330,55 @@
 	function handleSetRecordingSoundResult(msg) {
 		controlsLoading.sound = false;
 		if (!msg.payload.success) {
-			toast.error(msg.payload.error || "Failed to set recording sound");
+			toast.error("Failed to set recording sound: " + msg.payload.error || "Unknown error");
 			return;
 		}
 		recordingSoundEnabled = msg.payload.enabled;
 	}
 
+	function loadDevices() {
+		devicesLoading = true;
+		relayCommInstance.send(productId, "getDevices").catch((error) => {
+			toast.error("Failed to load devices: " + error.message);
+			console.error(error);
+			devicesLoading = false;
+		});
+	}
+
+	function handleGetDevicesResult(msg) {
+		devicesLoading = false;
+		if (!msg.payload.success) {
+			toast.error("Failed to load devices: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		devices = msg.payload.devices || [];
+	}
+
+	function removeDevice(deviceId) {
+		removeDeviceDialogOpen[deviceId] = false;
+		controlsLoading[`remove-${deviceId}`] = true;
+		relayCommInstance.send(productId, "removeDevice", { targetDeviceId: deviceId }).catch((error) => {
+			toast.error("Failed to remove device: " + error.message);
+			console.error(error);
+			controlsLoading[`remove-${deviceId}`] = false;
+		});
+	}
+
+	function handleRemoveDeviceResult(msg) {
+		if (!msg.payload.success) {
+			toast.error("Failed to remove device: " + msg.payload.error || "Unknown error");
+			Object.keys(controlsLoading).forEach((key) => {
+				if (key.startsWith("remove-")) controlsLoading[key] = false;
+			});
+			return;
+		}
+		const removedId = msg.payload.removedDeviceId;
+		devices = devices.filter((d) => d.id !== removedId);
+		controlsLoading[`remove-${removedId}`] = false;
+	}
+
 	function restartDevice() {
+		restartDialogOpen = false;
 		controlsLoading.restart = true;
 		relayCommInstance.send(productId, "restart").catch((error) => {
 			toast.error("Failed to restart device: " + error.message);
@@ -312,6 +397,7 @@
 	}
 
 	function resetDevice() {
+		resetDialogOpen = false;
 		controlsLoading.reset = true;
 		relayCommInstance.send(productId, "reset").catch((error) => {
 			toast.error("Failed to reset device: " + error.message);
@@ -323,7 +409,7 @@
 	function handleResetResult(msg) {
 		controlsLoading.reset = false;
 		if (!msg.payload.success) {
-			toast.error(msg.payload.error || "Failed to reset device");
+			toast.error("Failed to reset device: " + msg.payload.error || "Unknown error");
 			return;
 		}
 		toast.success("Reset initiated.");
@@ -345,7 +431,7 @@
 	function handleHealthResult(msg) {
 		healthLoading = false;
 		if (!msg.payload.success) {
-			toast.error(msg.payload.error || "Failed to load health data");
+			toast.error("Failed to load health data: " + msg.payload.error || "Unknown error");
 			return;
 		}
 		health = {
@@ -378,7 +464,7 @@
 	function handleStartUpdateResult(msg) {
 		controlsLoading.update = false;
 		if (!msg.payload.success) {
-			toast.error(msg.payload.error || "Failed to start update");
+			toast.error("Failed to start update: " + msg.payload.error || "Unknown error");
 			return;
 		}
 		toast.success("Update started!");
@@ -392,7 +478,7 @@
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
 		</Button>
 	</div>
-	<div class="relative aspect-16/9 w-full max-h-[55svh] bg-black">
+	<div class="relative aspect-16/9 max-h-[55svh] w-full bg-black">
 		{#if streamLoading}
 			<div class="flex h-full w-full items-center justify-center text-background">
 				<Spinner class="size-8" />
@@ -482,7 +568,69 @@
 							{/if}
 						</Button>
 					</div>
-					<AlertDialog.Root>
+
+					<div class="border p-4">
+						<div class="mb-4 flex items-center justify-between">
+							<Label class="text-base">Paired devices</Label>
+							<Button onclick={loadDevices} variant="outline" size="sm" disabled={devicesLoading}>
+								{#if devicesLoading}
+									<Spinner class="size-4" />
+								{:else}
+									<RiRefreshLine class="size-4" />
+								{/if}
+							</Button>
+						</div>
+						{#if devices.length === 0}
+							<p class="text-sm text-muted-foreground">No devices paired.</p>
+						{:else}
+							<div class="space-y-4">
+								{#each devices as device}
+									<div
+										class="flex items-center justify-between border p-4 {device.id == localStorage.getItem('deviceId')
+											? 'bg-foreground text-background'
+											: ''}"
+									>
+										<div class="flex-1 truncate">
+											<p class="text-sm font-medium">{device.name || "Unknown device"}</p>
+											<p class="truncate text-xs text-muted-foreground">{device.id}</p>
+										</div>
+										<AlertDialog.Root
+											open={removeDeviceDialogOpen[device.id]}
+											onOpenChange={(open) => {
+												removeDeviceDialogOpen[device.id] = open;
+											}}
+										>
+											<AlertDialog.Trigger
+												class={buttonVariants({ variant: "ghost", size: "sm" })}
+												disabled={controlsLoading[`remove-${device.id}`]}
+											>
+												{#if controlsLoading[`remove-${device.id}`]}
+													<Spinner class="size-4" />
+												{:else}
+													<RiDeleteBinLine class="size-4" />
+												{/if}
+											</AlertDialog.Trigger>
+											<AlertDialog.Content>
+												<AlertDialog.Header>
+													<AlertDialog.Title>Remove device?</AlertDialog.Title>
+													<AlertDialog.Description>
+														This will unpair "{device.name || "Unknown device"}" from this product. The device will no
+														longer be able to access this product.
+													</AlertDialog.Description>
+												</AlertDialog.Header>
+												<AlertDialog.Footer>
+													<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+													<AlertDialog.Action onclick={() => removeDevice(device.id)}>Remove</AlertDialog.Action>
+												</AlertDialog.Footer>
+											</AlertDialog.Content>
+										</AlertDialog.Root>
+									</div>
+								{/each}
+							</div>
+						{/if}
+					</div>
+
+					<AlertDialog.Root bind:open={restartDialogOpen}>
 						<AlertDialog.Trigger
 							class="{buttonVariants({ variant: 'outline' })} w-full gap-2"
 							disabled={controlsLoading.restart}
@@ -508,7 +656,7 @@
 						</AlertDialog.Content>
 					</AlertDialog.Root>
 
-					<AlertDialog.Root>
+					<AlertDialog.Root bind:open={resetDialogOpen}>
 						<AlertDialog.Trigger
 							class="{buttonVariants({ variant: 'outline' })} w-full gap-2"
 							disabled={controlsLoading.reset}
