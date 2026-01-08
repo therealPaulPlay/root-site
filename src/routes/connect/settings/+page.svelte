@@ -4,8 +4,9 @@
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
-	import { RiArrowLeftLine } from "svelte-remixicon";
+	import { RiArrowLeftLine, RiExternalLinkLine } from "svelte-remixicon";
 	import Label from "$lib/components/ui/label/label.svelte";
+	import IframeDialog from "$lib/components/IframeDialog.svelte";
 
 	let relayDomain = $state("");
 	let relayDomainInput = $state("");
@@ -55,5 +56,11 @@
 				}
 			}}>Save</Button
 		>
+	</section>
+
+	<section class="mt-10 w-full space-y-4 border-y p-6 lg:p-8">
+		<IframeDialog title="Privacy Policy" src="/privacy">
+			Privacy Policy <RiExternalLinkLine class="size-4" />
+		</IframeDialog>
 	</section>
 </div>
