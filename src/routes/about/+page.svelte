@@ -18,7 +18,7 @@
 		<h1 class="font-display text-3xl font-medium tracking-wide">About</h1>
 		<p>
 			Working on web games by day, and on ROOT by night, I am persuing my <span class="bg-accent"
-				>dream of creating smart home products</span
+				>dream of creating smart security products</span
 			>
 			– starting with the Observer – that <span class="bg-accent">respect user privacy</span>.
 		</p>

@@ -44,12 +44,12 @@
 		"Set the relay server."
 	];
 	let stepImage = [
-		"/images/connect/charge-image.jpg",
-		"/images/connect/wireless-image.jpg",
+		"/images/connect/charge.jpg",
+		"/images/connect/wireless.jpg",
 		"no-image-display-qr-code",
-		"/images/connect/label-image.jpg",
-		"/images/connect/internet-image.jpg",
-		"/images/connect/settings-image.jpg"
+		"/images/connect/label.jpg",
+		"/images/connect/internet.jpg",
+		"/images/connect/settings.jpg"
 	];
 
 	// Instances
@@ -499,7 +499,7 @@
 								WARNING: Aborting the setup with an already paired device will NOT reset the full pairing progress.
 								Finishing the WiFi and Relay setup is highly recommended.
 							{:else}
-								All progress will be lost and you will return to the connect panel.
+								All progress will be lost and you will return to the main page.
 							{/if}
 						</AlertDialog.Description>
 					</AlertDialog.Header>
