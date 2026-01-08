@@ -16,11 +16,12 @@
 	import {
 		RiArrowLeftLine,
 		RiRestartLine,
-		RiDeleteBinLine,
 		RiDownloadLine,
 		RiRefreshLine,
 		RiVolumeUpLine,
-		RiVolumeMuteLine
+		RiVolumeMuteLine,
+		RiCloseLine,
+		RiFileShredLine
 	} from "svelte-remixicon";
 
 	const productId = page.params.productId;
@@ -619,7 +620,7 @@
 			</Tabs.Content>
 			<Tabs.Content value="controls" class="of-top of-bottom space-y-6 overflow-y-auto p-6">
 				<div class="space-y-6">
-					<div class="flex items-center justify-between rounded-lg border p-4">
+					<div class="flex items-center justify-between gap-4 rounded-lg border p-4">
 						<div>
 							<Label class="text-base">Microphone</Label>
 							<p class="text-sm text-muted-foreground">Record audio together with video.</p>
@@ -632,7 +633,7 @@
 							{/if}
 						</Button>
 					</div>
-					<div class="flex items-center justify-between rounded-lg border p-4">
+					<div class="flex items-center justify-between gap-4 rounded-lg border p-4">
 						<div>
 							<Label class="text-base">Recording sound</Label>
 							<p class="text-sm text-muted-foreground">Play sound when recording or streaming.</p>
@@ -647,9 +648,10 @@
 					</div>
 
 					<div class="border p-4">
-						<div class="mb-4 flex items-center justify-between">
+						<div class="mb-4 flex items-center justify-between gap-4">
 							<Label class="text-base">Paired devices</Label>
 							<Button onclick={loadDevices} variant="outline" size="sm" disabled={devicesLoading}>
+								Refresh
 								{#if devicesLoading}
 									<Spinner class="size-4" />
 								{:else}
@@ -663,7 +665,7 @@
 							<div class="space-y-4">
 								{#each devices as device}
 									<div
-										class="flex items-center justify-between border p-4 {device.id == localStorage.getItem('deviceId')
+										class="flex items-center justify-between border p-4 {device.id === localStorage.getItem('deviceId')
 											? 'bg-foreground text-background'
 											: ''}"
 									>
@@ -671,36 +673,39 @@
 											<p class="text-sm font-medium">{device.name || "Unknown device"}</p>
 											<p class="truncate text-xs text-muted-foreground">ID: {device.id}</p>
 										</div>
-										<AlertDialog.Root
-											open={removeDeviceDialogOpen[device.id]}
-											onOpenChange={(open) => {
-												removeDeviceDialogOpen[device.id] = open;
-											}}
-										>
-											<AlertDialog.Trigger
-												class={buttonVariants({ variant: "ghost", size: "sm" })}
-												disabled={controlsLoading[`remove-${device.id}`]}
+										<!-- Removing the user's currently used device is done via the /connect page -->
+										{#if device.id !== localStorage.getItem("deviceId")}
+											<AlertDialog.Root
+												open={removeDeviceDialogOpen[device.id]}
+												onOpenChange={(open) => {
+													removeDeviceDialogOpen[device.id] = open;
+												}}
 											>
-												{#if controlsLoading[`remove-${device.id}`]}
-													<Spinner class="size-4" />
-												{:else}
-													<RiDeleteBinLine class="size-4" />
-												{/if}
-											</AlertDialog.Trigger>
-											<AlertDialog.Content>
-												<AlertDialog.Header>
-													<AlertDialog.Title>Remove device?</AlertDialog.Title>
-													<AlertDialog.Description>
-														This will unpair "{device.name || "Unknown device"}" from this product. The device will no
-														longer be able to access this product.
-													</AlertDialog.Description>
-												</AlertDialog.Header>
-												<AlertDialog.Footer>
-													<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-													<AlertDialog.Action onclick={() => removeDevice(device.id)}>Remove</AlertDialog.Action>
-												</AlertDialog.Footer>
-											</AlertDialog.Content>
-										</AlertDialog.Root>
+												<AlertDialog.Trigger
+													class={buttonVariants({ variant: "outline", size: "sm" })}
+													disabled={controlsLoading[`remove-${device.id}`]}
+												>
+													{#if controlsLoading[`remove-${device.id}`]}
+														<Spinner class="size-4" />
+													{:else}
+														<RiCloseLine class="size-4" />
+													{/if}
+												</AlertDialog.Trigger>
+												<AlertDialog.Content>
+													<AlertDialog.Header>
+														<AlertDialog.Title>Remove device?</AlertDialog.Title>
+														<AlertDialog.Description>
+															This will unpair "{device.name || "Unknown device"}" from this product. The device will no
+															longer be able to access this product.
+														</AlertDialog.Description>
+													</AlertDialog.Header>
+													<AlertDialog.Footer>
+														<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+														<AlertDialog.Action onclick={() => removeDevice(device.id)}>Remove</AlertDialog.Action>
+													</AlertDialog.Footer>
+												</AlertDialog.Content>
+											</AlertDialog.Root>
+										{/if}
 									</div>
 								{/each}
 							</div>
@@ -741,7 +746,7 @@
 							{#if controlsLoading.reset}
 								<Spinner class="size-4" />
 							{:else}
-								<RiDeleteBinLine class="size-4" />
+								<RiFileShredLine class="size-4" />
 							{/if}
 							Factory reset
 						</AlertDialog.Trigger>
