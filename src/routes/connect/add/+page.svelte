@@ -22,6 +22,7 @@
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { onMount } from "svelte";
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config.js";
+	import IframeDialog from "$lib/components/IframeDialog.svelte";
 
 	let step = $state(1);
 	let stepAmount = $state(6);
@@ -168,6 +169,11 @@
 			<p class="max-w-3xl">
 				Use the USB charger to plug your ROOT camera into a wall outlet. Wait until a startup sound plays. Rarely, this
 				can take up to 5 minutes.
+			</p>
+			<p>
+				By clicking on "NEXT", you agree to our <IframeDialog src="/terms" variant={null}
+					><span class="underline">Terms of Use</span>.</IframeDialog
+				>
 			</p>
 		{/if}
 

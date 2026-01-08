@@ -2,6 +2,7 @@
 	import { RiBlueskyLine, RiTwitterXLine, RiYoutubeFill } from "svelte-remixicon";
 	import Button from "./ui/button/button.svelte";
 	import { Capacitor } from "@capacitor/core";
+	import { goto } from "$app/navigation";
 </script>
 
 {#if !Capacitor.isNativePlatform()}
@@ -27,7 +28,13 @@
 				© Root {new Date().getFullYear()}
 			</p>
 		</div>
-		<div class="pointer-events-none relative h-30 w-full md:h-38 lg:h-55 xl:h-72 2xl:h-90">
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<div
+			class="relative h-30 w-full md:h-38 lg:h-55 xl:h-72 2xl:h-90"
+			onclick={() => goto("/")}
+			role="link"
+			tabindex="0"
+		>
 			<div class="logo-layer"></div>
 			<div class="logo-layer logo-fill"></div>
 		</div>

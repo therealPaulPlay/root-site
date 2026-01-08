@@ -9,7 +9,7 @@
 </svelte:head>
 
 <div class="h-full">
-	<section class="relative mt-20 w-full space-y-4 border-y p-6 lg:p-8">
+	<section class="relative my-20 w-full space-y-4 border-y p-6 lg:p-8">
 		<h1 class="font-display text-3xl font-medium tracking-wide">Source code</h1>
 		<p>
 			<Button

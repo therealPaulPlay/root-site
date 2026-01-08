@@ -1,14 +1,14 @@
 <script>
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { buttonVariants } from "./ui/button";
-	let { children, title = "Default", src = "/" } = $props();
+	let { children, src = "/", variant = "outline", class: classes } = $props();
 </script>
 
 <Dialog.Root>
-	<Dialog.Trigger class={buttonVariants({ variant: "outline" })}>
+	<Dialog.Trigger class={variant ? buttonVariants({ variant: variant }) : "" + classes ? " " + classes : ""}>
 		{@render children?.()}
 	</Dialog.Trigger>
-	<Dialog.Content class="h-[calc(100%-2rem)] flex flex-col pt-12">
-		<iframe frameborder="0" class="grow w-full border" src={src + "?hide-navbar=true"} {title}> </iframe>
+	<Dialog.Content class="flex h-[calc(100svh-10rem)] flex-col overflow-hidden pt-12">
+		<iframe frameborder="0" class="w-full grow border" src={src + "?hide-navbar=true"} title="web page"> </iframe>
 	</Dialog.Content>
 </Dialog.Root>

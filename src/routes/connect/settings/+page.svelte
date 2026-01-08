@@ -58,9 +58,15 @@
 		>
 	</section>
 
-	<section class="mt-10 w-full space-y-4 border-y p-6 lg:p-8">
-		<IframeDialog title="Privacy Policy" src="/privacy">
+	<section class="mt-10 flex w-full flex-wrap gap-4 border-y p-6 lg:p-8">
+		<IframeDialog src="/privacy">
 			Privacy Policy <RiExternalLinkLine class="size-4" />
+		</IframeDialog>
+		<IframeDialog src="/terms">
+			Terms of Use <RiExternalLinkLine class="size-4" />
+		</IframeDialog>
+		<IframeDialog src="/source-code">
+			Source code <RiExternalLinkLine class="size-4" />
 		</IframeDialog>
 	</section>
 </div>
