@@ -59,8 +59,11 @@
 	let videoElement = $state();
 	let mediaSource;
 	let sourceBuffer;
-	let streamHasAudio = $state(false);
-	let videoMuted = $state(true);
+
+	// Audio streaming
+	let audioContext;
+	let audioMuted = $state(false);
+	let nextAudioTime = 0;
 
 	onMount(async () => {
 		product = getProduct(productId);
@@ -97,6 +100,7 @@
 				if (!msg.payload.success) toast.error(msg.payload.error || "Stream heartbeat failed");
 			});
 			relayCommInstance.on("streamVideoChunkResult", handleStreamVideoChunk);
+			relayCommInstance.on("streamAudioChunkResult", handleStreamAudioChunk);
 
 			// Load initial data and start stream
 			loadEvents();
@@ -117,6 +121,10 @@
 			if (videoElement) videoElement.src = "";
 			mediaSource = null;
 			sourceBuffer = null;
+		}
+		if (audioContext) {
+			audioContext.close();
+			audioContext = null;
 		}
 		if (relayCommInstance) relayCommInstance.disconnect();
 	});
@@ -201,11 +209,11 @@
 
 	function startStream() {
 		relayCommInstance.send(productId, "startStream").catch((error) => {
-			stopStream(error);
+			onStreamStopped(error);
 		});
 	}
 
-	function stopStream(reason) {
+	function onStreamStopped(reason) {
 		toast.error("Stream failed: " + reason);
 		console.error("Stream failed: ", error);
 		stopStreamHeartbeat();
@@ -233,15 +241,16 @@
 			return;
 		}
 
-		setupMediaSource();
-		startStreamHeartbeat();
+		if (!mediaSource) setupMediaSource();
+		if (micEnabled && !audioContext) setupAudioContext();
+		if (!heartbeatInterval) startStreamHeartbeat();
 	}
 
 	let pendingChunks = $state([]);
 
 	function handleStreamVideoChunk(msg) {
 		if (!msg.payload.success) {
-			stopStream(msg.payload.error);
+			onStreamStopped(msg.payload.error);
 			return;
 		}
 
@@ -277,6 +286,52 @@
 		}
 	}
 
+	// Audio streaming functions
+	function setupAudioContext() {
+		audioContext = new AudioContext();
+		nextAudioTime = audioContext.currentTime;
+	}
+
+	function handleStreamAudioChunk(msg) {
+		if (!msg.payload.success) {
+			console.error("Audio stream error:", msg.payload.error);
+			return;
+		}
+		if (!audioContext || audioMuted) return;
+
+		// Decode base64 PCM data
+		const bytes = atob(msg.payload.chunk);
+		const pcmData = new Int16Array(bytes.length / 2);
+
+		for (let i = 0; i < pcmData.length; i++) {
+			const byte1 = bytes.charCodeAt(i * 2);
+			const byte2 = bytes.charCodeAt(i * 2 + 1);
+			pcmData[i] = byte1 | (byte2 << 8);
+		}
+
+		// Convert Int16 PCM to Float32 for Web Audio API
+		const float32Data = new Float32Array(pcmData.length);
+		for (let i = 0; i < pcmData.length; i++) {
+			float32Data[i] = pcmData[i] / 32768.0; // Convert to -1.0 to 1.0 range
+		}
+
+		// Create audio buffer (48kHz mono)
+		const audioBuffer = audioContext.createBuffer(1, float32Data.length, 48000);
+		audioBuffer.getChannelData(0).set(float32Data);
+
+		// Create buffer source and schedule playback
+		const source = audioContext.createBufferSource();
+		source.buffer = audioBuffer;
+		source.connect(audioContext.destination);
+
+		// Schedule at next available time to avoid gaps
+		source.start(nextAudioTime);
+		nextAudioTime += audioBuffer.duration;
+
+		// Reset if we're getting too far ahead (prevent unbounded growth)
+		if (nextAudioTime > audioContext.currentTime + 1) nextAudioTime = audioContext.currentTime;
+	}
+
 	// Controls handlers
 	function loadMicrophone() {
 		relayCommInstance.send(productId, "getMicrophone").catch((error) => {
@@ -309,6 +364,7 @@
 			return;
 		}
 		micEnabled = msg.payload.enabled;
+		startStream(); // Restart stream to apply microphone changes
 	}
 
 	function loadRecordingSound() {
@@ -492,14 +548,14 @@
 				<Spinner class="size-8" />
 			</div>
 		{/if}
-		<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted={videoMuted}></video>
-		{#if streamHasAudio}
+		<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted></video>
+		{#if micEnabled}
 			<Button
-				onclick={() => (videoMuted = !videoMuted)}
+				onclick={() => (audioMuted = !audioMuted)}
 				class="absolute right-4 bottom-4 px-3 opacity-50 transition-none hover:opacity-100"
 				variant="outline"
 			>
-				{#if videoMuted}
+				{#if audioMuted}
 					<RiVolumeMuteLine class="size-4" />
 				{:else}
 					<RiVolumeUpLine class="size-4" />
@@ -613,7 +669,7 @@
 									>
 										<div class="flex-1 truncate">
 											<p class="text-sm font-medium">{device.name || "Unknown device"}</p>
-											<p class="truncate text-xs text-muted-foreground">{device.id}</p>
+											<p class="truncate text-xs text-muted-foreground">ID: {device.id}</p>
 										</div>
 										<AlertDialog.Root
 											open={removeDeviceDialogOpen[device.id]}
