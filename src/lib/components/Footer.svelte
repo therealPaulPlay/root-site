@@ -2,9 +2,13 @@
 	import { RiBlueskyLine, RiTwitterXLine, RiYoutubeFill } from "svelte-remixicon";
 	import Button from "./ui/button/button.svelte";
 	import { Capacitor } from "@capacitor/core";
+	import { page } from "$app/state";
+
+	// Hide footer if ?hide-footer=true is included in the URL or if the platform is native
+	let hideFooter = $derived(page.url.searchParams.get("hide-footer") === "true" || Capacitor.isNativePlatform());
 </script>
 
-{#if !Capacitor.isNativePlatform()}
+{#if !hideFooter}
 	<section class="relative mt-auto w-full overflow-hidden border-t bg-foreground">
 		<div class="flex flex-wrap gap-4 p-8 px-2 lg:px-8 xl:px-12 2xl:px-16">
 			<Button class="text-background" href="https://www.youtube.com/@PaulPlay" target="_blank" variant="link"

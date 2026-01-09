@@ -9,6 +9,6 @@
 		{@render children?.()}
 	</Dialog.Trigger>
 	<Dialog.Content class="flex h-[calc(100svh-10rem)] flex-col overflow-hidden pt-12">
-		<iframe frameborder="0" class="w-full grow border" src={src + "?hide-navbar=true"} title="web page"> </iframe>
+		<iframe frameborder="0" class="w-full grow border" src={src + "?hide-navbar=true&hide-footer=true"} title="web page"> </iframe>
 	</Dialog.Content>
 </Dialog.Root>

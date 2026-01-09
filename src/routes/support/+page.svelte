@@ -8,7 +8,7 @@
 	<title>Support</title>
 </svelte:head>
 
-<section class="relative flex h-80 w-full items-center justify-center overflow-hidden border-b lg:h-100 xl:h-150">
+<section class="relative flex h-80 w-full items-center justify-center overflow-hidden border-b lg:h-100 2xl:h-150">
 	<img alt="support" src="/images/support/support-hero.jpg" class="h-full w-full object-cover" />
 </section>
 

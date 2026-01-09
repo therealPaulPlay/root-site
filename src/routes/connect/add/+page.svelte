@@ -499,7 +499,7 @@
 								WARNING: Aborting the setup with an already paired device will NOT reset the full pairing progress.
 								Finishing the WiFi and Relay setup is highly recommended.
 							{:else}
-								All progress will be lost and you will return to the main page.
+								All setup progress will be lost.
 							{/if}
 						</AlertDialog.Description>
 					</AlertDialog.Header>

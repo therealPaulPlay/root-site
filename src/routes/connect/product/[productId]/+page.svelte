@@ -872,10 +872,10 @@
 						{#if health.logs && health.logs.length > 0}
 							<div class="rounded-lg border p-4">
 								<h4 class="mb-4 font-medium">Logs</h4>
-								<div class="relative h-60 overflow-hidden border bg-muted p-4 text-xs">
+								<div class="relative h-60 overflow-hidden border bg-muted text-xs">
 									<div
 										bind:this={logsContainer}
-										class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto break-all"
+										class="of-top of-bottom of-length-2 p-4 h-full w-full overflow-x-hidden overflow-y-auto break-all"
 									>
 										{#each health.logs as log}
 											<div><span class="text-muted-foreground">[{log.time}]</span> {log.msg}</div>

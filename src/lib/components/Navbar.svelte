@@ -27,7 +27,7 @@
 
 	let showMobileNavbar = $state(false);
 
-	// Hide navbar if ?hide-navbar=true is included in the URL or if the platform is native (iOS/Android)
+	// Hide navbar if ?hide-navbar=true is included in the URL or if the platform is native
 	let hideNavbar = $derived(page.url.searchParams.get("hide-navbar") === "true" || Capacitor.isNativePlatform());
 </script>
 
