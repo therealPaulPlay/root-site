@@ -80,7 +80,7 @@
 	let currentlyScanning = $state(false);
 	let currentlyPairing = $state(false);
 	let currentlyConnectingWifi = $state(false);
-	let currentlyRefreshingWifi = $state(false);
+	let currentlyLoadingWifi = $state(false);
 	let currentlySettingRelay = $state(false);
 
 	// Data
@@ -96,7 +96,7 @@
 
 	async function getWifiNetworks() {
 		try {
-			currentlyRefreshingWifi = true;
+			currentlyLoadingWifi = true;
 			wifiNetworks = [];
 
 			// Limit to 100
@@ -109,7 +109,7 @@
 		} catch (error) {
 			toast.error("Error getting WiFi networks from product: " + error.message);
 		} finally {
-			currentlyRefreshingWifi = false;
+			currentlyLoadingWifi = false;
 		}
 	}
 
@@ -408,14 +408,14 @@
 							{/each}
 						{:else}
 							<div class="flex h-full w-full items-center justify-center p-4">
-								<p class="text-center text-sm">{currentlyRefreshingWifi ? "Loading..." : "No networks found."}</p>
+								<p class="text-center text-sm">{currentlyLoadingWifi ? "Loading..." : "No networks found."}</p>
 							</div>
 						{/if}
 					</div>
 				</div>
-				<Button class="w-fit" variant="outline" onclick={getWifiNetworks} disabled={currentlyRefreshingWifi}>
+				<Button class="w-fit" variant="outline" onclick={getWifiNetworks} disabled={currentlyLoadingWifi}>
 					Refresh
-					{#if currentlyRefreshingWifi}
+					{#if currentlyLoadingWifi}
 						<Spinner />
 					{:else}
 						<RiRefreshLine class="size-4" />

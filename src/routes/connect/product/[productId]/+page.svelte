@@ -21,7 +21,9 @@
 		RiVolumeUpLine,
 		RiVolumeMuteLine,
 		RiCloseLine,
-		RiFileShredLine
+		RiFileShredLine,
+		RiFullscreenLine,
+		RiFullscreenExitLine
 	} from "svelte-remixicon";
 
 	const productId = page.params.productId;
@@ -65,6 +67,9 @@
 	let audioContext;
 	let audioMuted = $state(false);
 	let nextAudioTime = 0;
+
+	// Fullscreen
+	let isFullscreen = $state(false);
 
 	onMount(async () => {
 		product = getProduct(productId);
@@ -535,6 +540,16 @@
 		toast.success("Update started!");
 		loadHealth();
 	}
+
+	function toggleFullscreen() {
+		if (!document.fullscreenElement) {
+			videoElement?.parentElement?.requestFullscreen();
+			isFullscreen = true;
+		} else {
+			document.exitFullscreen();
+			isFullscreen = false;
+		}
+	}
 </script>
 
 <div class="flex h-svh w-full flex-col divide-y overflow-hidden">
@@ -543,26 +558,31 @@
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
 		</Button>
 	</div>
-	<div class="relative aspect-16/9 max-h-[55svh] w-full bg-black">
+	<div class="relative aspect-16/9 max-h-[55svh] w-full bg-black" class:border-0!={isFullscreen}>
 		{#if streamLoading}
 			<div class="flex h-full w-full items-center justify-center text-background">
 				<Spinner class="size-8" />
 			</div>
 		{/if}
 		<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted></video>
-		{#if micEnabled}
-			<Button
-				onclick={() => (audioMuted = !audioMuted)}
-				class="absolute right-4 bottom-4 px-3 opacity-50 transition-none hover:opacity-100"
-				variant="outline"
-			>
-				{#if audioMuted}
-					<RiVolumeMuteLine class="size-4" />
+		<div class="absolute right-4 bottom-4 flex gap-2">
+			{#if micEnabled}
+				<Button onclick={() => (audioMuted = !audioMuted)} class="px-3 opacity-50 transition-none hover:opacity-100">
+					{#if audioMuted}
+						<RiVolumeMuteLine class="size-4" />
+					{:else}
+						<RiVolumeUpLine class="size-4" />
+					{/if}
+				</Button>
+			{/if}
+			<Button onclick={toggleFullscreen} class="px-3 opacity-50 transition-none hover:opacity-100">
+				{#if isFullscreen}
+					<RiFullscreenExitLine class="size-4" />
 				{:else}
-					<RiVolumeUpLine class="size-4" />
+					<RiFullscreenLine class="size-4" />
 				{/if}
 			</Button>
-		{/if}
+		</div>
 	</div>
 	<div class="w-full basis-full overflow-hidden">
 		<Tabs.Root value="events" onValueChange={(v) => (activeTab = v)} class="relative max-h-full">
@@ -875,7 +895,7 @@
 								<div class="relative h-60 overflow-hidden border bg-muted text-xs">
 									<div
 										bind:this={logsContainer}
-										class="of-top of-bottom of-length-2 p-4 h-full w-full overflow-x-hidden overflow-y-auto break-all"
+										class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto p-4 break-all"
 									>
 										{#each health.logs as log}
 											<div><span class="text-muted-foreground">[{log.time}]</span> {log.msg}</div>
