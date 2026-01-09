@@ -96,6 +96,16 @@
 				<p>From here, you can revoke access to your camera.</p>
 			</Accordion.Content>
 		</Accordion.Item>
+		<Accordion.Item value="item-9">
+			<Accordion.Trigger>How can I change the connected WiFi?</Accordion.Trigger>
+			<Accordion.Content class="flex flex-col gap-4 text-balance">
+				<p>
+					To change the WiFi network your ROOT product is connected to, (re-)start the same setup process used during
+					the initial setup and follow the steps.
+				</p>
+				<p>From there, you'll be prompted to skip ahead to the WiFi configuration if you wish to do so.</p>
+			</Accordion.Content>
+		</Accordion.Item>
 	</Accordion.Root>
 </section>
 
