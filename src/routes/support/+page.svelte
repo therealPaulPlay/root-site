@@ -81,7 +81,7 @@
 			<Accordion.Trigger>Does ROOT collect usage data?</Accordion.Trigger>
 			<Accordion.Content class="flex flex-col gap-4 text-balance">
 				<p>
-					We have no insight in how you use our products. All communication between you and our products is encrypted
+					We have no insight into how you use our products. All communication between you and our products is encrypted
 					and only you have access to the key.
 				</p>
 			</Accordion.Content>
