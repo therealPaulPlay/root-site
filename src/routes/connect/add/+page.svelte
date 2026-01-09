@@ -5,7 +5,7 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { Bluetooth } from "$lib/utils/bluetooth";
 	import { encodeKey, Encryption } from "$lib/utils/encryption";
-	import { saveProduct } from "$lib/utils/pairedProductsStorage";
+	import { getProduct, saveProduct } from "$lib/utils/pairedProductsStorage";
 	import { encryptPayload } from "$lib/utils/payloadEncryptionBle";
 	import {
 		RiAlertLine,
@@ -13,10 +13,12 @@
 		RiArrowRightLine,
 		RiCheckLine,
 		RiLock2Line,
-		RiLockUnlockLine
+		RiLockUnlockLine,
+		RiRefreshLine
 	} from "svelte-remixicon";
 	import * as NativeSelect from "$lib/components/ui/native-select/index.js";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+	import * as Dialog from "$lib/components/ui/dialog/index.js";
 	import { toast } from "svelte-sonner";
 	import QrCode from "svelte-qrcode";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
@@ -71,6 +73,7 @@
 	let wifiCountryCode = $state("");
 	let pendingWifiNetwork = $state(null);
 	let currentProductId = $state(null);
+	let alreadyPairedDialogOpen = $state(false);
 
 	// Busy state
 	let currentlyConnectingViaBle = $state(false);
@@ -107,6 +110,26 @@
 			toast.error("Error getting WiFi networks from product: " + error.message);
 		} finally {
 			currentlyRefreshingWifi = false;
+		}
+	}
+
+	async function getWifiAndRelayStatus() {
+		try {
+			const wifiStatusResponse = await bluetoothInstance.read("wifiStatus");
+			wifiConfigured = Boolean(wifiStatusResponse.connected);
+			if (wifiStatusResponse.ssid) selectedWiFiSSID = wifiStatusResponse.ssid;
+		} catch (error) {
+			toast.error("Error getting WiFi status: " + error.message);
+		}
+
+		try {
+			const relayStatusResponse = await bluetoothInstance.read("relayStatus");
+			if (relayStatusResponse.relayDomain) {
+				relayConfigured = true;
+				relayDomainInput = relayStatusResponse.relayDomain;
+			}
+		} catch (error) {
+			toast.error("Error getting relay status: " + error.message);
 		}
 	}
 
@@ -212,6 +235,19 @@
 					} catch (error) {
 						currentlyConnectingViaBle = false;
 						toast.error("Error getting pairing code: " + error.message);
+						return;
+					}
+
+					// Get product ID to check if already paired
+					try {
+						const productIdResult = await bluetoothInstance.read("productId");
+						currentProductId = productIdResult.productId;
+
+						// Check if this product is already paired
+						const existingProduct = getProduct(currentProductId);
+						if (existingProduct) alreadyPairedDialogOpen = true;
+					} catch (error) {
+						toast.error("Error getting product ID: " + error.message);
 					}
 
 					currentlyConnectingViaBle = false;
@@ -303,17 +339,8 @@
 								model: modelResponse.model
 							});
 
-							// Get WiFi status
-							const wifiStatusResponse = await bluetoothInstance.read("wifiStatus");
-							wifiConfigured = Boolean(wifiStatusResponse.connected);
-							if (wifiStatusResponse.ssid) selectedWiFiSSID = wifiStatusResponse.ssid;
-
-							// Get relay status
-							const relayStatusResponse = await bluetoothInstance.read("relayStatus");
-							if (relayStatusResponse.relayDomain) {
-								relayConfigured = true;
-								relayDomainInput = relayStatusResponse.relayDomain;
-							}
+							// Get WiFi and relay status
+							await getWifiAndRelayStatus();
 
 							successfulPair = true;
 
@@ -387,11 +414,13 @@
 					</div>
 				</div>
 				<Button class="w-fit" variant="outline" onclick={getWifiNetworks} disabled={currentlyRefreshingWifi}>
+					Refresh
 					{#if currentlyRefreshingWifi}
 						<Spinner />
+					{:else}
+						<RiRefreshLine class="size-4" />
 					{/if}
-					Refresh</Button
-				>
+				</Button>
 			</div>
 		{/if}
 
@@ -525,4 +554,31 @@
 			>
 		</div>
 	</div>
+
+	<!-- Already Paired Dialog -->
+	<Dialog.Root bind:open={alreadyPairedDialogOpen}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>Already paired</Dialog.Title>
+				<Dialog.Description>
+					This product is already paired. You can jump ahead to WiFi and relay configuration to adjust those settings.
+					<br /><br />
+					If you're experiencing issues and want to intentionally re-pair, repeating the full setup process is recommended.
+				</Dialog.Description>
+			</Dialog.Header>
+			<Dialog.Footer class="mt-4">
+				<Button variant="outline" onclick={() => (alreadyPairedDialogOpen = false)}>Continue Full Setup</Button>
+				<Button
+					onclick={async () => {
+						alreadyPairedDialogOpen = false;
+						step = 5;
+						await getWifiAndRelayStatus();
+						await getWifiNetworks();
+					}}
+				>
+					Jump ahead
+				</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
 </div>

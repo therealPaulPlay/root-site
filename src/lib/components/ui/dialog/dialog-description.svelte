@@ -8,6 +8,6 @@
 <DialogPrimitive.Description
 	bind:ref
 	data-slot="dialog-description"
-	class={cn("text-sm text-muted-foreground", className)}
+	class={cn("text-sm text-muted-foreground text-start", className)}
 	{...restProps}
 />

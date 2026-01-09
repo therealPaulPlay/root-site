@@ -10,6 +10,7 @@ import { toast } from "svelte-sonner";
 const SERVICE_UUID = "a07498ca-ad5b-474e-940d-16f1fbe7e8cd";
 const CHAR_UUIDS = {
 	productModel: "fa3fd066-de2d-4a15-8e0c-4a8d45a847a5",
+	productId: "8f3c4d5e-9a2b-4f1e-8d6c-7e5f4a3b2c1d",
 	getCode: "51ff12bb-3ed8-46e5-b4f9-d64e2fec021b",
 	scanQR: "2c8b0a8e-5f3d-4a9b-8e7c-1d4f6a8b9c2e",
 	pair: "4fafc201-1fb5-459e-8fcc-c5c9c331914b",
