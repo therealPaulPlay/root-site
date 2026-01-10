@@ -31,7 +31,7 @@
 	let product = $state(null);
 	let relayCommInstance;
 	let streamLoading = $state(true);
-	let heartbeatInterval;
+	let streamHeartbeatInterval;
 
 	// Events
 	let events = $state([]);
@@ -110,6 +110,9 @@
 			relayCommInstance.on("streamVideoChunkResult", handleStreamVideoChunk);
 			relayCommInstance.on("streamAudioChunkResult", handleStreamAudioChunk);
 
+			// Handle tab visibility changes
+			if (typeof window !== "undefined") document.addEventListener("visibilitychange", handleVisibilityChange);
+
 			// Load initial data and start stream
 			loadEvents();
 			loadHealth();
@@ -124,16 +127,8 @@
 	});
 
 	onDestroy(() => {
-		stopStreamHeartbeat();
-		if (mediaSource) {
-			if (videoElement) videoElement.src = "";
-			mediaSource = null;
-			sourceBuffer = null;
-		}
-		if (audioContext) {
-			audioContext.close();
-			audioContext = null;
-		}
+		if (typeof window !== "undefined") document.removeEventListener("visibilitychange", handleVisibilityChange);
+		stopStream();
 		if (relayCommInstance) relayCommInstance.disconnect();
 	});
 
@@ -209,19 +204,19 @@
 			sourceBuffer.addEventListener("updateend", () => {
 				processPendingChunks();
 
-				// Start playback once we have 500ms buffered
+				// Start playback once we at least one chunk in the buffer
 				if (!videoStarted && videoElement.buffered.length > 0) {
-					const bufferedAmount = videoElement.buffered.end(0) - videoElement.buffered.start(0);
-					if (bufferedAmount >= 0.5) {
-						videoStarted = true;
-						videoElement.play().catch(console.error);
-					}
+					videoStarted = true;
+					videoElement.play().catch(console.error);
 				}
 			});
 		});
 
 		videoElement.addEventListener("error", () => {
-			if (videoElement) console.error("Video playback error:", videoElement.error);
+			// Ignore empty src errors (code 4) from stopStream()
+			if (videoElement?.error && videoElement.error.code !== 4) {
+				console.error("Video playback error:", videoElement.error);
+			}
 		});
 	}
 
@@ -231,26 +226,43 @@
 		});
 	}
 
+	function stopStream() {
+		pendingChunks = [];
+		if (streamHeartbeatInterval) {
+			clearInterval(streamHeartbeatInterval);
+			streamHeartbeatInterval = null;
+		}
+		if (mediaSource) {
+			mediaSource = null;
+			sourceBuffer = null;
+			videoStarted = false;
+		}
+		if (videoElement) {
+			videoElement.src = "";
+			videoElement.load();
+		}
+		if (audioContext) {
+			audioContext.close();
+			audioContext = null;
+		}
+		bufferedChunks = [];
+		nextAudioTime = 0;
+		audioStarted = false;
+		streamLoading = true;
+	}
+
 	function onStreamStopped(reason) {
 		toast.error("Stream failed: " + reason);
 		console.error("Stream failed: ", reason);
-		stopStreamHeartbeat();
-		streamLoading = false;
+		stopStream();
 	}
 
 	function startStreamHeartbeat() {
-		heartbeatInterval = setInterval(() => {
+		streamHeartbeatInterval = setInterval(() => {
 			relayCommInstance.send(productId, "continueStream").catch((error) => {
 				console.error("Failed to send heartbeat:", error);
 			});
 		}, 2000);
-	}
-
-	function stopStreamHeartbeat() {
-		if (heartbeatInterval) {
-			clearInterval(heartbeatInterval);
-			heartbeatInterval = null;
-		}
 	}
 
 	function handleStartStreamResult(msg) {
@@ -261,7 +273,7 @@
 
 		if (!mediaSource) setupMediaSource();
 		if (micEnabled && !audioContext) setupAudioContext();
-		if (!heartbeatInterval) startStreamHeartbeat();
+		if (!streamHeartbeatInterval) startStreamHeartbeat();
 	}
 
 	let pendingChunks = $state([]);
@@ -302,6 +314,11 @@
 				console.error("Failed to append queued buffer:", err);
 			}
 		}
+	}
+
+	function handleVisibilityChange() {
+		if (document.hidden) stopStream();
+		else startStream();
 	}
 
 	// Audio streaming functions

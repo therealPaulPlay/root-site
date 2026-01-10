@@ -12,13 +12,13 @@
 	<div class="of-top of-bottom of-length-2 max-h-full p-8 max-xl:pb-16 xl:overflow-y-auto">
 		<h1 class="font-display text-3xl font-medium">Privacy Policy</h1>
 		<br />
-		<p>By using this service, you agree to the collection and use of information as described in this policy.</p>
+		<p>By using our services, you agree to the collection and use of information as described in this policy.</p>
 		<br /><br />
 
 		<h2 class="mb-4">What data we collect</h2>
 		<p>
 			We collect server logs and error reports that may include technical information such as IP addresses, browser
-			details, pages visited, and timestamps. This data helps us maintain the service and ensure security.
+			details, pages visited, and timestamps. This data helps us maintain service and ensure security.
 		</p>
 		<br /><br />
 
@@ -32,8 +32,8 @@
 
 		<h2 class="mb-4">Why we collect data</h2>
 		<p>
-			Data collection is necessary to ensure service security, diagnose technical problems, and provide a reliable
-			service to our users.
+			Data collection is necessary to ensure service security, diagnose technical problems, and provide reliable
+			services to our users.
 		</p>
 		<br /><br />
 
