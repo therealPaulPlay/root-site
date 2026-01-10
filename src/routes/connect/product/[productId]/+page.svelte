@@ -176,7 +176,7 @@
 		if (!msg.payload.success) return toast.error("Failed to load recoring: " + msg.payload.error || "Unknown error");
 
 		// Create blob and download
-		const byteCharacters = atob(msg.payload.data);
+		const byteCharacters = atob(msg.payload.video);
 		const byteNumbers = new Array(byteCharacters.length);
 		for (let i = 0; i < byteCharacters.length; i++) {
 			byteNumbers[i] = byteCharacters.charCodeAt(i);
