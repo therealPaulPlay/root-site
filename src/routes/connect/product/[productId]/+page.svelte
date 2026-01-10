@@ -346,10 +346,8 @@
 	}
 
 	function scheduleAudio() {
-		// Reset if we fall behind
-		if (nextAudioTime < audioContext.currentTime) {
-			nextAudioTime = audioContext.currentTime;
-		}
+		const drift = audioContext.currentTime - nextAudioTime;
+		if (drift > 0.05) nextAudioTime += drift * 0.5; // Only correct if drift is >50ms, correct "halfway" for smooth correction
 
 		// Schedule chunks to maintain ~500ms buffer
 		while (bufferedChunks.length > 0 && nextAudioTime - audioContext.currentTime < 0.5) {
