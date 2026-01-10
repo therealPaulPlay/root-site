@@ -62,11 +62,13 @@
 	let videoElement = $state();
 	let mediaSource;
 	let sourceBuffer;
+	let videoStarted = false;
 
 	// Audio streaming
 	let audioContext;
 	let audioMuted = $state(false);
 	let nextAudioTime = 0;
+	let audioStarted = false;
 
 	// Fullscreen
 	let isFullscreen = $state(false);
@@ -201,11 +203,21 @@
 		videoElement.src = URL.createObjectURL(mediaSource);
 
 		mediaSource.addEventListener("sourceopen", () => {
-			sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001f"'); // Specify codec
+			sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001f"');
 			sourceBuffer.mode = "sequence";
+			processPendingChunks();
+			sourceBuffer.addEventListener("updateend", () => {
+				processPendingChunks();
 
-			processPendingChunks(); // Process chunks that arrived while or before MediaSource was opening
-			sourceBuffer.addEventListener("updateend", processPendingChunks); // Process pending chunks every time the buffer is done updating
+				// Start playback once we have 500ms buffered
+				if (!videoStarted && videoElement.buffered.length > 0) {
+					const bufferedAmount = videoElement.buffered.end(0) - videoElement.buffered.start(0);
+					if (bufferedAmount >= 0.5) {
+						videoStarted = true;
+						videoElement.play().catch(console.error);
+					}
+				}
+			});
 		});
 
 		videoElement.addEventListener("error", () => {
@@ -221,7 +233,7 @@
 
 	function onStreamStopped(reason) {
 		toast.error("Stream failed: " + reason);
-		console.error("Stream failed: ", error);
+		console.error("Stream failed: ", reason);
 		stopStreamHeartbeat();
 		streamLoading = false;
 	}
@@ -295,9 +307,11 @@
 	// Audio streaming functions
 	function setupAudioContext() {
 		audioContext = new AudioContext();
-		nextAudioTime = audioContext.currentTime;
+		nextAudioTime = 0;
+		audioStarted = false;
 	}
 
+	let bufferedChunks = [];
 	function handleStreamAudioChunk(msg) {
 		if (!msg.payload.success) {
 			console.error("Audio stream error:", msg.payload.error);
@@ -305,37 +319,47 @@
 		}
 		if (!audioContext || audioMuted) return;
 
-		// Decode base64 PCM data
+		// Decode PCM data
 		const bytes = atob(msg.payload.chunk);
 		const pcmData = new Int16Array(bytes.length / 2);
-
 		for (let i = 0; i < pcmData.length; i++) {
-			const byte1 = bytes.charCodeAt(i * 2);
-			const byte2 = bytes.charCodeAt(i * 2 + 1);
-			pcmData[i] = byte1 | (byte2 << 8);
+			pcmData[i] = bytes.charCodeAt(i * 2) | (bytes.charCodeAt(i * 2 + 1) << 8); // Bitwise OR (|)
 		}
 
-		// Convert Int16 PCM to Float32 for Web Audio API
+		// Convert Int16 PCM to Float32
 		const float32Data = new Float32Array(pcmData.length);
 		for (let i = 0; i < pcmData.length; i++) {
-			float32Data[i] = pcmData[i] / 32768.0; // Convert to -1.0 to 1.0 range
+			float32Data[i] = pcmData[i] / 32768.0;
 		}
 
 		// Create audio buffer (48kHz mono)
 		const audioBuffer = audioContext.createBuffer(1, float32Data.length, 48000);
 		audioBuffer.getChannelData(0).set(float32Data);
+		bufferedChunks.push(audioBuffer);
 
-		// Create buffer source and schedule playback
-		const source = audioContext.createBufferSource();
-		source.buffer = audioBuffer;
-		source.connect(audioContext.destination);
+		// Wait for initial buffer before starting (1 chunk)
+		if (!audioStarted && bufferedChunks.length >= 1) {
+			audioStarted = true;
+			nextAudioTime = audioContext.currentTime;
+			scheduleAudio();
+		} else if (audioStarted) scheduleAudio();
+	}
 
-		// Schedule at next available time to avoid gaps
-		source.start(nextAudioTime);
-		nextAudioTime += audioBuffer.duration;
+	function scheduleAudio() {
+		// Reset if we fall behind
+		if (nextAudioTime < audioContext.currentTime) {
+			nextAudioTime = audioContext.currentTime;
+		}
 
-		// Reset if we're getting too far ahead (prevent unbounded growth)
-		if (nextAudioTime > audioContext.currentTime + 1) nextAudioTime = audioContext.currentTime;
+		// Schedule chunks to maintain ~500ms buffer
+		while (bufferedChunks.length > 0 && nextAudioTime - audioContext.currentTime < 0.5) {
+			const chunk = bufferedChunks.shift();
+			const source = audioContext.createBufferSource();
+			source.buffer = chunk;
+			source.connect(audioContext.destination);
+			source.start(nextAudioTime);
+			nextAudioTime += chunk.duration;
+		}
 	}
 
 	// Controls handlers
@@ -564,7 +588,7 @@
 				<Spinner class="size-8" />
 			</div>
 		{/if}
-		<video bind:this={videoElement} class="h-full w-full" autoplay playsinline muted></video>
+		<video bind:this={videoElement} class="h-full w-full" playsinline muted></video>
 		<div class="absolute right-4 bottom-4 flex gap-2">
 			{#if micEnabled}
 				<Button onclick={() => (audioMuted = !audioMuted)} class="px-3 opacity-50 transition-none hover:opacity-100">
