@@ -643,7 +643,7 @@
 						{/if}
 					</Button>
 				</div>
-				<div class="of-top of-bottom no-scrollbar max-h-[50svh] w-full divide-y overflow-y-auto border">
+				<div class="w-full divide-y overflow-y-auto border">
 					{#if events.length === 0}
 						<div class="p-4 text-center text-muted-foreground">No events recorded yet.</div>
 					{:else}
@@ -664,6 +664,9 @@
 								</div>
 								<div class="flex-1">
 									<p class="font-medium">{new Date(event.timestamp).toLocaleString()}</p>
+									<p class="text-sm text-muted-foreground">
+										Type: {event.event_type?.[0]?.toUpperCase() + event.event_type?.slice(1) || "N/A"}
+									</p>
 									<p class="text-sm text-muted-foreground">
 										Duration: {event.duration || "N/A"}s
 									</p>
