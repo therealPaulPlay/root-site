@@ -158,9 +158,7 @@
 
 	function handleThumbnailResult(msg) {
 		if (!msg.payload.success) return toast.error("Failed to get thumbnail: " + msg.payload.error || "Unknown error");
-
-		const eventId = msg.payload.id || Object.keys(eventThumbnails).length;
-		eventThumbnails[eventId] = msg.payload.data;
+		eventThumbnails[msg.payload.eventId] = msg.payload.data;
 	}
 
 	function viewRecording(event) {
@@ -606,7 +604,7 @@
 		<video bind:this={videoElement} class="h-full w-full" playsinline muted></video>
 		<div class="absolute right-4 bottom-4 flex gap-2">
 			{#if micEnabled}
-				<Button onclick={() => (audioMuted = !audioMuted)} class="px-3 opacity-50 transition-none hover:opacity-100">
+				<Button onclick={() => (audioMuted = !audioMuted)} class="px-3 opacity-50 hover:opacity-100">
 					{#if audioMuted}
 						<RiVolumeMuteLine class="size-4" />
 					{:else}
@@ -614,7 +612,7 @@
 					{/if}
 				</Button>
 			{/if}
-			<Button onclick={toggleFullscreen} class="px-3 opacity-50 transition-none hover:opacity-100">
+			<Button onclick={toggleFullscreen} class="px-3 opacity-50 hover:opacity-100">
 				{#if isFullscreen}
 					<RiFullscreenExitLine class="size-4" />
 				{:else}
@@ -648,8 +646,8 @@
 						<div class="p-4 text-center text-muted-foreground">No events recorded yet.</div>
 					{:else}
 						{#each events as event}
-							<div class="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50">
-								<div class="aspect-video h-20 shrink-0 overflow-hidden rounded bg-muted">
+							<div class="flex items-center gap-4 p-4 hover:bg-muted/50">
+								<div class="aspect-16/9 h-20 shrink-0 overflow-hidden bg-muted border">
 									{#if eventThumbnails[event.id]}
 										<img
 											src={"data:image/jpg;base64," + eventThumbnails[event.id]}
