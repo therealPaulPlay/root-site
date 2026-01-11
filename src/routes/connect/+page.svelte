@@ -19,6 +19,7 @@
 	import { toast } from "svelte-sonner";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
+	import WebBluetoothUnsupportedDialog from "$lib/components/WebBluetoothUnsupportedDialog.svelte";
 
 	let products = $state([]);
 	let relayCommInstance;
@@ -274,3 +275,5 @@
 		<p class="my-auto truncate text-center">No cameras connected.</p>
 	{/if}
 </div>
+
+<WebBluetoothUnsupportedDialog />
