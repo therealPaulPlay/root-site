@@ -23,7 +23,9 @@
 		RiCloseLine,
 		RiFileShredLine,
 		RiFullscreenLine,
-		RiFullscreenExitLine
+		RiFullscreenExitLine,
+		RiSearchAi2Line,
+		RiTimeLine
 	} from "svelte-remixicon";
 
 	const productId = page.params.productId;
@@ -646,8 +648,8 @@
 						<div class="p-4 text-center text-muted-foreground">No events recorded yet.</div>
 					{:else}
 						{#each events as event}
-							<div class="flex items-center gap-4 p-4 hover:bg-muted/50">
-								<div class="aspect-16/9 h-20 shrink-0 overflow-hidden bg-muted border">
+							<div class="flex flex-wrap items-center gap-4 p-4 hover:bg-muted/50">
+								<div class="aspect-16/9 h-20 shrink-0 overflow-hidden border bg-muted">
 									{#if eventThumbnails[event.id]}
 										<img
 											src={"data:image/jpg;base64," + eventThumbnails[event.id]}
@@ -660,16 +662,18 @@
 										</div>
 									{/if}
 								</div>
-								<div class="flex-1">
-									<p class="font-medium">{new Date(event.timestamp).toLocaleString()}</p>
-									<p class="text-sm text-muted-foreground">
-										Type: {event.event_type?.[0]?.toUpperCase() + event.event_type?.slice(1) || "N/A"}
+								<div class="flex-1 gap-4">
+									<p class="font-medium w-full mb-2">{new Date(event.timestamp).toLocaleString()}</p>
+									<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+										<RiSearchAi2Line class="size-4" />
+										{event.event_type?.[0]?.toUpperCase() + event.event_type?.slice(1) || "N/A"}
 									</p>
-									<p class="text-sm text-muted-foreground">
-										Duration: {event.duration || "N/A"}s
+									<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+										<RiTimeLine class="size-4" />
+										{event.duration || "N/A"}s
 									</p>
 								</div>
-								<Button onclick={() => viewRecording(event)} variant="outline" size="sm" class="gap-2">
+								<Button onclick={() => viewRecording(event)} variant="outline" size="sm" class="gap-2 max-sm:grow">
 									<RiDownloadLine class="size-4" />
 									Download
 								</Button>
@@ -839,8 +843,8 @@
 
 				{#if health}
 					<div class="space-y-6">
-						<div class="rounded-lg border p-4">
-							<h4 class="mb-4 font-medium">Performance</h4>
+						<div class="space-y-4 rounded-lg border p-4">
+							<Label class="text-base">Performance</Label>
 							<div class="space-y-2 text-sm">
 								{#if health.performance.cpuUsagePercent !== undefined}
 									<div class="flex justify-between">
@@ -879,8 +883,8 @@
 							</div>
 						</div>
 
-						<div class="rounded-lg border p-4">
-							<h4 class="mb-4 font-medium">Network</h4>
+						<div class="space-y-4 rounded-lg border p-4">
+							<Label class="text-base">Network</Label>
 							<div class="space-y-2 text-sm">
 								<div class="flex justify-between">
 									<span class="text-muted-foreground">WiFi status</span>
@@ -899,8 +903,8 @@
 							</div>
 						</div>
 
-						<div class="rounded-lg border p-4">
-							<h4 class="mb-4 font-medium">Firmware</h4>
+						<div class="space-y-4 rounded-lg border p-4">
+							<Label class="text-base">Firmware</Label>
 							<div class="space-y-2 text-sm">
 								<div class="flex justify-between">
 									<span class="text-muted-foreground">Version</span>
@@ -930,8 +934,8 @@
 						</div>
 
 						{#if health.logs && health.logs.length > 0}
-							<div class="rounded-lg border p-4">
-								<h4 class="mb-4 font-medium">Logs</h4>
+							<div class="rounded-lg border p-4 space-y-4">
+								<Label class="text-base">Logs</Label>
 								<div class="relative h-60 overflow-hidden border bg-muted text-xs">
 									<div
 										bind:this={logsContainer}
