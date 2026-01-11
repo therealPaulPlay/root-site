@@ -152,7 +152,7 @@
 	<div class="relative flex h-fit min-h-32 w-full shrink-0 border-y max-md:flex-wrap">
 		<!-- preview image -->
 		<div
-			class="aspect-16/9 w-full content-center bg-foreground text-center text-background max-md:border-b md:w-1/3 md:border-r"
+			class="aspect-video w-full content-center bg-foreground text-center text-background max-md:border-b md:w-1/3 md:border-r"
 		>
 			<!-- todo -->
 			{#if !previewImages[product.id]}

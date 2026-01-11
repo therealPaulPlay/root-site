@@ -58,7 +58,7 @@
 		>
 	</section>
 
-	<section class="mt-10 flex w-full flex-wrap gap-4 border-y p-6 lg:p-8">
+	<section class="mt-10 flex w-full flex-wrap gap-2 border-y p-6 lg:p-8">
 		<IframeDialog src="/privacy">
 			Privacy Policy <RiExternalLinkLine class="size-4" />
 		</IframeDialog>

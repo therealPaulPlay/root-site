@@ -5,9 +5,13 @@
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
+	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
+	import * as Popover from "$lib/components/ui/popover";
+	import * as RangeCalendar from "$lib/components/ui/range-calendar";
+	import { Checkbox } from "$lib/components/ui/checkbox";
 	import { getProduct } from "$lib/utils/pairedProductsStorage";
 	import { RelayComm, RELAY_REQUEST_TIMEOUT } from "$lib/utils/relaycomm";
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
@@ -25,8 +29,13 @@
 		RiFullscreenLine,
 		RiFullscreenExitLine,
 		RiSearchAi2Line,
-		RiTimeLine
+		RiTimeLine,
+		RiEyeLine,
+		RiCalendarLine,
+		RiFilter3Line
 	} from "svelte-remixicon";
+	import { CalendarDate, getLocalTimeZone } from "@internationalized/date";
+	import { base64ToBlob } from "$lib/utils/base64ToBlob";
 
 	const productId = page.params.productId;
 
@@ -41,6 +50,16 @@
 	let selectedEvent = $state(null);
 	let eventThumbnails = $state({});
 	let viewRecordingDialog = $state(false);
+	let recordingAudioElement = $state();
+	let recordingVideoLoading = $state(false);
+	let recordingVideoUrl = $state(null);
+	let recordingAudioUrl = $state(null);
+
+	// Event filters
+	let dateRangeOpen = $state(false);
+	let dateRangeValue = $state(undefined);
+	let typeFilterOpen = $state(false);
+	let selectedTypes = $state([]);
 
 	// Controls
 	let micEnabled = $state(false);
@@ -166,30 +185,37 @@
 	function viewRecording(event) {
 		selectedEvent = event;
 		viewRecordingDialog = true;
+		recordingVideoLoading = true;
+		recordingVideoUrl = null;
+		recordingAudioUrl = null;
 		relayCommInstance.send(productId, "getRecording", { id: event.id }).catch((error) => {
 			toast.error("Failed to load recording: " + error.message);
 			console.error(error);
+			recordingVideoLoading = false;
 		});
 	}
 
 	function handleRecordingResult(msg) {
-		if (!msg.payload.success) return toast.error("Failed to load recoring: " + msg.payload.error || "Unknown error");
-
-		// Create blob and download
-		const byteCharacters = atob(msg.payload.video);
-		const byteNumbers = new Array(byteCharacters.length);
-		for (let i = 0; i < byteCharacters.length; i++) {
-			byteNumbers[i] = byteCharacters.charCodeAt(i);
+		if (!msg.payload.success) {
+			toast.error("Failed to load recording: " + msg.payload.error || "Unknown error");
+			recordingVideoLoading = false;
+			return;
 		}
-		const byteArray = new Uint8Array(byteNumbers);
-		const blob = new Blob([byteArray], { type: "video/mp4" });
-		const url = URL.createObjectURL(blob);
 
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = `recording-${selectedEvent.id}.mp4`;
-		a.click();
-		URL.revokeObjectURL(url);
+		recordingVideoUrl = URL.createObjectURL(base64ToBlob(msg.payload.video, "video/mp4"));
+		if (msg.payload.audio) recordingAudioUrl = URL.createObjectURL(base64ToBlob(msg.payload.audio, "audio/mp4"));
+		recordingVideoLoading = false;
+	}
+
+	function onRecordingDialogClose() {
+		if (recordingVideoUrl) {
+			URL.revokeObjectURL(recordingVideoUrl);
+			recordingVideoUrl = null;
+		}
+		if (recordingAudioUrl) {
+			URL.revokeObjectURL(recordingAudioUrl);
+			recordingAudioUrl = null;
+		}
 	}
 
 	// Streaming handlers
@@ -589,6 +615,41 @@
 			isFullscreen = false;
 		}
 	}
+
+	// Event filtering and grouping
+	const hasDateFilter = $derived(dateRangeValue?.start && dateRangeValue?.end);
+	const hasTypeFilter = $derived(selectedTypes.length > 0);
+
+	function capitalizeType(type) {
+		return type?.charAt(0).toUpperCase() + type?.slice(1);
+	}
+
+	const availableTypes = $derived([...new Set(events.map((e) => capitalizeType(e.event_type)).filter(Boolean))].sort());
+
+	const filteredEvents = $derived(
+		events.filter((event) => {
+			// Date range filter
+			if (hasDateFilter) {
+				const eventDate = new Date(event.timestamp).setHours(0, 0, 0, 0);
+				const startDate = dateRangeValue.start.toDate(getLocalTimeZone()).getTime();
+				const endDate = dateRangeValue.end.toDate(getLocalTimeZone()).getTime();
+				if (eventDate < startDate || eventDate > endDate) return false;
+			}
+
+			// Type filter
+			if (hasTypeFilter && !selectedTypes.includes(capitalizeType(event.event_type))) return false;
+
+			return true;
+		})
+	);
+
+	const groupedEvents = $derived(
+		filteredEvents.reduce((groups, event) => {
+			const dateKey = new Date(event.timestamp).toLocaleDateString();
+			(groups[dateKey] ||= []).push(event);
+			return groups;
+		}, {})
+	);
 </script>
 
 <div class="flex h-svh w-full flex-col divide-y overflow-hidden">
@@ -597,7 +658,7 @@
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
 		</Button>
 	</div>
-	<div class="relative aspect-16/9 max-h-[55svh] w-full bg-black" class:border-0!={isFullscreen}>
+	<div class="relative aspect-video max-h-[45svh] w-full bg-black" class:border-0!={isFullscreen}>
 		{#if streamLoading}
 			<div class="flex h-full w-full items-center justify-center text-background">
 				<Spinner class="size-8" />
@@ -632,8 +693,68 @@
 					<Tabs.Trigger value="health">Health</Tabs.Trigger>
 				</Tabs.List>
 			</div>
-			<Tabs.Content value="events" class="of-top of-bottom space-y-6 overflow-y-auto p-6">
-				<div class="flex items-center justify-end">
+			<Tabs.Content
+				value="events"
+				class="of-bottom overflow-y-auto p-6"
+				onscroll={() => {
+					dateRangeOpen = false;
+					typeFilterOpen = false;
+				}}
+			>
+				<div class="flex flex-wrap items-center justify-end gap-2">
+					<!-- Date range filter -->
+					<Popover.Root bind:open={dateRangeOpen}>
+						<Popover.Trigger
+							class="{buttonVariants({ variant: hasDateFilter ? 'default' : 'outline', size: 'sm' })} gap-2"
+						>
+							<RiCalendarLine class="size-4" />
+							Date
+						</Popover.Trigger>
+						<Popover.Content class="w-auto p-4" align="start">
+							<div class="space-y-4">
+								<RangeCalendar.RangeCalendar bind:value={dateRangeValue} class="rounded-md border" />
+								<Button
+									size="sm"
+									variant="outline"
+									disabled={!hasDateFilter}
+									class="w-full"
+									onclick={() => (dateRangeValue = undefined)}
+								>
+									Clear
+								</Button>
+							</div>
+						</Popover.Content>
+					</Popover.Root>
+
+					<!-- Type filter -->
+					<Popover.Root bind:open={typeFilterOpen}>
+						<Popover.Trigger
+							class="{buttonVariants({ variant: hasTypeFilter ? 'default' : 'outline', size: 'sm' })} gap-2"
+						>
+							<RiFilter3Line class="size-4" />
+							Type
+						</Popover.Trigger>
+						<Popover.Content class="w-56 p-4" align="start">
+							<div class="space-y-3">
+								{#each availableTypes as type}
+									<Label class="text-nowrap">
+										<Checkbox
+											checked={selectedTypes.includes(type)}
+											onCheckedChange={() => {
+												if (selectedTypes.includes(type)) selectedTypes = selectedTypes.filter((t) => t !== type);
+												else selectedTypes = [...selectedTypes, type];
+											}}
+										/>
+										<p class="truncate">{type}</p>
+									</Label>
+								{/each}
+								{#if availableTypes.length === 0}
+									<p class="text-sm text-muted-foreground">No types available.</p>
+								{/if}
+							</div>
+						</Popover.Content>
+					</Popover.Root>
+
 					<Button onclick={loadEvents} variant="outline" size="sm" disabled={eventsLoading}>
 						Refresh
 						{#if !eventsLoading}
@@ -643,44 +764,55 @@
 						{/if}
 					</Button>
 				</div>
-				<div class="w-full divide-y overflow-y-auto border">
-					{#if events.length === 0}
-						<div class="p-4 text-center text-muted-foreground">No events recorded yet.</div>
-					{:else}
-						{#each events as event}
-							<div class="flex flex-wrap items-center gap-4 p-4 hover:bg-muted/50">
-								<div class="aspect-16/9 h-20 shrink-0 overflow-hidden border bg-muted">
-									{#if eventThumbnails[event.id]}
-										<img
-											src={"data:image/jpg;base64," + eventThumbnails[event.id]}
-											alt="Event thumbnail"
-											class="h-full w-full object-cover"
-										/>
-									{:else}
-										<div class="flex h-full w-full items-center justify-center">
-											<Spinner class="size-4" />
-										</div>
-									{/if}
+
+				{#if events.length === 0}
+					<div class="mt-6 rounded-lg border p-8 text-center text-muted-foreground">No events recorded yet.</div>
+				{:else if Object.keys(groupedEvents).length === 0}
+					<div class="mt-6 rounded-lg border p-8 text-center text-muted-foreground">
+						No events match the selected filters.
+					</div>
+				{:else}
+					{#each Object.entries(groupedEvents) as [dateKey, dateEvents]}
+						<div class="sticky -top-6 z-10 flex items-center gap-4 bg-background mask-b-from-70% mask-b-to-100% py-4">
+							<span class="shrink-0 text-sm font-medium text-muted-foreground">{dateKey}</span>
+							<Separator class="flex-1" />
+						</div>
+						<div class="divide-y overflow-y-auto rounded-lg border">
+							{#each dateEvents as event}
+								<div class="flex flex-wrap items-center gap-4 p-4 hover:bg-muted/50">
+									<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted">
+										{#if eventThumbnails[event.id]}
+											<img
+												src={"data:image/jpg;base64," + eventThumbnails[event.id]}
+												alt="Event thumbnail"
+												class="h-full w-full object-cover"
+											/>
+										{:else}
+											<div class="flex h-full w-full items-center justify-center">
+												<Spinner class="size-4" />
+											</div>
+										{/if}
+									</div>
+									<div class="flex-1 gap-4">
+										<p class="mb-2 w-full font-medium">{new Date(event.timestamp).toLocaleTimeString()}</p>
+										<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+											<RiSearchAi2Line class="size-4" />
+											{capitalizeType(event.event_type) || "N/A"}
+										</p>
+										<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+											<RiTimeLine class="size-4" />
+											{event.duration || "N/A"}s
+										</p>
+									</div>
+									<Button onclick={() => viewRecording(event)} variant="outline" size="sm" class="gap-2 max-sm:grow">
+										<RiEyeLine class="size-4" />
+										View
+									</Button>
 								</div>
-								<div class="flex-1 gap-4">
-									<p class="font-medium w-full mb-2">{new Date(event.timestamp).toLocaleString()}</p>
-									<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
-										<RiSearchAi2Line class="size-4" />
-										{event.event_type?.[0]?.toUpperCase() + event.event_type?.slice(1) || "N/A"}
-									</p>
-									<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
-										<RiTimeLine class="size-4" />
-										{event.duration || "N/A"}s
-									</p>
-								</div>
-								<Button onclick={() => viewRecording(event)} variant="outline" size="sm" class="gap-2 max-sm:grow">
-									<RiDownloadLine class="size-4" />
-									Download
-								</Button>
-							</div>
-						{/each}
-					{/if}
-				</div>
+							{/each}
+						</div>
+					{/each}
+				{/if}
 			</Tabs.Content>
 			<Tabs.Content value="controls" class="of-top of-bottom space-y-6 overflow-y-auto p-6">
 				<div class="space-y-6">
@@ -729,7 +861,8 @@
 							<div class="space-y-4">
 								{#each devices as device}
 									<div
-										class="flex items-center justify-between border p-4 {device.id === localStorage.getItem('deviceId')
+										class="flex items-center justify-between gap-4 border p-4 {device.id ===
+										localStorage.getItem('deviceId')
 											? 'bg-foreground text-background'
 											: ''}"
 									>
@@ -934,7 +1067,7 @@
 						</div>
 
 						{#if health.logs && health.logs.length > 0}
-							<div class="rounded-lg border p-4 space-y-4">
+							<div class="space-y-4 rounded-lg border p-4">
 								<Label class="text-base">Logs</Label>
 								<div class="relative h-60 overflow-hidden border bg-muted text-xs">
 									<div
@@ -954,3 +1087,41 @@
 		</Tabs.Root>
 	</div>
 </div>
+
+<!-- Recording Viewer Dialog -->
+<Dialog.Root bind:open={viewRecordingDialog} onOpenChange={(open) => !open && onRecordingDialogClose()}>
+	<Dialog.Content class="max-w-4xl">
+		<Dialog.Header>
+			<Dialog.Title>{selectedEvent ? new Date(selectedEvent.timestamp).toLocaleString() : ""}</Dialog.Title>
+		</Dialog.Header>
+		<div class="relative flex aspect-video w-full items-center justify-center border bg-foreground">
+			{#if recordingVideoLoading}
+				<Spinner class="size-8 text-background" />
+			{:else if recordingVideoUrl}
+				<video
+					src={recordingVideoUrl}
+					controls
+					autoplay
+					class="w-full"
+					onloadedmetadata={(e) => {
+						// Sync audio with video if both exist
+						if (recordingAudioUrl && recordingAudioElement) {
+							e.target.addEventListener("play", () => recordingAudioElement?.play());
+							e.target.addEventListener("pause", () => recordingAudioElement?.pause());
+							e.target.addEventListener("seeked", () => {
+								recordingAudioElement.currentTime = e.target.currentTime;
+							});
+						}
+					}}
+				>
+					<track kind="captions" />
+				</video>
+				{#if recordingAudioUrl}
+					<audio src={recordingAudioUrl} class="hidden" bind:this={recordingAudioElement}>
+						<track kind="captions" />
+					</audio>
+				{/if}
+			{/if}
+		</div>
+	</Dialog.Content>
+</Dialog.Root>

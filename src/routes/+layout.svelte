@@ -5,7 +5,7 @@
 	import Navbar from "$lib/components/Navbar.svelte";
 	import Footer from "$lib/components/Footer.svelte";
 	import { Toaster } from "$lib/components/ui/sonner/index.js";
-	import { initializeBackGestureHandler, removeBackGestureHandler } from "$lib/utils/back-gesture";
+	import { initializeBackGestureHandler, removeBackGestureHandler } from "$lib/utils/backGesture";
 
 	let { children } = $props();
 
