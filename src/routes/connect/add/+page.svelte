@@ -567,7 +567,6 @@
 				</Dialog.Description>
 			</Dialog.Header>
 			<Dialog.Footer class="mt-4">
-				<Button variant="outline" onclick={() => (alreadyPairedDialogOpen = false)}>Continue Full Setup</Button>
 				<Button
 					onclick={async () => {
 						alreadyPairedDialogOpen = false;

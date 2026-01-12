@@ -51,9 +51,14 @@
 	let eventThumbnails = $state({});
 	let viewRecordingDialog = $state(false);
 	let recordingAudioElement = $state();
+	let recordingVideoElement = $state();
 	let recordingVideoLoading = $state(false);
+	let recordingLoadingPercent = $state(0);
 	let recordingVideoUrl = $state(null);
 	let recordingAudioUrl = $state(null);
+	let recordingHasAudio = $state(false);
+	let recordingChunks = $state({ video: [], audio: [] });
+	let recordingTotalChunks = $state({ video: 0, audio: 0 });
 
 	// Event filters
 	let dateRangeOpen = $state(false);
@@ -110,7 +115,7 @@
 	let audioContext;
 	let audioMuted = $state(false);
 	let nextAudioTime = 0;
-	let audioStarted = false;
+	let audioStarted = $state(false);
 
 	// Fullscreen
 	let isFullscreen = $state(false);
@@ -231,13 +236,24 @@
 		selectedEvent = event;
 		viewRecordingDialog = true;
 		recordingVideoLoading = true;
+		recordingLoadingPercent = 0;
 		recordingVideoUrl = null;
 		recordingAudioUrl = null;
+		recordingHasAudio = false;
+		recordingChunks = { video: [], audio: [] };
+		recordingTotalChunks = { video: 0, audio: 0 };
 		relayCommInstance.send(productId, "getRecording", { id: event.id }).catch((error) => {
 			toast.error("Failed to load recording: " + error.message);
 			console.error(error);
 			recordingVideoLoading = false;
 		});
+	}
+
+	function tryPlayRecording() {
+		if (!recordingVideoElement || recordingVideoElement.readyState < 2) return;
+		if (recordingHasAudio && (!recordingAudioElement || recordingAudioElement.readyState < 2)) return;
+		if (recordingAudioElement) recordingAudioElement.currentTime = 0;
+		recordingVideoElement.play().catch(console.error);
 	}
 
 	function handleRecordingResult(msg) {
@@ -247,9 +263,43 @@
 			return;
 		}
 
-		recordingVideoUrl = URL.createObjectURL(base64ToBlob(msg.payload.video, "video/mp4"));
-		if (msg.payload.audio) recordingAudioUrl = URL.createObjectURL(base64ToBlob(msg.payload.audio, "audio/mp4"));
-		recordingVideoLoading = false;
+		if (msg.payload.hasAudio !== undefined) recordingHasAudio = msg.payload.hasAudio;
+		if (!msg.payload.chunk) return;
+
+		const { fileType, chunkIndex, totalChunks, chunk } = msg.payload;
+		const bytes = atob(chunk);
+		const buffer = new Uint8Array(bytes.length);
+		for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
+
+		recordingChunks[fileType][chunkIndex] = buffer;
+		recordingTotalChunks[fileType] = totalChunks;
+
+		// Update progress
+		const total = recordingTotalChunks.video + (recordingHasAudio ? recordingTotalChunks.audio : 0);
+		const received = recordingChunks.video.filter(Boolean).length + recordingChunks.audio.filter(Boolean).length;
+		recordingLoadingPercent = total > 0 ? Math.round((received / total) * 100) : 0;
+
+		if (chunkIndex === totalChunks - 1) {
+			const totalLength = recordingChunks[fileType].reduce((sum, chunk) => sum + chunk.length, 0);
+			const combined = new Uint8Array(totalLength);
+			let offset = 0;
+
+			for (const chunk of recordingChunks[fileType]) {
+				combined.set(chunk, offset);
+				offset += chunk.length;
+			}
+
+			const mimeType = fileType === "video" ? "video/mp4" : "audio/mp4";
+			const blobUrl = URL.createObjectURL(new Blob([combined], { type: mimeType }));
+
+			if (fileType === "video") {
+				recordingVideoUrl = blobUrl;
+				if (!recordingHasAudio) recordingVideoLoading = false;
+			} else {
+				recordingAudioUrl = blobUrl;
+				recordingVideoLoading = false;
+			}
+		}
 	}
 
 	function onRecordingDialogClose() {
@@ -343,7 +393,7 @@
 		}
 
 		if (!mediaSource) setupMediaSource();
-		if (micEnabled && !audioContext) setupAudioContext();
+		if (!audioContext) setupAudioContext();
 		if (!streamHeartbeatInterval) startStreamHeartbeat();
 	}
 
@@ -768,7 +818,7 @@
 		{/if}
 		<video bind:this={videoElement} class="h-full w-full" playsinline muted></video>
 		<div class="absolute right-4 bottom-4 flex gap-2">
-			{#if micEnabled}
+			{#if audioStarted}
 				<Button onclick={() => (audioMuted = !audioMuted)} class="px-3 opacity-50 hover:opacity-100">
 					{#if audioMuted}
 						<RiVolumeMuteLine class="size-4" />
@@ -1277,28 +1327,40 @@
 		</Dialog.Header>
 		<div class="relative flex aspect-video w-full items-center justify-center border bg-foreground">
 			{#if recordingVideoLoading}
-				<Spinner class="size-8 text-background" />
+					<Spinner class="size-8 text-background" />
+					<p class="absolute text-background text-sm -translate-y-1/2 text-center w-full mt-22">{recordingLoadingPercent}%</p>
 			{:else if recordingVideoUrl}
 				<video
 					src={recordingVideoUrl}
+					bind:this={recordingVideoElement}
 					controls
-					autoplay
 					class="w-full"
-					onloadedmetadata={(e) => {
-						// Sync audio with video if both exist
-						if (recordingAudioUrl && recordingAudioElement) {
-							e.target.addEventListener("play", () => recordingAudioElement?.play());
-							e.target.addEventListener("pause", () => recordingAudioElement?.pause());
-							e.target.addEventListener("seeked", () => {
-								recordingAudioElement.currentTime = e.target.currentTime;
-							});
+					onloadeddata={tryPlayRecording}
+					onplay={() => {
+						if (recordingAudioElement) {
+							recordingAudioElement.currentTime = recordingVideoElement.currentTime;
+							recordingAudioElement.play().catch(console.error);
+						}
+					}}
+					onpause={() => {
+						if (recordingAudioElement) recordingAudioElement.pause();
+					}}
+					onseeked={() => {
+						if (recordingAudioElement) {
+							recordingAudioElement.currentTime = recordingVideoElement.currentTime;
+							if (!recordingVideoElement.paused) recordingAudioElement.play().catch(console.error);
 						}
 					}}
 				>
 					<track kind="captions" />
 				</video>
 				{#if recordingAudioUrl}
-					<audio src={recordingAudioUrl} class="hidden" bind:this={recordingAudioElement}>
+					<audio
+						src={recordingAudioUrl}
+						class="hidden"
+						bind:this={recordingAudioElement}
+						onloadeddata={tryPlayRecording}
+					>
 						<track kind="captions" />
 					</audio>
 				{/if}
