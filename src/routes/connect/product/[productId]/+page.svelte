@@ -73,14 +73,32 @@
 
 	// Devices
 	let devices = $state([]);
-	let devicesLoading = $state(false);
 	let removeDeviceDialogOpen = $state({});
 
 	// Health
 	let health = $state(null);
 	let healthLoading = $state(false);
 	let logsContainer = $state();
-	let activeTab = $state("events");
+
+	// Tab lazy loading
+	const TABS = { EVENTS: "events", CONTROLS: "controls", HEALTH: "health" };
+	let activeTab = $state(TABS.EVENTS);
+	let tabsLoaded = $state({ [TABS.EVENTS]: false, [TABS.CONTROLS]: false, [TABS.HEALTH]: false });
+
+	// Thumbnail IntersectionObserver
+	function observeThumbnail(eventId) {
+		return (element) => {
+			const observer = new IntersectionObserver(
+				([entry]) => {
+					if (entry.isIntersecting) queueThumbnail(eventId);
+					else removeThumbnailFromQueue(eventId);
+				},
+				{ rootMargin: "100px" }
+			);
+			observer.observe(element);
+			return () => observer.disconnect();
+		};
+	}
 
 	// Video streaming
 	let videoElement = $state();
@@ -140,13 +158,8 @@
 			// Handle tab visibility changes
 			if (typeof window !== "undefined") document.addEventListener("visibilitychange", handleVisibilityChange);
 
-			// Load initial data and start stream
+			// Load events tab immediately (default tab), start stream
 			loadEvents();
-			loadHealth();
-			loadMicrophone();
-			loadRecordingSound();
-			loadEventDetectionConfig();
-			loadDevices();
 			startStream();
 		} catch (error) {
 			toast.error("Failed to connect to relay: " + error.message);
@@ -177,16 +190,41 @@
 		}
 		events = msg.payload.events || [];
 		eventsLoading = false;
+	}
 
-		// Load thumbnails for events
-		events.forEach((event) => {
-			relayCommInstance.send(productId, "getThumbnail", { id: event.id }).catch(console.error);
-		});
+	// Thumbnail loading with rate limiting
+	let thumbnailQueue = [];
+	let loadingThumbnails = new Set();
+	let thumbnailInterval;
+
+	function queueThumbnail(eventId) {
+		if (!eventThumbnails[eventId] && !loadingThumbnails.has(eventId) && !thumbnailQueue.includes(eventId)) {
+			thumbnailQueue.push(eventId);
+			if (!thumbnailInterval) {
+				thumbnailInterval = setInterval(() => {
+					const toLoad = thumbnailQueue.splice(0, 5);
+					toLoad.forEach((id) => {
+						loadingThumbnails.add(id);
+						relayCommInstance.send(productId, "getThumbnail", { id }).catch(() => loadingThumbnails.delete(id));
+					});
+					if (thumbnailQueue.length === 0) {
+						clearInterval(thumbnailInterval);
+						thumbnailInterval = null;
+					}
+				}, 1000);
+			}
+		}
+	}
+
+	function removeThumbnailFromQueue(eventId) {
+		const index = thumbnailQueue.indexOf(eventId);
+		if (index > -1) thumbnailQueue.splice(index, 1);
 	}
 
 	function handleThumbnailResult(msg) {
 		if (!msg.payload.success) return toast.error("Failed to get thumbnail: " + msg.payload.error || "Unknown error");
 		eventThumbnails[msg.payload.eventId] = msg.payload.data;
+		loadingThumbnails.delete(msg.payload.eventId);
 	}
 
 	function viewRecording(event) {
@@ -418,6 +456,7 @@
 	}
 
 	function handleGetMicrophoneResult(msg) {
+		controlsLoading.mic = false;
 		if (!msg.payload.success) {
 			toast.error("Failed to load microphone setting: " + msg.payload.error || "Unknown error");
 			return;
@@ -452,6 +491,7 @@
 	}
 
 	function handleGetRecordingSoundResult(msg) {
+		controlsLoading.sound = false;
 		if (!msg.payload.success) {
 			toast.error("Failed to load recording sound setting: " + msg.payload.error || "Unknown error");
 			return;
@@ -485,6 +525,7 @@
 	}
 
 	function handleGetEventDetectionConfigResult(msg) {
+		controlsLoading.eventDetection = false;
 		if (!msg.payload.success) {
 			toast.error("Failed to load event detection config: " + msg.payload.error || "Unknown error");
 			return;
@@ -533,16 +574,16 @@
 	}
 
 	function loadDevices() {
-		devicesLoading = true;
+		controlsLoading.devices = true;
 		relayCommInstance.send(productId, "getDevices").catch((error) => {
 			toast.error("Failed to load devices: " + error.message);
 			console.error(error);
-			devicesLoading = false;
+			controlsLoading.devices = false;
 		});
 	}
 
 	function handleGetDevicesResult(msg) {
-		devicesLoading = false;
+		controlsLoading.devices = false;
 		if (!msg.payload.success) {
 			toast.error("Failed to load devices: " + msg.payload.error || "Unknown error");
 			return;
@@ -643,7 +684,7 @@
 
 	$effect(() => {
 		// Scroll logs to bottom by default upon load
-		if (logsContainer && health?.logs?.length && activeTab === "health") {
+		if (logsContainer && health?.logs?.length && activeTab === TABS.HEALTH) {
 			logsContainer.scrollTop = logsContainer.scrollHeight;
 		}
 	});
@@ -746,16 +787,36 @@
 		</div>
 	</div>
 	<div class="w-full basis-full overflow-hidden">
-		<Tabs.Root value="events" onValueChange={(v) => (activeTab = v)} class="relative max-h-full">
+		<Tabs.Root
+			bind:value={activeTab}
+			onValueChange={(v) => {
+				if (!relayCommInstance) return;
+				if (v === TABS.CONTROLS && !tabsLoaded[TABS.CONTROLS]) {
+					tabsLoaded[TABS.CONTROLS] = true;
+					controlsLoading.mic = true;
+					controlsLoading.sound = true;
+					controlsLoading.eventDetection = true;
+					controlsLoading.devices = true;
+					loadMicrophone();
+					loadRecordingSound();
+					loadEventDetectionConfig();
+					loadDevices();
+				} else if (v === TABS.HEALTH && !tabsLoaded[TABS.HEALTH]) {
+					tabsLoaded[TABS.HEALTH] = true;
+					loadHealth();
+				}
+			}}
+			class="relative max-h-full"
+		>
 			<div class="w-full">
 				<Tabs.List class="w-full">
-					<Tabs.Trigger value="events">Events</Tabs.Trigger>
-					<Tabs.Trigger value="controls">Controls</Tabs.Trigger>
-					<Tabs.Trigger value="health">Health</Tabs.Trigger>
+					<Tabs.Trigger value={TABS.EVENTS}>Events</Tabs.Trigger>
+					<Tabs.Trigger value={TABS.CONTROLS}>Controls</Tabs.Trigger>
+					<Tabs.Trigger value={TABS.HEALTH}>Health</Tabs.Trigger>
 				</Tabs.List>
 			</div>
 			<Tabs.Content
-				value="events"
+				value={TABS.EVENTS}
 				class="of-bottom overflow-y-auto p-6"
 				onscroll={() => {
 					dateRangeOpen = false;
@@ -841,7 +902,10 @@
 						<div class="divide-y overflow-y-auto rounded-lg border">
 							{#each dateEvents as event}
 								<div class="flex flex-wrap items-center gap-4 p-4 hover:bg-muted/50">
-									<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted">
+									<div
+										class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted"
+										{@attach observeThumbnail(event.id)}
+									>
 										{#if eventThumbnails[event.id]}
 											<img
 												src={"data:image/jpg;base64," + eventThumbnails[event.id]}
@@ -875,7 +939,7 @@
 					{/each}
 				{/if}
 			</Tabs.Content>
-			<Tabs.Content value="controls" class="of-top of-bottom space-y-6 overflow-y-auto p-6">
+			<Tabs.Content value={TABS.CONTROLS} class="of-top of-bottom space-y-6 overflow-y-auto p-6">
 				<div class="space-y-6">
 					<div class="flex items-center justify-between gap-4 rounded-lg border p-4">
 						<div>
@@ -963,9 +1027,9 @@
 					<div class="border p-4">
 						<div class="mb-4 flex items-center justify-between gap-4">
 							<Label class="text-base">Paired devices</Label>
-							<Button onclick={loadDevices} variant="outline" size="sm" disabled={devicesLoading}>
+							<Button onclick={loadDevices} variant="outline" size="sm" disabled={controlsLoading.devices}>
 								Refresh
-								{#if devicesLoading}
+								{#if controlsLoading.devices}
 									<Spinner class="size-4" />
 								{:else}
 									<RiRefreshLine class="size-4" />
@@ -1079,7 +1143,7 @@
 					</AlertDialog.Root>
 				</div>
 			</Tabs.Content>
-			<Tabs.Content value="health" class="of-top of-bottom space-y-6 overflow-y-auto p-6">
+			<Tabs.Content value={TABS.HEALTH} class="of-top of-bottom space-y-6 overflow-y-auto p-6">
 				<div class="flex items-center justify-end">
 					<Button onclick={loadHealth} variant="outline" size="sm" disabled={healthLoading}>
 						Refresh
