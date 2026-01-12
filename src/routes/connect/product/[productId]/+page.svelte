@@ -64,6 +64,9 @@
 	// Controls
 	let micEnabled = $state(false);
 	let recordingSoundEnabled = $state(false);
+	let eventDetectionEnabled = $state(false);
+	let eventDetectionTypes = $state([]);
+	let eventDetectionTypesInput = $state("");
 	let controlsLoading = $state({});
 	let restartDialogOpen = $state(false);
 	let resetDialogOpen = $state(false);
@@ -118,6 +121,9 @@
 			relayCommInstance.on("setMicrophoneResult", handleSetMicrophoneResult);
 			relayCommInstance.on("getRecordingSoundResult", handleGetRecordingSoundResult);
 			relayCommInstance.on("setRecordingSoundResult", handleSetRecordingSoundResult);
+			relayCommInstance.on("getEventDetectionConfigResult", handleGetEventDetectionConfigResult);
+			relayCommInstance.on("setEventDetectionEnabledResult", handleSetEventDetectionEnabledResult);
+			relayCommInstance.on("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
 			relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
 			relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
 			relayCommInstance.on("getHealthResult", handleHealthResult);
@@ -139,6 +145,7 @@
 			loadHealth();
 			loadMicrophone();
 			loadRecordingSound();
+			loadEventDetectionConfig();
 			loadDevices();
 			startStream();
 		} catch (error) {
@@ -469,6 +476,60 @@
 			return;
 		}
 		recordingSoundEnabled = msg.payload.enabled;
+	}
+
+	function loadEventDetectionConfig() {
+		relayCommInstance.send(productId, "getEventDetectionConfig").catch((error) => {
+			console.error("Failed to load event detection config:", error);
+		});
+	}
+
+	function handleGetEventDetectionConfigResult(msg) {
+		if (!msg.payload.success) {
+			toast.error("Failed to load event detection config: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		eventDetectionEnabled = msg.payload.enabled;
+		eventDetectionTypes = msg.payload.enabledTypes || [];
+	}
+
+	function toggleEventDetection() {
+		controlsLoading.eventDetection = true;
+		const newValue = !eventDetectionEnabled;
+		relayCommInstance.send(productId, "setEventDetectionEnabled", { enabled: newValue }).catch((error) => {
+			toast.error("Failed to toggle event detection: " + error.message);
+			console.error(error);
+			controlsLoading.eventDetection = false;
+		});
+	}
+
+	function handleSetEventDetectionEnabledResult(msg) {
+		controlsLoading.eventDetection = false;
+		if (!msg.payload.success) {
+			toast.error("Failed to set event detection: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		eventDetectionEnabled = msg.payload.enabled;
+	}
+
+	function updateEventDetectionTypes() {
+		controlsLoading.eventDetectionTypes = true;
+		relayCommInstance
+			.send(productId, "setEventDetectionTypes", { enabledTypes: eventDetectionTypes })
+			.catch((error) => {
+				toast.error("Failed to update event detection types: " + error.message);
+				console.error(error);
+				controlsLoading.eventDetectionTypes = false;
+			});
+	}
+
+	function handleSetEventDetectionTypesResult(msg) {
+		controlsLoading.eventDetectionTypes = false;
+		if (!msg.payload.success) {
+			toast.error("Failed to set event detection types: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		eventDetectionTypes = msg.payload.enabledTypes || [];
 	}
 
 	function loadDevices() {
@@ -841,6 +902,62 @@
 								{recordingSoundEnabled ? "Enabled" : "Disabled"}
 							{/if}
 						</Button>
+					</div>
+
+					<div class="space-y-4 rounded-lg border p-4">
+						<div class="flex items-center justify-between gap-4">
+							<div>
+								<Label class="text-base">Event detection</Label>
+								<p class="text-sm text-muted-foreground">Detect and record events automatically.</p>
+							</div>
+							<Button onclick={toggleEventDetection} variant="outline" disabled={controlsLoading.eventDetection}>
+								{#if controlsLoading.eventDetection}
+									<Spinner class="size-4" />
+								{:else}
+									{eventDetectionEnabled ? "Enabled" : "Disabled"}
+								{/if}
+							</Button>
+						</div>
+						{#if eventDetectionEnabled}
+							<div>
+								<Label class="mb-2 text-muted-foreground">Types (empty = all)</Label>
+								<div class="flex min-h-10 flex-wrap items-center gap-2 border bg-background px-2 py-2">
+									{#each eventDetectionTypes as type}
+										<div class="inline-flex items-center gap-1 bg-secondary px-2 py-0.75 text-xs">
+											<span>{type}</span>
+											<Button
+												variant="ghost"
+												class="h-fit px-0 py-0"
+												onclick={() => {
+													eventDetectionTypes = eventDetectionTypes.filter((t) => t !== type);
+													updateEventDetectionTypes();
+												}}
+												disabled={controlsLoading.eventDetectionTypes}
+											>
+												<RiCloseLine class="size-3" />
+											</Button>
+										</div>
+									{/each}
+									<input
+										bind:value={eventDetectionTypesInput}
+										placeholder={eventDetectionTypes.length === 0 ? "person, pet, etc." : ""}
+										disabled={controlsLoading.eventDetectionTypes}
+										class="flex-1 text-sm outline-none"
+										onkeydown={(e) => {
+											if (e.key === "," || e.key === "Enter") {
+												e.preventDefault();
+												const lowercaseType = eventDetectionTypesInput.toLowerCase().trim();
+												if (lowercaseType && !eventDetectionTypes.includes(lowercaseType)) {
+													eventDetectionTypes = [...eventDetectionTypes, lowercaseType];
+													updateEventDetectionTypes();
+													eventDetectionTypesInput = "";
+												}
+											}
+										}}
+									/>
+								</div>
+							</div>
+						{/if}
 					</div>
 
 					<div class="border p-4">
