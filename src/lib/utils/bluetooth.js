@@ -13,6 +13,7 @@ const CHAR_UUIDS = {
 	productId: "8f3c4d5e-9a2b-4f1e-8d6c-7e5f4a3b2c1d",
 	getCode: "51ff12bb-3ed8-46e5-b4f9-d64e2fec021b",
 	scanQR: "2c8b0a8e-5f3d-4a9b-8e7c-1d4f6a8b9c2e",
+	viewfinder: "3d9e1f7a-4b6c-5e8d-9f0a-1b2c3d4e5f6a",
 	pair: "4fafc201-1fb5-459e-8fcc-c5c9c331914b",
 	productPublicKey: "2d7c0e8f-5a3b-4c1d-8e6a-0f4b9d2c7e1a",
 	wifiNetworks: "c2be2bc9-cee3-40ae-af50-f9959f25ee5b",
@@ -61,9 +62,12 @@ export class Bluetooth {
 
 	async connect() {
 		await ensureInitialized();
-		if (!this.#deviceId) throw new Error("No device selected. Call scan() first!");
+		if (!this.isConnected()) throw new Error("No device selected. Call scan() first!");
 
 		await BleClient.connect(this.#deviceId, (deviceId) => {
+			// On disconnect...
+			this.#deviceId = null;
+			this.#deviceName = null;
 			toast.info("Bluetooth device disconnected.");
 			console.log(`Bluetooth device ${deviceId} disconnected!`);
 		});
@@ -71,16 +75,18 @@ export class Bluetooth {
 
 	async disconnect() {
 		await ensureInitialized();
-		if (this.#deviceId) {
-			await BleClient.disconnect(this.#deviceId);
-		}
+		if (this.isConnected()) await BleClient.disconnect(this.#deviceId);
 		this.#deviceId = null;
 		this.#deviceName = null;
 	}
 
+	isConnected() {
+		return this.#deviceId !== null;
+	}
+
 	async read(charName) {
 		await ensureInitialized();
-		if (!this.#deviceId) throw new Error("No BLE device connected!");
+		if (!this.isConnected()) throw new Error("No BLE device connected!");
 
 		const uuid = CHAR_UUIDS[charName];
 		if (!uuid) throw new Error(`Unknown characteristic: ${charName}`);
@@ -102,7 +108,7 @@ export class Bluetooth {
 
 	async writeAndRead(charName, data) {
 		await ensureInitialized();
-		if (!this.#deviceId) throw new Error("No BLE device connected!");
+		if (!this.isConnected()) throw new Error("No BLE device connected!");
 
 		const uuid = CHAR_UUIDS[charName];
 		if (!uuid) throw new Error(`Unknown characteristic: ${charName}`);

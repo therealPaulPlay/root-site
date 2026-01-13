@@ -286,7 +286,7 @@
 				processPendingChunks();
 
 				// Start playback once we at least one chunk in the buffer
-				if (!videoStarted && videoElement.buffered.length > 0) {
+				if (!videoStarted && videoElement && videoElement.buffered.length > 0) {
 					videoStarted = true;
 					videoElement.play().catch(console.error);
 				}
@@ -375,7 +375,7 @@
 		for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
 
 		// Queue chunks if MediaSource isn't ready yet
-		if (mediaSource.readyState !== "open" || !sourceBuffer) {
+		if (!mediaSource || mediaSource.readyState !== "open" || !sourceBuffer) {
 			pendingChunks.push(buffer);
 			return;
 		}

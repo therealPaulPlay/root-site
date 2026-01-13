@@ -25,6 +25,7 @@
 	import { onMount } from "svelte";
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config.js";
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
+	import QRViewfinder from "$lib/components/QRViewfinder.svelte";
 
 	let step = $state(1);
 	let stepAmount = $state(6);
@@ -40,7 +41,7 @@
 	let stepTitle = [
 		"Plug in the product.",
 		"Connect via Bluetooth.",
-		"Scan this QR code.",
+		"Scan the QR code.",
 		"Pair your device.",
 		"Configure WiFi.",
 		"Set the relay server."
@@ -172,9 +173,7 @@
 			<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover" />
 		</div>
 	{:else if step === 3}
-		<div
-			class="flex min-h-[calc(min(50svh,60svh))] w-full items-center justify-center overflow-hidden border-b bg-white! py-12"
-		>
+		<div class="flex w-full items-center justify-center overflow-hidden border-b bg-white! py-6 md:py-12 lg:py-16">
 			{#if pairingCode}
 				<div class="pt-4 pl-4">
 					<QrCode value={pairingCode} size={275} errorCorrection="H" />
@@ -265,31 +264,36 @@
 
 		{#if step == 3}
 			<p class="max-w-3xl">
-				Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE" and hold the product still.
+				Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE".
 			</p>
-			<Button
-				class="mt-4 w-fit"
-				disabled={currentlyScanning || successfulScan}
-				onclick={async () => {
-					try {
-						currentlyScanning = true;
-						await bluetoothInstance.read("scanQR");
-						successfulScan = true;
-					} catch (error) {
-						toast.error("Error scanning code: " + error.message);
-					} finally {
-						currentlyScanning = false;
-					}
-				}}
-			>
-				{#if currentlyScanning}
-					<Spinner />
+			<div class="mt-4 space-y-8">
+				<Button
+					class="w-fit"
+					disabled={currentlyScanning || successfulScan}
+					onclick={async () => {
+						try {
+							currentlyScanning = true;
+							await bluetoothInstance.read("scanQR");
+							successfulScan = true;
+						} catch (error) {
+							toast.error("Error scanning code: " + error.message);
+						} finally {
+							currentlyScanning = false;
+						}
+					}}
+				>
+					{#if currentlyScanning}
+						<Spinner />
+					{/if}
+					Scan code
+					{#if successfulScan}
+						<RiCheckLine class="h-4! w-4!" />
+					{/if}
+				</Button>
+				{#if !successfulScan}
+					<QRViewfinder {bluetoothInstance} />
 				{/if}
-				Scan code
-				{#if successfulScan}
-					<RiCheckLine class="h-4! w-4!" />
-				{/if}
-			</Button>
+			</div>
 		{/if}
 
 		{#if step == 4}
@@ -515,7 +519,7 @@
 		{/if}
 
 		<!-- Controls -->
-		<div class="mt-auto flex w-full justify-between gap-8">
+		<div class="mt-auto pt-4 flex w-full justify-between gap-8">
 			<AlertDialog.Root>
 				<AlertDialog.Trigger class={buttonVariants({ variant: "outline" })}>
 					<RiArrowLeftLine class="h-4! w-4!" />Abort
