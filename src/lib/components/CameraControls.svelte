@@ -20,7 +20,7 @@
 		eventDetectionEnabled,
 		eventDetectionTypes,
 		eventDetectionTypesInput = $bindable(),
-        devices = []
+		devices = []
 	} = $props();
 
 	let restartDialogOpen = $state(false);
@@ -70,46 +70,44 @@
 				{/if}
 			</Button>
 		</div>
-		{#if eventDetectionEnabled}
-			<div>
-				<Label class="mb-2 text-muted-foreground">Types (empty = all)</Label>
-				<div class="flex min-h-10 flex-wrap items-center gap-2 border bg-background px-2 py-2">
-					{#each eventDetectionTypes as type}
-						<div class="inline-flex items-center gap-1 bg-secondary px-2 py-0.75 text-xs">
-							<span>{type}</span>
-							<Button
-								variant="ghost"
-								class="h-fit px-0 py-0"
-								onclick={() => {
-									eventDetectionTypes = eventDetectionTypes.filter((t) => t !== type);
-									updateEventDetectionTypes();
-								}}
-								disabled={controlsLoading.eventDetectionTypes}
-							>
-								<RiCloseLine class="size-3" />
-							</Button>
-						</div>
-					{/each}
-					<input
-						bind:value={eventDetectionTypesInput}
-						placeholder={eventDetectionTypes.length === 0 ? "person, pet, etc." : ""}
-						disabled={controlsLoading.eventDetectionTypes}
-						class="flex-1 text-sm outline-none"
-						onkeydown={(e) => {
-							if (e.key === "," || e.key === "Enter") {
-								e.preventDefault();
-								const lowercaseType = eventDetectionTypesInput.toLowerCase().trim();
-								if (lowercaseType && !eventDetectionTypes.includes(lowercaseType)) {
-									eventDetectionTypes = [...eventDetectionTypes, lowercaseType];
-									updateEventDetectionTypes();
-									eventDetectionTypesInput = "";
-								}
+		<div class:opacity-50={!eventDetectionEnabled} class:pointer-events-none={!eventDetectionEnabled}>
+			<Label class="mb-2 text-muted-foreground">Types (empty = all)</Label>
+			<div class="flex min-h-10 flex-wrap items-center gap-2 border bg-background px-2 py-2">
+				{#each eventDetectionTypes as type}
+					<div class="inline-flex items-center gap-1 bg-secondary px-2 py-0.75 text-xs">
+						<span>{type}</span>
+						<Button
+							variant="ghost"
+							class="h-fit px-0 py-0"
+							onclick={() => {
+								eventDetectionTypes = eventDetectionTypes.filter((t) => t !== type);
+								updateEventDetectionTypes();
+							}}
+							disabled={controlsLoading.eventDetectionTypes}
+						>
+							<RiCloseLine class="size-3" />
+						</Button>
+					</div>
+				{/each}
+				<input
+					bind:value={eventDetectionTypesInput}
+					placeholder={eventDetectionTypes.length === 0 ? "person, pet, etc." : ""}
+					disabled={controlsLoading.eventDetectionTypes}
+					class="flex-1 text-sm outline-none"
+					onkeydown={(e) => {
+						if (e.key === "," || e.key === "Enter") {
+							e.preventDefault();
+							const lowercaseType = eventDetectionTypesInput.toLowerCase().trim();
+							if (lowercaseType && !eventDetectionTypes.includes(lowercaseType)) {
+								eventDetectionTypes = [...eventDetectionTypes, lowercaseType];
+								updateEventDetectionTypes();
+								eventDetectionTypesInput = "";
 							}
-						}}
-					/>
-				</div>
+						}
+					}}
+				/>
 			</div>
-		{/if}
+		</div>
 	</div>
 
 	<div class="border p-4">
