@@ -6,17 +6,17 @@
 
 	let { bluetoothInstance } = $props();
 
+	const resX = 96;
+	const resY = 54;
+
 	let canvas = $state();
 	let ctx;
-	let intervalId = $state();
-	let isUpdating = false;
 	let initialUpdateCompleted = $state(false);
 	let isDestroyed = false;
 
 	async function updateViewfinder() {
-		if (!bluetoothInstance?.isConnected() || isUpdating || isDestroyed) return;
+		if (!bluetoothInstance?.isConnected() || isDestroyed) return;
 
-		isUpdating = true;
 		try {
 			const chunkMap = {};
 			let hasMore = true;
@@ -35,28 +35,31 @@
 			const fullData = indices.map((i) => chunkMap[i]).join("");
 
 			if (fullData.length > 0 && !isDestroyed) {
-				const imageData = decodeBitmap(fullData, 48, 27);
+				const imageData = decodeBitmap(fullData, resX, resY);
 				ctx.putImageData(imageData, 0, 0);
 			}
 		} catch (err) {
 			console.error("Viewfinder error:", err);
 		} finally {
-			isUpdating = false;
 			initialUpdateCompleted = true;
+		}
+	}
+
+	async function viewfinderLoop() {
+		while (!isDestroyed) {
+			await updateViewfinder();
+			await new Promise(resolve => setTimeout(resolve, 250)); // Wait 0.25s in between
 		}
 	}
 
 	onMount(() => {
 		isDestroyed = false;
-		if (intervalId) clearInterval(intervalId);
 		ctx = canvas.getContext("2d");
-		intervalId = setInterval(updateViewfinder, 1000);
-		updateViewfinder();
+		viewfinderLoop();
 	});
 
 	onDestroy(() => {
 		isDestroyed = true;
-		if (intervalId) clearInterval(intervalId);
 	});
 </script>
 
@@ -68,8 +71,8 @@
 		{/if}
 		<canvas
 			bind:this={canvas}
-			width="48"
-			height="27"
+			width={resX}
+			height={resY}
 			class="border bg-foreground"
 			style="image-rendering: pixelated; width: 160px; height: 90px;"
 		></canvas>
