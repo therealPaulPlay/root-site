@@ -384,6 +384,18 @@
 		streamLoading = false; // Hide loading spinner, now that chunks are coming in and displaying
 		pendingChunks.push(buffer);
 		processPendingChunks();
+		correctVideoDrift(); // Check for video drift and seek forward if too far behind
+	}
+
+	function correctVideoDrift() {
+		if (!videoElement || !videoStarted || videoElement.buffered.length === 0) return;
+
+		const bufferEnd = videoElement.buffered.end(videoElement.buffered.length - 1);
+		const currentTime = videoElement.currentTime;
+		const drift = bufferEnd - currentTime;
+
+		// If video is more than 500ms behind the buffer end, seek forward to catch up (100ms behind to avoid edge issues)
+		if (drift > 0.5) videoElement.currentTime = bufferEnd - 0.1;
 	}
 
 	function processPendingChunks() {
@@ -445,11 +457,13 @@
 	}
 
 	function scheduleAudio() {
-		const drift = audioContext.currentTime - nextAudioTime;
-		if (drift > 0.05) nextAudioTime += drift * 0.5; // Only correct if drift is >50ms, correct "halfway" for smooth correction
+		if (bufferedChunks.length > 1) bufferedChunks = bufferedChunks.slice(-1); // Only keep newest chunk to prevent drift
 
-		// Schedule chunks to maintain ~500ms buffer
-		while (bufferedChunks.length > 0 && nextAudioTime - audioContext.currentTime < 0.5) {
+		while (bufferedChunks.length > 0) {
+			const currentTime = audioContext.currentTime;
+			if (nextAudioTime < currentTime) nextAudioTime = currentTime; // Snap to now if fallen behind (e.g. not enough chunks for a while)
+			if (nextAudioTime > currentTime + 0.3) break; // Keep 300ms buffer to absorb network jitter
+
 			const chunk = bufferedChunks.shift();
 			const source = audioContext.createBufferSource();
 			source.buffer = chunk;
