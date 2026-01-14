@@ -450,8 +450,7 @@
 				<Tabs.Content value="local">
 					<p>
 						Recordings are stored on-device and
-						<span class="bg-accent">streamed from the product directly on-demand</span>. No cloud storage costs,
-						absolute control.
+						<span class="bg-accent">streamed from the product directly on-demand</span>. No cloud storage subscription is needed.
 					</p>
 				</Tabs.Content>
 				<Tabs.Content value="transparency">
