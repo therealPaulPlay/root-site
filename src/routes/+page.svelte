@@ -190,7 +190,7 @@
 		playsinline
 		autoplay
 		muted
-		class="pointer-events-none absolute inset-0 -z-1 h-full w-full border-b bg-foreground object-cover"
+		class="pointer-events-none absolute inset-0 -z-1 h-full w-full bg-foreground object-cover"
 		style="object-position: 30% center;"
 	>
 		<source
@@ -206,7 +206,7 @@
 		<div class="z-2 max-w-xl space-y-4">
 			<h3 class="font-display text-5xl font-medium tracking-wide text-background">Privacy, redefined.</h3>
 			<p class="max-w-lg text-background">
-				The ROOT Observer is here to challenge what <i>private</i> in a security camera stands for.
+				The ROOT Observer challenges what <i>private</i> should stand for in security cameras.
 			</p>
 			<Button
 				size="lg"
