@@ -3,8 +3,8 @@
 	import Button from "./ui/button/button.svelte";
 	import Label from "./ui/label/label.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
-	
-    let { health, healthLoading, activeTab, healthTab = "", loadHealth = () => {} } = $props();
+
+	let { health, healthLoading, activeTab, healthTab = "", loadHealth = () => {} } = $props();
 
 	let logsContainer = $state();
 
@@ -134,4 +134,6 @@
 			</div>
 		{/if}
 	</div>
+{:else}
+	<div class="mt-6 rounded-lg border p-8 text-center text-muted-foreground">No health information loaded.</div>
 {/if}
