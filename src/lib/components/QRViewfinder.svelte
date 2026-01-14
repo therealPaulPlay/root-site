@@ -3,6 +3,7 @@
 	import { decodeBitmap } from "$lib/utils/decodeBitmap";
 	import Label from "./ui/label/label.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
+	import { toast } from "svelte-sonner";
 
 	let { bluetoothInstance } = $props();
 
@@ -14,6 +15,8 @@
 	let initialUpdateCompleted = $state(false);
 	let isDestroyed = false;
 
+	let hasShownError = false; // Prevent error toast spam
+
 	async function updateViewfinder() {
 		if (!bluetoothInstance?.isConnected() || isDestroyed) return;
 
@@ -23,7 +26,6 @@
 
 			while (hasMore && !isDestroyed) {
 				const response = await bluetoothInstance.read("viewfinder");
-				if (!response.success) break;
 				chunkMap[response.index] = response.data;
 				hasMore = response.hasMore;
 			}
@@ -38,17 +40,20 @@
 				const imageData = decodeBitmap(fullData, resX, resY);
 				ctx.putImageData(imageData, 0, 0);
 			}
-		} catch (err) {
-			console.error("Viewfinder error:", err);
-		} finally {
+
 			initialUpdateCompleted = true;
+			hasShownError = false;
+		} catch (error) {
+			console.error("Viewfinder error:", error);
+			if (!hasShownError) toast.error("Viewfinder error:", error.message);
+			hasShownError = true;
 		}
 	}
 
 	async function viewfinderLoop() {
 		while (!isDestroyed) {
 			await updateViewfinder();
-			await new Promise(resolve => setTimeout(resolve, 250)); // Wait 0.25s in between
+			await new Promise((resolve) => setTimeout(resolve, 250)); // Wait 0.25s in between
 		}
 	}
 
