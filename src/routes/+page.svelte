@@ -1,10 +1,23 @@
 <script>
 	import { onMount, onDestroy } from "svelte";
-	import { RiDeviceLine, RiTimeLine, RiComputerLine, RiCpuLine, RiTranslate2, RiCamera2Fill } from "svelte-remixicon";
+	import {
+		RiDeviceLine,
+		RiTimeLine,
+		RiComputerLine,
+		RiCpuLine,
+		RiTranslate2,
+		RiCamera2Fill,
+		RiCamera2Line,
+		RiServerLine,
+		RiSmartphoneLine,
+		RiExternalLinkLine
+	} from "svelte-remixicon";
 	import { blur } from "svelte/transition";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Carousel from "$lib/components/ui/carousel";
+	import * as Tabs from "$lib/components/ui/tabs";
+	import Label from "$lib/components/ui/label/label.svelte";
 
 	// User tracking example
 	let exampleTrackingInfo = $state([]);
@@ -98,7 +111,7 @@
 
 		const plusCount = Math.floor(width / 55); // Rough estimate for plus width
 		const plus = "+".repeat(Math.max(1, plusCount));
-		marqueeText = `${plus}Shockingly+++Private+++Devices${plus}`;
+		marqueeText = `${plus}Shockingly+++Private+++Products${plus}`;
 	}
 
 	function updateEyeGrid() {
@@ -170,7 +183,7 @@
 	onpointermove={handleEyePupilPointerMove}
 />
 
-<section class="relative mb-20 flex h-100 w-full items-center justify-center lg:h-125 xl:h-155">
+<section class="relative mb-20 flex h-125 w-full items-center justify-center border-b xl:h-155">
 	<!-- svelte-ignore a11y_media_has_caption -->
 	<video
 		loop
@@ -185,18 +198,36 @@
 			type="video/mp4"
 		/>
 	</video>
+	<div class="absolute right-0 bottom-0 left-0 p-8 lg:p-10">
+		<!-- Black fade and slight blur -->
+		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground mask-t-from-0%"></div>
+		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground/25 mask-t-from-70% backdrop-blur-lg"></div>
+		<!-- Hero text container -->
+		<div class="z-2 max-w-xl space-y-4">
+			<h3 class="font-display text-5xl font-medium tracking-wide text-background">Privacy, redefined.</h3>
+			<p class="max-w-lg text-background">
+				The ROOT Observer is here to challenge what <i>private</i> in a security camera stands for.
+			</p>
+			<Button
+				size="lg"
+				class="mt-2 bg-background text-foreground hover:bg-background/80 hover:text-foreground"
+				href="https://tally.so/r/NpXY1N"
+				target="_blank">Email waitlist</Button
+			>
+		</div>
+	</div>
 </section>
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
 	<div class="min-w-2/3 space-y-4 p-6 lg:border-r lg:p-8">
-		<h3 class="font-display text-3xl font-medium tracking-wide">Built for privacy.</h3>
+		<h3 class="font-display text-3xl font-medium tracking-wide">Keeping you safe.</h3>
 		<p class="max-w-150">
 			Privacy protects everyone. It’s a basic human right, <span class="bg-accent"
 				>threatened the moment monitoring becomes possible</span
 			>.
 		</p>
 		<p class="max-w-150">
-			Unlike most smart home cameras, <span class="bg-accent">Root products ensure only you can access</span> video, audio
+			Unlike most smart home cameras, <span class="bg-accent">ROOT products ensure only you can access</span> video, audio
 			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
 		<Dialog.Root>
@@ -276,6 +307,31 @@
 	</div>
 </section>
 
+<section class="relative mb-20 border-y p-6 lg:p-8">
+	<div class="mb-6 text-center">
+		<h3 class="font-display text-3xl font-medium tracking-wide">Others can't be trusted.</h3>
+	</div>
+	<!-- Articles about data breaches affecting security cameras -->
+	<div class="px-10">
+		<Carousel.Root>
+			<Carousel.Content>
+				{#each privacyIssueArticleSnippets as item}
+					<Carousel.Item class="min-w-50 lg:basis-5/11">
+						<div class="flex h-full flex-col border bg-accent p-4">
+							<p class="italic">
+								"{item.text}" -
+								<a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
+							</p>
+						</div>
+					</Carousel.Item>
+				{/each}
+			</Carousel.Content>
+			<Carousel.Previous />
+			<Carousel.Next />
+		</Carousel.Root>
+	</div>
+</section>
+
 <section class="mb-20 flex border-y max-lg:flex-wrap-reverse">
 	<div
 		class="relative flex min-h-60 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
@@ -315,31 +371,6 @@
 	</div>
 </section>
 
-<section class="relative mb-20 border-y p-6 lg:p-8">
-	<div class="mb-6 text-center">
-		<h3 class="font-display text-3xl font-medium tracking-wide">Don't give up control.</h3>
-	</div>
-	<!-- Articles about data breaches affecting security cameras -->
-	<div class="px-10">
-		<Carousel.Root>
-			<Carousel.Content>
-				{#each privacyIssueArticleSnippets as item}
-					<Carousel.Item class="min-w-50 lg:basis-5/11">
-						<div class="flex h-full flex-col border bg-accent p-4">
-							<p class="italic">
-								"{item.text}" -
-								<a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
-							</p>
-						</div>
-					</Carousel.Item>
-				{/each}
-			</Carousel.Content>
-			<Carousel.Previous />
-			<Carousel.Next />
-		</Carousel.Root>
-	</div>
-</section>
-
 <section class="relative mb-20 flex w-full items-center justify-center overflow-hidden border-y py-30">
 	<div class="absolute -inset-2.5 -z-1 bg-foreground select-none">
 		{#each binaryEffectArray as row, index}
@@ -354,11 +385,86 @@
 		>
 		<div class="w-18/20 border p-4 lg:w-2/3">
 			<p class="text-background">
-				Building home security cameras that are private out of the box, without sacrificing usability. Based on secure and
-				intelligent open-source software. <span class="inline-block h-4 w-2 animate-flash bg-background align-middle"
+				Building home security cameras that are private out of the box, without sacrificing usability. Based on secure
+				and intelligent open-source software. <span
+					class="inline-block h-4 w-2 animate-flash bg-background align-middle"
 				></span>
 			</p>
 		</div>
+	</div>
+</section>
+
+<section class="relative mb-20 border-y p-6 lg:p-8">
+	<div class="mb-2 text-center md:mb-4">
+		<h3 class="font-display text-3xl font-medium tracking-wide">A secure architecture.</h3>
+	</div>
+	<!-- Architecture diagram -->
+	{#snippet productBox(Icon, label)}
+		<div class="flex flex-col items-center gap-2">
+			<div class="flex size-20 items-center justify-center border bg-background sm:size-24 lg:size-28">
+				<Icon class="size-8 sm:size-10 lg:size-12" />
+			</div>
+			<Label class="h-10 max-w-20 text-center leading-5 text-wrap">{label}</Label>
+		</div>
+	{/snippet}
+	{#snippet lanes(delayOffset = 0)}
+		<div class="flex flex-1 flex-col justify-center gap-3 self-stretch overflow-hidden pb-12">
+			<div class="relative h-px w-full bg-border">
+				<div
+					class="packet-right absolute top-1/2 h-2 w-6 -translate-y-1/2 border bg-background"
+					style="animation-delay: {delayOffset}s"
+				></div>
+			</div>
+			<div class="relative h-px w-full bg-border">
+				<div
+					class="packet-left absolute top-1/2 right-0 h-2 w-6 -translate-y-1/2 border bg-background"
+					style="animation-delay: {delayOffset + 0.5}s"
+				></div>
+			</div>
+		</div>
+	{/snippet}
+	<div class="mx-auto flex max-w-5xl items-start justify-between py-8">
+		{@render productBox(RiSmartphoneLine, "Your device")}
+		{@render lanes(0)}
+		{@render productBox(RiServerLine, "Stateless Relay")}
+		{@render lanes(0.3)}
+		{@render productBox(RiCamera2Line, "ROOT product")}
+	</div>
+
+	<!-- Security info tabs -->
+	<div class="border-top-1! mx-auto mt-2 max-w-xl border">
+		<Tabs.Root value="encryption">
+			<Tabs.List class="w-full">
+				<Tabs.Trigger value="encryption">Encrypted</Tabs.Trigger>
+				<Tabs.Trigger value="local">Local</Tabs.Trigger>
+				<Tabs.Trigger value="transparency">Transparent</Tabs.Trigger>
+			</Tabs.List>
+			<div class="p-4">
+				<Tabs.Content value="encryption">
+					<p>
+						All data is end-to-end encrypted with forward secrecy to ensure <span class="bg-accent"
+							>past communications stay secure</span
+						> even if keys are compromised.
+					</p>
+				</Tabs.Content>
+				<Tabs.Content value="local">
+					<p>
+						Recordings are stored on-device and
+						<span class="bg-accent">streamed from the product directly on-demand</span>. No cloud storage costs,
+						absolute control.
+					</p>
+				</Tabs.Content>
+				<Tabs.Content value="transparency">
+					<p>
+						ROOT <span class="bg-accent">software is open-source</span>. No hidden data collection, no black boxes. You
+						can audit the
+						<a class="inline-flex items-center gap-1 underline" href="/source-code"
+							>source code <RiExternalLinkLine class="size-4" /></a
+						> yourself.
+					</p>
+				</Tabs.Content>
+			</div>
+		</Tabs.Root>
 	</div>
 </section>
 
@@ -387,5 +493,29 @@
 <style>
 	.eye-grid {
 		grid-template-columns: repeat(var(--eye-grid-cols, 10), minmax(0, 1fr));
+	}
+
+	.packet-right {
+		animation: slide-right 2s linear infinite;
+	}
+	.packet-left {
+		animation: slide-left 2s linear infinite;
+	}
+
+	@keyframes slide-right {
+		0% {
+			left: -1.5rem;
+		}
+		100% {
+			left: calc(100% + 1.5rem);
+		}
+	}
+	@keyframes slide-left {
+		0% {
+			right: -1.5rem;
+		}
+		100% {
+			right: calc(100% + 1.5rem);
+		}
 	}
 </style>

@@ -23,9 +23,10 @@
 			<Button class="text-background" href="https://x.com/PaulPlayStudio" target="_blank" variant="link"
 				>Twitter <RiTwitterXLine /></Button
 			>
-			<Button variant="link" class="text-background" href="/privacy">Privacy Policy</Button>
-			<Button variant="link" class="text-background" href="/terms">Terms of Use</Button>
+			<Button variant="link" class="text-background" href="/privacy">Privacy</Button>
+			<Button variant="link" class="text-background" href="/terms">Terms</Button>
 			<Button variant="link" class="text-background" href="/support">Support</Button>
+			<Button variant="link" class="text-background" href="/source-code">Source code</Button>
 			<Button variant="link" class="text-background" href="https://paulplay.studio/imprint" target="_blank"
 				>Imprint</Button
 			>

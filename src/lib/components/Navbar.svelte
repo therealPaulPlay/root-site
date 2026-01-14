@@ -139,7 +139,7 @@
 			/>
 		</div>
 		<div class="flex justify-center p-4">
-			<Button href="/source-code" variant="link" class="text-wrap">Source code</Button>
+			<Button href="https://paulplay.studio" target="_blank" variant="link" class="text-wrap">By PaulPlay</Button>
 		</div>
 	</aside>
 {/if}
