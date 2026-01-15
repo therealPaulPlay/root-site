@@ -9,15 +9,13 @@
 		RiCamera2Fill,
 		RiCamera2Line,
 		RiServerLine,
-		RiSmartphoneLine,
-		RiExternalLinkLine
+		RiSmartphoneLine
 	} from "svelte-remixicon";
 	import { blur } from "svelte/transition";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { decryptTextEffect } from "$lib/utils/decryptTextEffect.js";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Carousel from "$lib/components/ui/carousel";
-	import * as Tabs from "$lib/components/ui/tabs";
 	import Label from "$lib/components/ui/label/label.svelte";
 
 	// User tracking example
@@ -153,7 +151,7 @@
 
 	const privacyIssueArticleSnippets = [
 		{
-			text: "Eufy failed to encrypt some video streams and made private home footage accessible to unauthenticated users.",
+			text: "Eufy failed to encrypt a portion of video streams and made private home footage accessible to unauthenticated users.",
 			source:
 				"https://ag.ny.gov/press-release/2025/attorney-general-james-secures-450000-companies-selling-home-security-cameras?utm_source=chatgpt.com",
 			sourceName: "NY AG"
@@ -165,7 +163,7 @@
 			sourceName: "FTC"
 		},
 		{
-			text: "Wyze exposed thumbnails and video previews allowing some customers to see other people’s recordings.",
+			text: "Wyze exposed thumbnails and video previews allowing a percentage of customers to see recordings from other users.",
 			source: "https://edition.cnn.com/2024/02/20/tech/wyze-breach-camera/index.html?utm_source=chatgpt.com",
 			sourceName: "CNN"
 		}
@@ -199,13 +197,18 @@
 			type="video/mp4"
 		/>
 	</video>
-	<div class="absolute right-0 bottom-0 left-0 p-8 lg:p-10 pb-10 lg:pb-12">
+	<div class="absolute right-0 bottom-0 left-0 p-8 pb-10 lg:p-10 lg:pb-12">
 		<!-- Black fade and slight blur -->
 		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground mask-t-from-0%"></div>
 		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground/25 mask-t-from-70% backdrop-blur-lg"></div>
 		<!-- Hero text container -->
 		<div class="z-2 max-w-xl space-y-4">
-			<h3 class="font-display text-5xl font-medium tracking-wide leading-13 text-background md:text-nowrap" {@attach decryptTextEffect("Privacy, redefined.")}>Privacy, redefined.</h3>
+			<h3
+				class="font-display text-5xl leading-13 font-medium tracking-wide text-background lg:text-nowrap"
+				{@attach decryptTextEffect("Privacy, redefined.")}
+			>
+				Privacy, redefined.
+			</h3>
 			<p class="max-w-lg text-background">
 				The ROOT Observer challenges what <i>private</i> should stand for in security cameras.
 			</p>
@@ -308,37 +311,12 @@
 	</div>
 </section>
 
-<section class="relative mb-20 border-y p-6 pb-8! lg:p-8">
-	<div class="mb-6 text-center">
-		<h3 class="font-display text-3xl font-medium tracking-wide">Others can't be trusted.</h3>
-	</div>
-	<!-- Articles about data breaches affecting security cameras -->
-	<div class="px-10">
-		<Carousel.Root>
-			<Carousel.Content>
-				{#each privacyIssueArticleSnippets as item}
-					<Carousel.Item class="min-w-50 lg:basis-5/11">
-						<div class="flex h-full flex-col border bg-accent p-4">
-							<p class="italic">
-								"{item.text}" -
-								<a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
-							</p>
-						</div>
-					</Carousel.Item>
-				{/each}
-			</Carousel.Content>
-			<Carousel.Previous />
-			<Carousel.Next />
-		</Carousel.Root>
-	</div>
-</section>
-
 <section class="mb-20 flex border-y max-lg:flex-wrap-reverse">
 	<div
 		class="relative flex min-h-60 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
 	>
 		<div
-			class="absolute inset-0 ml-15 transition-transform duration-700 ease-in-out"
+			class="absolute inset-0 ml-10 transition-transform duration-700 ease-in-out xl:ml-15"
 			style:transform="translateY({trackingExampleIndex * -60 + 30}px)"
 		>
 			{#each exampleTrackingInfo as info, i}
@@ -372,6 +350,31 @@
 	</div>
 </section>
 
+<section class="relative mb-20 border-y p-6 pb-8! lg:p-8">
+	<div class="mb-6 text-center">
+		<h3 class="font-display text-3xl font-medium tracking-wide">Others can't be trusted.</h3>
+	</div>
+	<!-- Articles about data breaches affecting security cameras -->
+	<div class="px-10">
+		<Carousel.Root>
+			<Carousel.Content class="gap-6">
+				{#each privacyIssueArticleSnippets as item}
+					<Carousel.Item class="max-w-105 min-w-50 lg:basis-5/11">
+						<div class="flex h-full flex-col border bg-accent p-4">
+							<p class="italic">
+								"{item.text}" -
+								<a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
+							</p>
+						</div>
+					</Carousel.Item>
+				{/each}
+			</Carousel.Content>
+			<Carousel.Previous />
+			<Carousel.Next />
+		</Carousel.Root>
+	</div>
+</section>
+
 <section class="relative mb-20 flex w-full items-center justify-center overflow-hidden border-y py-30">
 	<div class="absolute -inset-2.5 -z-1 bg-foreground select-none">
 		{#each binaryEffectArray as row, index}
@@ -395,11 +398,8 @@
 	</div>
 </section>
 
-<section class="relative mb-20 border-y p-6 pb-8! lg:p-8">
-	<div class="mb-2 text-center md:mb-4">
-		<h3 class="font-display text-3xl font-medium tracking-wide">A secure architecture.</h3>
-	</div>
-	<!-- Architecture diagram -->
+<section class="mb-20 flex border-y max-xl:flex-wrap-reverse">
+	<!-- Architecture diagram (left side) -->
 	{#snippet productBox(Icon, label)}
 		<div class="flex flex-col items-center gap-2">
 			<div class="flex size-20 items-center justify-center border bg-background sm:size-24 lg:size-28">
@@ -424,47 +424,27 @@
 			</div>
 		</div>
 	{/snippet}
-	<div class="mx-auto flex max-w-5xl items-start justify-between py-8">
-		{@render productBox(RiSmartphoneLine, "Your device")}
-		{@render lanes(0)}
-		{@render productBox(RiServerLine, "Stateless Relay")}
-		{@render lanes(0.3)}
-		{@render productBox(RiCamera2Line, "ROOT product")}
+	<div class="my-auto w-1/2 p-8 max-xl:w-full xl:mx-6 2xl:mx-8">
+		<div class="flex items-start">
+			{@render productBox(RiSmartphoneLine, "Your device")}
+			{@render lanes(0)}
+			{@render productBox(RiServerLine, "Stateless Relay")}
+			{@render lanes(0.3)}
+			{@render productBox(RiCamera2Line, "ROOT product")}
+		</div>
 	</div>
 
-	<!-- Security info tabs -->
-	<div class="border-top-1! mx-auto mt-2 max-w-xl border">
-		<Tabs.Root value="encryption">
-			<Tabs.List class="w-full">
-				<Tabs.Trigger value="encryption">Encrypted</Tabs.Trigger>
-				<Tabs.Trigger value="local">Local</Tabs.Trigger>
-				<Tabs.Trigger value="transparency">Transparent</Tabs.Trigger>
-			</Tabs.List>
-			<div class="p-4">
-				<Tabs.Content value="encryption">
-					<p>
-						All data is end-to-end encrypted with forward secrecy to ensure <span class="bg-accent"
-							>past communications stay secure</span
-						> even if keys are compromised.
-					</p>
-				</Tabs.Content>
-				<Tabs.Content value="local">
-					<p>
-						Recordings are stored on-device and
-						<span class="bg-accent">streamed from the product directly on-demand</span>. No cloud storage subscription is needed.
-					</p>
-				</Tabs.Content>
-				<Tabs.Content value="transparency">
-					<p>
-						ROOT <span class="bg-accent">software is open-source</span>. No hidden data collection, no black boxes. You
-						can audit the
-						<a class="inline-flex items-center gap-1 underline" href="/source-code"
-							>source code <RiExternalLinkLine class="size-4" /></a
-						> yourself.
-					</p>
-				</Tabs.Content>
-			</div>
-		</Tabs.Root>
+	<!-- Text content (right side) -->
+	<div class="min-w-1/2 space-y-4 p-6 lg:p-8 xl:border-l">
+		<h3 class="font-display text-3xl font-medium tracking-wide">A secure architecture.</h3>
+		<p class="max-w-130">
+			All data is end-to-end encrypted with forward secrecy to ensure <span class="bg-accent"
+				>past messages stay secure even if keys are compromised.</span
+			>
+		</p>
+		<p class="max-w-130">
+			Recordings are stored locally and streamed to your device on-demand. No cloud storage is required.
+		</p>
 	</div>
 </section>
 

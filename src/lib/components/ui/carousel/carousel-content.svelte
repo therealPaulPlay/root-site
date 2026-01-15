@@ -10,7 +10,7 @@
 
 <div
 	data-slot="carousel-content"
-	class="overflow-hidden mask-x-from-97% mask-x-to-100% px-6"
+	class="overflow-hidden mask-x-from-97% mask-x-to-100% px-6 gap-4"
 	use:emblaCarouselSvelte={{
 		options: {
 			container: "[data-embla-container]",
@@ -24,7 +24,7 @@
 >
 	<div
 		bind:this={ref}
-		class={cn("flex", emblaCtx.orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col", className)}
+		class={cn("flex", emblaCtx.orientation === "horizontal" ? "" : "flex-col", className)}
 		data-embla-container=""
 		{...restProps}
 	>
