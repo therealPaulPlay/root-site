@@ -198,7 +198,7 @@
 			type="video/mp4"
 		/>
 	</video>
-	<div class="absolute right-0 bottom-0 left-0 p-8 lg:p-10">
+	<div class="absolute right-0 bottom-0 left-0 p-8 lg:p-10 pb-10 lg:pb-12">
 		<!-- Black fade and slight blur -->
 		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground mask-t-from-0%"></div>
 		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground/25 mask-t-from-70% backdrop-blur-lg"></div>
