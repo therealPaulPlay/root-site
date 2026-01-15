@@ -13,7 +13,7 @@
 			href: "/",
 			anchors: [
 				{ name: "Mission", anchor: "#mission" },
-				{ name: "Devices", anchor: "#devices" }
+				{ name: "Proucts", anchor: "#products" }
 			]
 		},
 		{ name: "About", href: "/about" },

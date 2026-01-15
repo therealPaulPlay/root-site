@@ -157,7 +157,7 @@
 			sourceName: "NY AG"
 		},
 		{
-			text: "Ring let employees or contractors view private user videos and allowed hackers to take control of users’ accounts.",
+			text: "Ring let employees or contractors view private user videos and enabled hackers to take control of users’ personal accounts.",
 			source:
 				"https://consumer.ftc.gov/consumer-alerts/2023/05/rings-privacy-failures-led-spying-and-harassment-through-home-security-cameras?page=0&utm_source=chatgpt.com",
 			sourceName: "FTC"
@@ -361,8 +361,8 @@
 				{#each privacyIssueArticleSnippets as item}
 					<Carousel.Item class="max-w-105 min-w-50 lg:basis-5/11">
 						<div class="flex h-full flex-col border bg-accent p-4">
-							<p class="italic">
-								"{item.text}" -
+							<p class="italic text-muted-foreground">
+								<span class="text-foreground">{item.text?.split(" ")?.[0]}</span> {item.text?.split(" ")?.slice(1)?.join(" ")} -
 								<a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
 							</p>
 						</div>
@@ -451,7 +451,7 @@
 <section class="mb-20 w-full border-y">
 	<div class="relative w-full overflow-hidden">
 		<!-- svelte-ignore a11y_consider_explicit_label -->
-		<a name="devices" class="h-0"></a>
+		<a name="products" class="h-0"></a>
 		<h3 bind:this={marqueeElement} class="-ml-1.5 text-3xl whitespace-nowrap">
 			{#each Array.from(marqueeText) as char}
 				<span class:text-muted-foreground={char === "+"}>{char}</span>
