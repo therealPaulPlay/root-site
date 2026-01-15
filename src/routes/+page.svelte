@@ -14,6 +14,7 @@
 	} from "svelte-remixicon";
 	import { blur } from "svelte/transition";
 	import Button from "$lib/components/ui/button/button.svelte";
+	import { decryptTextEffect } from "$lib/utils/decryptTextEffect.js";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Carousel from "$lib/components/ui/carousel";
 	import * as Tabs from "$lib/components/ui/tabs";
@@ -204,7 +205,7 @@
 		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground/25 mask-t-from-70% backdrop-blur-lg"></div>
 		<!-- Hero text container -->
 		<div class="z-2 max-w-xl space-y-4">
-			<h3 class="font-display text-5xl font-medium tracking-wide text-background">Privacy, redefined.</h3>
+			<h3 class="font-display text-5xl font-medium tracking-wide leading-13 text-background md:text-nowrap" {@attach decryptTextEffect("Privacy, redefined.")}>Privacy, redefined.</h3>
 			<p class="max-w-lg text-background">
 				The ROOT Observer challenges what <i>private</i> should stand for in security cameras.
 			</p>
@@ -307,7 +308,7 @@
 	</div>
 </section>
 
-<section class="relative mb-20 border-y p-6 lg:p-8">
+<section class="relative mb-20 border-y p-6 pb-8! lg:p-8">
 	<div class="mb-6 text-center">
 		<h3 class="font-display text-3xl font-medium tracking-wide">Others can't be trusted.</h3>
 	</div>
@@ -383,7 +384,7 @@
 		<a class="scroll-mt-50 px-6 py-8 font-display text-7xl font-medium text-background uppercase" name="mission"
 			>The mission</a
 		>
-		<div class="w-18/20 border p-4 lg:w-2/3">
+		<div class="mx-6 border p-4 lg:w-2/3">
 			<p class="text-background">
 				Building home security cameras that are private out of the box, without sacrificing usability. Based on secure
 				and intelligent open-source software. <span
@@ -394,7 +395,7 @@
 	</div>
 </section>
 
-<section class="relative mb-20 border-y p-6 lg:p-8">
+<section class="relative mb-20 border-y p-6 pb-8! lg:p-8">
 	<div class="mb-2 text-center md:mb-4">
 		<h3 class="font-display text-3xl font-medium tracking-wide">A secure architecture.</h3>
 	</div>
