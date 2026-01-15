@@ -335,7 +335,7 @@
 							// Save product after successful pairing
 							saveProduct({
 								id: pairingResponse.productId,
-								name: "My ROOT " + modelResponse.model?.[0]?.toUpperCase() + modelResponse.model?.slice(1),
+								name: "My ROOT " + modelResponse.model?.[0]?.toUpperCase() + modelResponse.model?.slice(1), // Don't change this prefix! It needs to match the firmware ProductAlias
 								productPublicKey: publicKeyResponse.publicKey,
 								devicePublicKey: encodeKey(keypair.publicKey),
 								devicePrivateKey: encodeKey(keypair.privateKey),

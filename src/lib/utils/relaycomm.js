@@ -33,7 +33,7 @@ export class RelayComm {
 			this.#ws.onopen = () => {
 				if (this.#muteConnectionErrors) toast.info("Reconnected."); // If errors are muted (indicating that relay connection is in bad state), toast on reconnect
 				this.#muteConnectionErrors = false;
-				console.info("Relay connection opened.");
+				console.info("Relay connection opened");
 				resolve();
 			}
 			this.#ws.onerror = (e) => {
@@ -49,11 +49,11 @@ export class RelayComm {
 				}
 			};
 			this.#ws.onclose = () => {
-				console.warn("Relay connection closed.");
+				console.warn("Relay connection closed");
 
 				// Only attempt reconnect if this was not an intentional disconnect
 				if (!this.#intentionalDisconnect) {
-					if (!this.#muteConnectionErrors) toast.error("Relay connection closed, attempting reconnect.");
+					if (!this.#muteConnectionErrors) toast.error("Relay connection closed, attempting reconnect");
 					this.#muteConnectionErrors = true;
 					this.#ws = null; // To prevent .disconnect() attempt on .connect() - not needed, since we are already disconnected
 					this.#reconnectTimeout = setTimeout(() => this.connect().catch((e) => { console.error("Reconnecting to the relay failed – retrying in 5s:", e) }), 5000);
@@ -210,15 +210,17 @@ export class RelayComm {
 			}
 		}
 
-		// Clear pending request timeout if exists
-		if (msg.requestId && this.#pendingRequestTimeouts.has(msg.requestId)) {
-			clearTimeout(this.#pendingRequestTimeouts.get(msg.requestId));
-			this.#pendingRequestTimeouts.delete(msg.requestId);
-		}
-
 		// Route to handlers
 		const handlers = this.#handlers.get(msg.type);
 		if (handlers) handlers.forEach((handler) => handler(msg));
+
+		// Clear pending request timeout and resolve promise
+		if (msg.requestId && this.#pendingRequestTimeouts.has(msg.requestId)) {
+			const { timeout, resolve } = this.#pendingRequestTimeouts.get(msg.requestId);
+			clearTimeout(timeout);
+			this.#pendingRequestTimeouts.delete(msg.requestId);
+			resolve();
+		}
 	}
 
 	async send(productId, type, data = {}) {
@@ -231,25 +233,26 @@ export class RelayComm {
 		const encrypted = await encryption.encrypt(JSON.stringify(data));
 
 		const requestId = crypto.randomUUID();
-		const timeout = setTimeout(() => {
-			this.#pendingRequestTimeouts.delete(requestId);
-			const errorMsg = `Request ${type} to product ${productId} timed out`;
-			console.error(errorMsg);
-			toast.error(errorMsg);
-		}, RELAY_REQUEST_TIMEOUT);
 
-		this.#pendingRequestTimeouts.set(requestId, timeout);
+		return new Promise((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				this.#pendingRequestTimeouts.delete(requestId);
+				reject(new Error(`Request ${type} to product ${productId} timed out`));
+			}, RELAY_REQUEST_TIMEOUT);
 
-		this.#ws.send(
-			JSON.stringify({
-				type,
-				target: "product",
-				productId,
-				deviceId: this.deviceId,
-				requestId,
-				payload: encrypted
-			})
-		);
+			this.#pendingRequestTimeouts.set(requestId, { timeout, resolve, reject });
+
+			this.#ws.send(
+				JSON.stringify({
+					type,
+					target: "product",
+					productId,
+					deviceId: this.deviceId,
+					requestId,
+					payload: encrypted
+				})
+			);
+		});
 	}
 
 	on(messageType, handler) {
@@ -281,8 +284,11 @@ export class RelayComm {
 		this.#renewalPromises.clear();
 		this.#handlers.clear();
 
-		// Clear all pending request timeouts
-		this.#pendingRequestTimeouts.forEach(timeout => clearTimeout(timeout));
+		// Clear all pending request timeouts and reject their promises
+		this.#pendingRequestTimeouts.forEach(({ timeout, reject }) => {
+			clearTimeout(timeout);
+			reject(new Error("Disconnected"));
+		});
 		this.#pendingRequestTimeouts.clear();
 	}
 }

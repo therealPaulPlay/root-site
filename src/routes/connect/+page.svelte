@@ -29,6 +29,7 @@
 	let previewImages = $state({});
 
 	let renameDialogOpen = $state({});
+	let renameDialogLoading = $state({});
 	let removeDialogOpen = $state({});
 	let removeDialogLoading = $state({});
 	let idForProductVisible = $state();
@@ -52,7 +53,7 @@
 
 				products.forEach((p) => {
 					relayCommInstance.send(p.id, "getPreview").catch((error) => {
-						console.error(`Failed to send message for product ${p.id}:`, error);
+						console.error(`Failed to get preview for product ${p.id}:`, error);
 					});
 				});
 
@@ -79,6 +80,21 @@
 					loadProducts(); // Refresh products
 				});
 
+				relayCommInstance.on("setProductAliasResult", (msg) => {
+					delete renameDialogLoading[msg.productId];
+					if (!msg.payload.success) {
+						toast.error(`Failed to rename product: ${msg.payload.error || "Unknown error"}`);
+						return;
+					}
+					// Update locally only on success
+					const product = products.find((p) => p.id === msg.productId);
+					if (product) {
+						product.name = msg.payload.alias;
+						saveProduct(product);
+					}
+					delete renameDialogOpen[msg.productId];
+				});
+
 				previewTimeout = setTimeout(() => {
 					previewTimeoutOver = true;
 					previewTimeout = null;
@@ -96,24 +112,18 @@
 
 	function handleRename(product) {
 		const newName = renameValue[product.id]?.trim();
-		if (!newName) {
-			toast.error("Product name cannot be empty");
+		if (!newName || newName.length < 3 || newName.length > 30) {
+			toast.error("Product name must be between 3 and 30 characters");
 			return;
 		}
+		if (!relayCommInstance) return toast.warning("Relaycomm instance is undefined!");
 
-		try {
-			const updatedProduct = { ...product, name: newName };
-			saveProduct(updatedProduct);
-
-			// Update local products array
-			const index = products.findIndex((p) => p.id === product.id);
-			if (index >= 0) products[index] = updatedProduct;
-
-			renameDialogOpen[product.id] = false;
-		} catch (error) {
-			toast.error(`Failed to rename product: ${error.message}`);
-			console.error("Error renaming product:", error);
-		}
+		renameDialogLoading[product.id] = true;
+		relayCommInstance.send(product.id, "setProductAlias", { alias: newName }).catch((error) => {
+			toast.error("Failed to rename product: " + error.message);
+			console.error("Failed to rename product:", error);
+			delete renameDialogLoading[product.id];
+		});
 	}
 
 	// Inform product of device removal & remove product locally
@@ -124,7 +134,7 @@
 			.send(productId, "removeDevice", { targetDeviceId: localStorage.getItem("deviceId") })
 			.catch((error) => {
 				toast.error("Failed to inform product about device removal: " + error.message);
-				console.error(error);
+				console.error("Failed to inform product about device removal:", error);
 				delete removeDialogOpen[productId]; // Close dialog
 				delete removeDialogLoading[productId]; // Stop loading
 				removeProduct(productId); // Remove prodcut locally anyway
@@ -207,7 +217,10 @@
 									/>
 								</div>
 								<div class="flex justify-end gap-2">
-									<Button onclick={() => handleRename(product)}>Set name</Button>
+									<Button disabled={renameDialogLoading[product.id]} onclick={() => handleRename(product)}>
+										{#if renameDialogLoading[product.id]}<Spinner />{/if}
+										Set name
+									</Button>
 								</div>
 							</div>
 						</Dialog.Content>
@@ -234,11 +247,8 @@
 									disabled={removeDialogLoading[product.id]}
 									onclick={() => removeProductAndRemoveDevice(product.id)}
 								>
-									{#if !removeDialogLoading[product.id]}
-										Remove
-									{:else}
-										<Spinner />
-									{/if}
+									{#if removeDialogLoading[product.id]}<Spinner />{/if}
+									Remove
 								</AlertDialog.Action>
 							</AlertDialog.Footer>
 						</AlertDialog.Content>
