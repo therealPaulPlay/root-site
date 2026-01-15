@@ -233,11 +233,11 @@
 		</p>
 		<Dialog.Root>
 			<Dialog.Trigger class="mt-4 text-start text-muted-foreground hover:underline"
-				>&gt; I have nothing to hide – why should I care?</Dialog.Trigger
+				>&gt; Why should I care about privacy?</Dialog.Trigger
 			>
 			<Dialog.Content class="w-full max-w-250!">
 				<Dialog.Header>
-					<Dialog.Title>This is why you should.</Dialog.Title>
+					<Dialog.Title>Why privacy matters.</Dialog.Title>
 				</Dialog.Header>
 				<iframe
 					class="aspect-video w-full"

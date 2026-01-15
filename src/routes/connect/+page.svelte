@@ -254,7 +254,7 @@
 						</AlertDialog.Content>
 					</AlertDialog.Root>
 				</span>
-				<p class="text-muted-forerground mb-4 text-sm uppercase">{product.model}</p>
+				<Label class="mb-6 mt-0.5">{product.model}</Label>
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<p
 					class="mt-auto w-fit max-w-full overflow-hidden text-xs text-nowrap text-neutral-300 hover:truncate"
@@ -282,7 +282,7 @@
 			{@render productItem(product)}
 		{/each}
 	{:else}
-		<p class="my-auto truncate text-center">No cameras connected.</p>
+		<Label class="my-auto truncate">No cameras connected.</Label>
 	{/if}
 </div>
 

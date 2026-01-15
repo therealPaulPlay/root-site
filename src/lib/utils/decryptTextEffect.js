@@ -1,4 +1,4 @@
-export function decryptTextEffect(text, { speed = 30, scrambleSpeed = 60, cursor = '▋' } = {}) {
+export function decryptTextEffect(text, { speed = 40, scrambleSpeed = 60, cursor = '▋' } = {}) {
 	return (node) => {
 		let revealed = -1;
 		let trailChar = null;
