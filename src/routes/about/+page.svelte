@@ -23,9 +23,9 @@
 			– starting with the Observer – that <span class="bg-accent">respect user privacy</span>.
 		</p>
 		<p>
-			While I was going all-in on privacy (Modded LineageOS on my phone, tracker-blocking firewall...) a couple years
+			While I was going all-in on privacy (Modded LineageOS, tracker-blocking firewall) a couple of years
 			ago, I no longer have the time to tinker with my tools – they <span class="bg-accent">need to just work</span>.
-			That's my goal: Privacy without sacrificing the user experience.
+			That's my goal with ROOT: Privacy without sacrificing the user experience.
 		</p>
 	</div>
 	<div
