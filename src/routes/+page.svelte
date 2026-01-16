@@ -25,6 +25,7 @@
 	// Dynamic eye grid
 	let eyeGridElement = $state();
 	let eyeCount = $state(70);
+	let lastMousePosition = $state({ x: 0, y: 0 });
 
 	onMount(() => {
 		exampleTrackingInfo = [
@@ -129,7 +130,7 @@
 		eyeGridElement.style.setProperty("--eye-grid-cols", cols.toString());
 	}
 
-	function handleEyePupilPointerMove(e) {
+	function updateEyePupils(clientX, clientY) {
 		for (let i = 0; i < eyeCount; i++) {
 			const pupil = document.getElementById(`pupil-${i}`);
 			const innerPupil = document.getElementById(`inner-pupil-${i}`);
@@ -139,8 +140,8 @@
 			const eyeRect = pupil.closest("svg").getBoundingClientRect();
 			const eyeCenterX = eyeRect.left + eyeRect.width / 2;
 			const eyeCenterY = eyeRect.top + eyeRect.height * 0.5;
-			const x = Math.max(38, Math.min(82, 60 + (e.clientX - eyeCenterX) * 0.02));
-			const y = Math.max(33, Math.min(57, 45 + (e.clientY - eyeCenterY) * 0.01));
+			const x = Math.max(38, Math.min(82, 60 + (clientX - eyeCenterX) * 0.02));
+			const y = Math.max(33, Math.min(57, 45 + (clientY - eyeCenterY) * 0.01));
 
 			pupil.setAttribute("cx", x);
 			pupil.setAttribute("cy", y);
@@ -179,7 +180,11 @@
 		updateMarqueeText();
 		updateEyeGrid();
 	}}
-	onpointermove={handleEyePupilPointerMove}
+	onpointermove={(e) => {
+		lastMousePosition = { x: e.clientX, y: e.clientY };
+		updateEyePupils(e.clientX, e.clientY);
+	}}
+	onscroll={() => updateEyePupils(lastMousePosition.x, lastMousePosition.y)}
 />
 
 <section class="relative mb-20 flex h-125 w-full items-center justify-center border-b xl:h-155">

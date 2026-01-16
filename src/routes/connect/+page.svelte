@@ -201,7 +201,7 @@
 						</Dialog.Trigger>
 						<Dialog.Content>
 							<Dialog.Header>
-								<Dialog.Title>Rename "{product.name}"</Dialog.Title>
+								<Dialog.Title>Rename "{product.name}"?</Dialog.Title>
 							</Dialog.Header>
 							<div class="flex flex-col gap-4">
 								<div class="space-y-1">
@@ -219,7 +219,7 @@
 								<div class="flex justify-end gap-2">
 									<Button disabled={renameDialogLoading[product.id]} onclick={() => handleRename(product)}>
 										{#if renameDialogLoading[product.id]}<Spinner />{/if}
-										Set name
+										Rename
 									</Button>
 								</div>
 							</div>
