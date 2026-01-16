@@ -210,7 +210,7 @@
 				Privacy, redefined.
 			</h3>
 			<p class="max-w-lg text-background">
-				The ROOT Observer challenges what <i>private</i> should stand for in security cameras.
+				The ROOT Observer rethinks security cameras with cryptographically guaranteed privacy.
 			</p>
 			<Button
 				size="lg"
@@ -361,8 +361,9 @@
 				{#each privacyIssueArticleSnippets as item}
 					<Carousel.Item class="max-w-105 min-w-50 lg:basis-5/11">
 						<div class="flex h-full flex-col border bg-accent p-4">
-							<p class="italic text-muted-foreground">
-								<span class="text-foreground">{item.text?.split(" ")?.[0]}</span> {item.text?.split(" ")?.slice(1)?.join(" ")} -
+							<p class="text-muted-foreground italic">
+								<span class="text-foreground">{item.text?.split(" ")?.[0]}</span>
+								{item.text?.split(" ")?.slice(1)?.join(" ")} -
 								<a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
 							</p>
 						</div>

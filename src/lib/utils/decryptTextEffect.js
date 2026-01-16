@@ -3,7 +3,7 @@ export function decryptTextEffect(text, { speed = 40, scrambleSpeed = 60, cursor
 		let revealed = -1;
 		let trailChar = null;
 
-		const trails = ['_', '‥', ' ', '/.', '<', '%']; // ‥ is a single two-dot character (U+2025)
+		const trails = [' ', '‥', ' ', '/.', '<', '%']; // ‥ is a single two-dot character (U+2025)
 		const randomTrail = () => trails[Math.floor(Math.random() * trails.length)];
 
 		function shuffle(arr) {
@@ -20,13 +20,9 @@ export function decryptTextEffect(text, { speed = 40, scrambleSpeed = 60, cursor
 			let position = 0;
 
 			for (const segment of text.split(/(?=[ ,.])|(?<=[ ,.])/)) {
-				if (' .,'.includes(segment)) {
-					output += segment;
-				} else {
-					const revealedCount = Math.max(0, Math.min(segment.length, revealed - position));
-					const shuffled = shuffle([...segment]);
-					output += segment.slice(0, revealedCount) + shuffled.slice(0, segment.length - revealedCount).join('');
-				}
+				const revealedCount = Math.max(0, Math.min(segment.length, revealed - position));
+				const shuffled = shuffle([...segment]);
+				output += segment.slice(0, revealedCount) + shuffled.slice(0, segment.length - revealedCount).join('');
 				position += segment.length;
 			}
 
@@ -37,14 +33,9 @@ export function decryptTextEffect(text, { speed = 40, scrambleSpeed = 60, cursor
 				output = output.slice(0, cursorPos - 1) + trailChar + output.slice(cursorPos);
 			}
 
-			if (cursorPos >= text.length) {
-				node.innerHTML = output + `<span style="margin-left:-0.15em">${cursor}</span>`;
-			} else {
-				node.innerHTML =
-					output.slice(0, cursorPos) +
-					`<span style="margin-right:-0.15em">${cursor}</span>` +
-					output.slice(cursorPos + 1);
-			}
+			// Insert cursor
+			if (cursorPos >= text.length) node.innerHTML = output + cursor;
+			else node.innerHTML = output.slice(0, cursorPos) + cursor + output.slice(cursorPos + 1);
 		}
 
 		function reveal() {
