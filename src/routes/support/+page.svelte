@@ -1,4 +1,5 @@
 <script>
+	import GuideCard from "$lib/components/GuideCard.svelte";
 	import * as Accordion from "$lib/components/ui/accordion/index.js";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { RiExternalLinkLine } from "svelte-remixicon";
@@ -147,6 +148,17 @@
 			</Accordion.Content>
 		</Accordion.Item>
 	</Accordion.Root>
+</section>
+
+<section class="mb-20 w-full space-y-8 border-y p-6 lg:p-8">
+	<h2 class="text-3xl">Guides</h2>
+	<div class="flex w-full flex-wrap items-center gap-6">
+		<GuideCard
+			title="Building your own security camera (made easy)"
+			subtitle="Learn how you can build your own Raspberry Pi security camera using our private and easy to use firmware."
+			href="/guides/building-your-own-security-camera"
+		/>
+	</div>
 </section>
 
 <section class="mb-20 w-full space-y-8 border-y p-6 lg:p-8">

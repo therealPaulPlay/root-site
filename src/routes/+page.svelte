@@ -341,7 +341,7 @@
 		</div>
 	</div>
 	<div class="min-w-2/3 space-y-4 p-6 lg:border-l lg:p-8">
-		<h3 class="text-3xl">Why it matters now.</h3>
+		<h3 class="text-3xl">Why it matters.</h3>
 		<p class="max-w-150">
 			Large tech corporations collect huge amounts of user information to <span class="bg-accent"
 				>piece together accurate profiles</span

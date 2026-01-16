@@ -135,5 +135,5 @@
 		{/if}
 	</div>
 {:else}
-	<div class="mt-6 rounded-lg border p-8 text-center text-muted-foreground">No health information loaded.</div>
+	<div class="mt-6 rounded-lg border p-8 text-center text-muted-foreground">No health data available.</div>
 {/if}
