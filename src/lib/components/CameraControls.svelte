@@ -222,7 +222,7 @@
 		</AlertDialog.Trigger>
 		<AlertDialog.Content>
 			<AlertDialog.Header>
-				<AlertDialog.Title>Factory reset</AlertDialog.Title>
+				<AlertDialog.Title>Factory reset?</AlertDialog.Title>
 				<AlertDialog.Description>
 					This will erase all data and settings. This action cannot be undone.
 				</AlertDialog.Description>
