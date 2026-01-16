@@ -209,7 +209,7 @@
 		<!-- Hero text container -->
 		<div class="z-2 max-w-xl space-y-4">
 			<h3
-				class="font-display text-5xl leading-13 font-medium tracking-wide text-background lg:text-nowrap"
+				class="text-5xl leading-13 text-background lg:text-nowrap"
 				{@attach decryptTextEffect("Privacy, redefined.")}
 			>
 				Privacy, redefined.
@@ -229,7 +229,7 @@
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
 	<div class="min-w-2/3 space-y-4 p-6 lg:border-r lg:p-8">
-		<h3 class="font-display text-3xl font-medium tracking-wide">Keeping you safe.</h3>
+		<h3 class="text-3xl">Keeping you safe.</h3>
 		<p class="max-w-150">
 			Privacy protects everyone. It’s a basic human right, <span class="bg-accent"
 				>threatened the moment monitoring becomes possible</span
@@ -341,7 +341,7 @@
 		</div>
 	</div>
 	<div class="min-w-2/3 space-y-4 p-6 lg:border-l lg:p-8">
-		<h3 class="font-display text-3xl font-medium tracking-wide">Why it matters now.</h3>
+		<h3 class="text-3xl">Why it matters now.</h3>
 		<p class="max-w-150">
 			Large tech corporations collect huge amounts of user information to <span class="bg-accent"
 				>piece together accurate profiles</span
@@ -357,7 +357,7 @@
 
 <section class="relative mb-20 border-y p-6 pb-8! lg:p-8">
 	<div class="mb-6 text-center">
-		<h3 class="font-display text-3xl font-medium tracking-wide">Others can't be trusted.</h3>
+		<h3 class="text-3xl">Others can't be trusted.</h3>
 	</div>
 	<!-- Articles about data breaches affecting security cameras -->
 	<div class="px-10">
@@ -442,7 +442,7 @@
 
 	<!-- Text content (right side) -->
 	<div class="min-w-1/2 space-y-4 p-6 lg:p-8 xl:border-l">
-		<h3 class="font-display text-3xl font-medium tracking-wide">A secure architecture.</h3>
+		<h3 class="text-3xl">A secure architecture.</h3>
 		<p class="max-w-130">
 			All data is end-to-end encrypted with forward secrecy to ensure <span class="bg-accent"
 				>past messages stay secure even if keys are compromised.</span
@@ -466,7 +466,7 @@
 	</div>
 	<div class="relative overflow-hidden border-t px-6 py-12 lg:px-8">
 		<p class="mb-1 w-fit bg-foreground px-0.5 text-background uppercase">Coming soon</p>
-		<h3 class="mb-4 font-display text-3xl font-medium tracking-wide">Observer</h3>
+		<h3 class="mb-4 text-3xl">Observer</h3>
 		<p class="lg:max-w-1/2">An indoor security camera with on-device AI vision.</p>
 		<img
 			src="/images/home/observer-simplified-line.svg"

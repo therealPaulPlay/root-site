@@ -7,7 +7,7 @@
 <Dialog.Root open={!bluetoothSupported()}>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Browser unsupported</Dialog.Title>
+			<Dialog.Title>Browser unsupported!</Dialog.Title>
 		</Dialog.Header>
 		<div class="space-y-4">
 			<p>This browser does not support the Web Bluetooth API. Bluetooth is necessary for pairing ROOT products.</p>

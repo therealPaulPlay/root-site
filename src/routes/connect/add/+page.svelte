@@ -185,7 +185,7 @@
 	{/if}
 
 	<div class="flex grow flex-col space-y-4 p-6 lg:p-8">
-		<h3 class="font-display text-3xl font-medium tracking-wide">{step}. {stepTitle[step - 1] || "Default."}</h3>
+		<h3 class="text-3xl">{step}. {stepTitle[step - 1] || "Default."}</h3>
 
 		{#if step == 1}
 			<p class="max-w-3xl">

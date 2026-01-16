@@ -13,7 +13,7 @@
 </section>
 
 <section class="relative mb-20 w-full space-y-4 border-y p-6 lg:p-8">
-	<h1 class="font-display text-3xl font-medium tracking-wide">Source code</h1>
+	<h1 class="text-3xl">Source code</h1>
 	<p>
 		<Button
 			href="https://github.com/therealPaulPlay/root-site"

@@ -184,7 +184,7 @@
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<div class="flex grow flex-col overflow-hidden p-4">
 				<span class="inline-flex items-center gap-1 overflow-hidden text-nowrap"
-					><h3 class="truncate font-display text-xl font-medium tracking-wide">{product.name}</h3>
+					><h3 class="truncate text-xl">{product.name}</h3>
 					<Dialog.Root
 						open={isRenameDialogOpen}
 						onOpenChange={(open) => {

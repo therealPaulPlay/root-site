@@ -13,7 +13,7 @@
 </section>
 
 <section class="my-20 w-full space-y-4 border-y p-6 lg:p-8">
-	<h1 class="font-display text-3xl font-medium tracking-wide">FAQ</h1>
+	<h2 class="text-3xl">FAQ</h2>
 	<Accordion.Root type="single" class="w-full">
 		<Accordion.Item value="item-1">
 			<Accordion.Trigger>What sets ROOT cameras apart?</Accordion.Trigger>
@@ -110,7 +110,7 @@
 </section>
 
 <section class="mb-20 w-full space-y-4 border-y p-6 lg:p-8">
-	<h1 class="font-display text-3xl font-medium tracking-wide">Troubleshooting</h1>
+	<h2 class="text-3xl">Troubleshooting</h2>
 	<Accordion.Root type="single" class="w-full">
 		<Accordion.Item value="item-1">
 			<Accordion.Trigger>The camera can't be reached</Accordion.Trigger>
@@ -150,7 +150,7 @@
 </section>
 
 <section class="mb-20 w-full space-y-8 border-y p-6 lg:p-8">
-	<h1 class="font-display text-3xl font-medium tracking-wide">Community</h1>
+	<h2 class="text-3xl">Community</h2>
 	<Button variant="outline" href="https://www.reddit.com/r/ROOTPRIVACY" target="_blank"
 		>Reddit <RiExternalLinkLine class="size-4" /></Button
 	>
