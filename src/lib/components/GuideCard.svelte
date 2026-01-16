@@ -10,9 +10,6 @@
 		<Card.Title>{title}</Card.Title>
 		<Card.Description>{subtitle}</Card.Description>
 	</Card.Header>
-	<!-- <Card.Content>
-		<p>Card Content</p>
-	</Card.Content> -->
 	<Card.Footer>
         <Button variant="outline" {href}>Read <RiArrowRightLine /></Button>
 	</Card.Footer>
