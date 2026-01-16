@@ -5,13 +5,14 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --port 3000 --host",
-		"build": "vite build",
+		"build": "vite build && npm run generate-sitemap",
 		"build:mobile": "vite build && npx cap sync",
 		"build:mobile-assets": "npx capacitor-assets generate --ios --android --assetPath ./store-assets",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"format": "prettier --write .",
-		"lint": "prettier --check ."
+		"lint": "prettier --check .",
+		"generate-sitemap": "node ./scripts/generate-sitemap.js"
 	},
 	"devDependencies": {
 		"@capacitor/cli": "^8.0.0",

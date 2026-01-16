@@ -7,6 +7,6 @@
 </svelte:head>
 
 <div class="flex h-screen w-full flex-col items-center justify-center">
-	<h1>{page.status} ({page.error.message}).</h1>
+	<p>{page.status} ({page.error.message}).</p>
 	<p>Beep. Bop.</p>
 </div>

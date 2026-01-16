@@ -1,35 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset
-    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-
-    <url>
-        <loc>https://rootprivacy.com</loc>
-    </url>
-    <url>
-        <loc>https://rootprivacy.com/about</loc>
-    </url>
-    <url>
-        <loc>https://rootprivacy.com/support</loc>
-    </url>
-    <url>
-        <loc>https://rootprivacy.com/connect</loc>
-    </url>
-    <url>
-        <loc>https://rootprivacy.com/connect/add</loc>
-    </url>
-    <url>
-        <loc>https://rootprivacy.com/connect/settings</loc>
-    </url>
-    <url>
-        <loc>https://rootprivacy.com/privacy</loc>
-    </url>
-    <url>
-        <loc>https://rootprivacy.com/terms</loc>
-    </url>
-    <url>
-        <loc>https://rootprivacy.com/source-code</loc>
-    </url>
-
+<!-- Auto-generated - Do not edit manually -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+  <url>
+    <loc>https://rootprivacy.com/</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/about</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/connect</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/connect/add</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/connect/settings</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/guides/building-your-own-security-camera</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/privacy</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/source-code</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/support</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/terms</loc>
+    <lastmod>2026-01-16</lastmod>
+  </url>
 </urlset>
