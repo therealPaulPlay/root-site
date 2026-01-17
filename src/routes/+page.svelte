@@ -393,9 +393,9 @@
 		<a class="scroll-mt-50 px-6 py-8 font-display text-7xl font-medium text-background uppercase" name="mission"
 			>The mission</a
 		>
-		<div class="mx-6 border p-4 lg:w-2/3">
+		<div class="mx-6 border p-4 lg:w-3/5">
 			<p class="text-background">
-				Building home security cameras that are private out of the box, without sacrificing usability. Based on secure
+				Building home security cameras that are private out of the box and effortless to use. Based on secure
 				and intelligent open-source software. <span
 					class="inline-block h-4 w-2 animate-flash bg-background align-middle"
 				></span>
