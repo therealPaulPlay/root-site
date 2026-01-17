@@ -3,7 +3,7 @@ export function decryptTextEffect(text, { speed = 40, scrambleSpeed = 60, cursor
 		let revealed = -1;
 		let trailChar = null;
 
-		const trails = [' ', '‥', ' ', '/.', '<', '%']; // ‥ is a single two-dot character (U+2025)
+		const trails = ['_', '‥', '<', '%', '/']; // ‥ is a single two-dot character (U+2025)
 		const randomTrail = () => trails[Math.floor(Math.random() * trails.length)];
 
 		function shuffle(arr) {

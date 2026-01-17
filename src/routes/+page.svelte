@@ -215,7 +215,7 @@
 				Privacy, redefined.
 			</h3>
 			<p class="max-w-lg text-background">
-				The ROOT Observer rethinks security cameras with cryptographically guaranteed privacy.
+				The Observer rethinks security cameras with cryptographically guaranteed privacy.
 			</p>
 			<Button
 				size="lg"
