@@ -208,10 +208,7 @@
 		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground/25 mask-t-from-70% backdrop-blur-lg"></div>
 		<!-- Hero text container -->
 		<div class="z-2 max-w-xl space-y-4">
-			<h3
-				class="text-5xl leading-13 text-background lg:text-nowrap"
-				{@attach decryptTextEffect("Privacy, redefined.")}
-			>
+			<h3 class="text-5xl leading-13 text-background lg:text-nowrap" {@attach decryptTextEffect("Privacy, redefined.")}>
 				Privacy, redefined.
 			</h3>
 			<p class="max-w-lg text-background">
@@ -395,9 +392,8 @@
 		>
 		<div class="mx-6 border p-4 lg:w-3/5">
 			<p class="text-background">
-				Building home security cameras that are private out of the box and effortless to use. Based on secure
-				and intelligent open-source software. <span
-					class="inline-block h-4 w-2 animate-flash bg-background align-middle"
+				Building home security cameras that are private out of the box and effortless to use. Based on secure and
+				intelligent open-source software. <span class="inline-block h-4 w-2 animate-flash bg-background align-middle"
 				></span>
 			</p>
 		</div>
@@ -449,7 +445,8 @@
 			>
 		</p>
 		<p class="max-w-130">
-			Recordings are stored locally and streamed to your device on-demand. No cloud storage is required.
+			Recordings are stored locally and streamed on-demand, making them accessible from anywhere in the world with no
+			cloud storage required.
 		</p>
 	</div>
 </section>
