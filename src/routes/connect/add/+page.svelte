@@ -27,6 +27,7 @@
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
 	import QRViewfinder from "$lib/components/QRViewfinder.svelte";
 	import WebBluetoothUnsupportedDialog from "$lib/components/WebBluetoothUnsupportedDialog.svelte";
+	import AdjustConnectRelayDialog from "$lib/components/AdjustConnectRelayDialog.svelte";
 
 	let step = $state(1);
 	let stepAmount = $state(6);
@@ -70,12 +71,14 @@
 	let wifiNetworks = $state([]);
 	let selectedWiFiSSID = $state("");
 	let relayDomainInput = $state(DEFAULT_RELAY_DOMAIN);
-	let wifiConnectDialogOpen = $state(false);
 	let wifiPasswordInput = $state("");
 	let wifiCountryCode = $state("");
 	let pendingWifiNetwork = $state(null);
 	let currentProductId = $state(null);
+
+	// Dialogs
 	let alreadyPairedDialogOpen = $state(false);
+	let wifiConnectDialogOpen = $state(false);
 
 	// Busy state
 	let currentlyConnectingViaBle = $state(false);
@@ -87,6 +90,7 @@
 
 	// Data
 	let countryCodes = $state({});
+	let newRelayDomain = $state();
 
 	// Load WiFi country code list
 	onMount(() => {
@@ -475,45 +479,48 @@
 			{/if}
 
 			<div class="mt-4 space-y-8">
-				{#if relayDomainInput !== DEFAULT_RELAY_DOMAIN}
-					<div class="flex max-w-lg gap-2 border p-4 text-sm items-center">
-						<RiAlertLine class="size-4!" />
-						<p>Unofficial relay server.</p>
-					</div>
-				{/if}
 				<div class="space-y-1">
 					<Label for="relay-domain">Domain</Label>
 					<Input type="text" placeholder="relay.com" class="max-w-xs" id="relay-domain" bind:value={relayDomainInput} />
 				</div>
-				<Button
-					class="w-fit"
-					variant={relayConfigured ? "outline" : "default"}
-					disabled={currentlySettingRelay}
-					onclick={async () => {
-						try {
-							currentlySettingRelay = true;
-							const payload = await encryptPayload(currentProductId, { relayDomain: relayDomainInput.trim() });
-							const response = await bluetoothInstance.writeAndRead("relaySet", {
-								deviceId: localStorage.getItem("deviceId"),
-								payload
-							});
-							if (response.success) relayConfigured = true;
-						} catch (error) {
-							toast.error("Error setting relay domain: " + error.message);
-						} finally {
-							currentlySettingRelay = false;
-						}
-					}}
-				>
-					{#if currentlySettingRelay}
-						<Spinner />
+				<div class="flex flex-wrap items-center gap-4">
+					<Button
+						class="w-fit"
+						variant={relayConfigured ? "outline" : "default"}
+						disabled={currentlySettingRelay}
+						onclick={async () => {
+							try {
+								currentlySettingRelay = true;
+								const relayDomain = relayDomainInput.trim();
+								const payload = await encryptPayload(currentProductId, { relayDomain });
+								const response = await bluetoothInstance.writeAndRead("relaySet", {
+									deviceId: localStorage.getItem("deviceId"),
+									payload
+								});
+								if (response.success) {
+									relayConfigured = true;
+									newRelayDomain = relayDomain; // Passed to adjust connect relay dialog
+								}
+							} catch (error) {
+								toast.error("Error setting relay domain: " + error.message);
+							} finally {
+								currentlySettingRelay = false;
+							}
+						}}
+					>
+						{#if currentlySettingRelay}
+							<Spinner />
+						{/if}
+						{#if !relayConfigured}
+							Set domain
+						{:else}
+							Edit domain
+						{/if}
+					</Button>
+					{#if relayDomainInput !== DEFAULT_RELAY_DOMAIN}
+						<Label><RiAlertLine class="size-4!" /> Unofficial!</Label>
 					{/if}
-					{#if !relayConfigured}
-						Set domain
-					{:else}
-						Edit domain
-					{/if}
-				</Button>
+				</div>
 			</div>
 		{/if}
 
@@ -557,32 +564,32 @@
 			>
 		</div>
 	</div>
-
-	<!-- Already Paired Dialog -->
-	<Dialog.Root bind:open={alreadyPairedDialogOpen}>
-		<Dialog.Content>
-			<Dialog.Header>
-				<Dialog.Title>Already paired</Dialog.Title>
-				<Dialog.Description>
-					This product is already paired. You can jump ahead to WiFi and relay configuration to adjust those settings.
-					<br /><br />
-					If you're experiencing issues and want to intentionally re-pair, repeating the full setup process is recommended.
-				</Dialog.Description>
-			</Dialog.Header>
-			<Dialog.Footer class="mt-4">
-				<Button
-					onclick={async () => {
-						alreadyPairedDialogOpen = false;
-						step = 5;
-						await getWifiAndRelayStatus();
-						await getWifiNetworks();
-					}}
-				>
-					Jump ahead
-				</Button>
-			</Dialog.Footer>
-		</Dialog.Content>
-	</Dialog.Root>
 </div>
 
+<!-- Already Paired Dialog -->
+<Dialog.Root bind:open={alreadyPairedDialogOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Already paired</Dialog.Title>
+		</Dialog.Header>
+		<p>This product is already paired. You can jump ahead to WiFi and relay configuration to adjust those settings.</p>
+		<p>
+			If you're experiencing issues and want to intentionally re-pair, repeating the full setup process is recommended.
+		</p>
+		<Dialog.Footer class="mt-4">
+			<Button
+				onclick={async () => {
+					alreadyPairedDialogOpen = false;
+					step = 5;
+					await getWifiAndRelayStatus();
+					await getWifiNetworks();
+				}}
+			>
+				Jump ahead
+			</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
+
+<AdjustConnectRelayDialog {newRelayDomain} />
 <WebBluetoothUnsupportedDialog />
