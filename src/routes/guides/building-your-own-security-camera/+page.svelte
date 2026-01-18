@@ -74,7 +74,11 @@
 		> and run the CI/CD pipeline by publishing a release.
 	</p>
 	<FirmwareDownloadButton />
-	<br /><br />
+	<p>
+		Once downloaded, extract the .img file by double-clicking (macOS) or right-clicking and selecting
+		"Extract All" (Windows).
+	</p>
+	<br />
 
 	<h2 class="text-3xl">Step 2: Flash the firmware</h2>
 
