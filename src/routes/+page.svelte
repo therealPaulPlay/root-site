@@ -208,7 +208,7 @@
 		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground/25 mask-t-from-70% backdrop-blur-lg"></div>
 		<!-- Hero text container -->
 		<div class="z-2 max-w-xl space-y-4">
-			<h3 class="text-5xl leading-13 text-background lg:text-nowrap" {@attach decryptTextEffect("Privacy, redefined.")}>
+			<h3 class="text-5xl leading-12.5 text-background lg:text-nowrap" {@attach decryptTextEffect("Privacy, redefined.")}>
 				Privacy, redefined.
 			</h3>
 			<p class="max-w-lg text-background">

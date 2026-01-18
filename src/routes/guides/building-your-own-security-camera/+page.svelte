@@ -18,7 +18,7 @@
 	</div>
 
 	<p>
-		While there are many home security cameras on the market, it's difficult to find one that guarantees absolute
+		While there are many home security cameras on the market, it's hard to find one that guarantees absolute
 		privacy. Popular security systems are known for storing footage either completely unencrypted, or encrypted with keys the
 		manufacturer has access to.
 	</p>
