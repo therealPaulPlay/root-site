@@ -26,6 +26,7 @@
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config.js";
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
 	import QRViewfinder from "$lib/components/QRViewfinder.svelte";
+	import WebBluetoothUnsupportedDialog from "$lib/components/WebBluetoothUnsupportedDialog.svelte";
 
 	let step = $state(1);
 	let stepAmount = $state(6);
@@ -263,9 +264,7 @@
 		{/if}
 
 		{#if step == 3}
-			<p class="max-w-3xl">
-				Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE".
-			</p>
+			<p class="max-w-3xl">Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE".</p>
 			<div class="mt-4 space-y-8">
 				<Button
 					class="w-fit"
@@ -477,9 +476,9 @@
 
 			<div class="mt-4 space-y-8">
 				{#if relayDomainInput !== DEFAULT_RELAY_DOMAIN}
-					<div class="flex max-w-lg gap-2 border p-4 text-sm">
-						<RiAlertLine class="h-4! w-4!" />
-						<p>Potentially less private!</p>
+					<div class="flex max-w-lg gap-2 border p-4 text-sm items-center">
+						<RiAlertLine class="size-4!" />
+						<p>Unofficial relay server.</p>
 					</div>
 				{/if}
 				<div class="space-y-1">
@@ -519,7 +518,7 @@
 		{/if}
 
 		<!-- Controls -->
-		<div class="mt-auto pt-4 flex w-full justify-between gap-8">
+		<div class="mt-auto flex w-full justify-between gap-8 pt-4">
 			<AlertDialog.Root>
 				<AlertDialog.Trigger class={buttonVariants({ variant: "outline" })}>
 					<RiArrowLeftLine class="h-4! w-4!" />Abort
@@ -585,3 +584,5 @@
 		</Dialog.Content>
 	</Dialog.Root>
 </div>
+
+<WebBluetoothUnsupportedDialog />

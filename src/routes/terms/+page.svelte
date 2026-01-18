@@ -10,12 +10,12 @@
 	class="right-0 max-w-xl border-t bg-background xl:absolute xl:mt-15 xl:mr-15 xl:h-[calc(100svh-7.5rem)] xl:border-b xl:border-l"
 >
 	<div class="of-top of-bottom of-length-2 max-h-full p-8 max-xl:pb-16 xl:overflow-y-auto">
-		<h1 class="text-3xl">Terms of Use</h1>
+		<h1 class="text-4xl">Terms of Use</h1>
 		<br />
 		<p>By using our products and services, you agree to these terms.</p>
 		<br /><br />
 
-		<h2 class="mb-4">Intended use</h2>
+		<h2 class="mb-4 font-mono">Intended use</h2>
 		<p>
 			Our products are designed for lawful home security monitoring on property you own or have explicit permission to
 			monitor. You are solely responsible for complying with all applicable laws regarding surveillance, recording, and
@@ -24,7 +24,7 @@
 		</p>
 		<br /><br />
 
-		<h2 class="mb-4">Data security and transmission</h2>
+		<h2 class="mb-4 font-mono">Data security and transmission</h2>
 		<p>
 			While we implement end-to-end encryption and security measures to protect your data, no method of electronic
 			transmission or storage is completely secure. We cannot guarantee absolute security of data transmitted over the
@@ -33,7 +33,7 @@
 		</p>
 		<br /><br />
 
-		<h2 class="mb-4">Liability limitations</h2>
+		<h2 class="mb-4 font-mono">Liability limitations</h2>
 		<p>
 			To the maximum extent permitted by law, we are not liable for any damages arising from product malfunction, data
 			breaches, unauthorized access, lost footage, service interruptions, or failure to detect or record events. Our
@@ -42,7 +42,7 @@
 		</p>
 		<br /><br />
 
-		<h2 class="mb-4">Product warranty</h2>
+		<h2 class="mb-4 font-mono">Product warranty</h2>
 		<p>
 			Our warranty covers defects in materials and workmanship under normal use for the period specified with your
 			product. The warranty does not cover damage from misuse, abuse, accidents, drops, liquid exposure, unauthorized
@@ -51,7 +51,7 @@
 		</p>
 		<br /><br />
 
-		<h2 class="mb-4">Service availability</h2>
+		<h2 class="mb-4 font-mono">Service availability</h2>
 		<p>
 			We strive to maintain reliable service but do not guarantee uninterrupted availability. We may modify, suspend, or
 			discontinue features or services at any time. We are not responsible for outages caused by internet connectivity
@@ -59,7 +59,7 @@
 		</p>
 		<br /><br />
 
-		<h2 class="mb-4">User responsibilities</h2>
+		<h2 class="mb-4 font-mono">User responsibilities</h2>
 		<p>
 			You are responsible for maintaining the security of your credentials and keys, ensuring proper product
 			installation and configuration, maintaining adequate internet connectivity, and keeping firmware updated. Failure
@@ -67,7 +67,7 @@
 		</p>
 		<br /><br />
 
-		<h2 class="mb-4">Prohibited activities</h2>
+		<h2 class="mb-4 font-mono">Prohibited activities</h2>
 		<p>
 			You may not use products for illegal surveillance or harassment, interfere with other users' service access,
 			impersonate us or our services, or resell our hardware products as new after use. Modification of open-source
@@ -76,14 +76,14 @@
 		</p>
 		<br /><br />
 
-		<h2 class="mb-4">Changes to terms</h2>
+		<h2 class="mb-4 font-mono">Changes to terms</h2>
 		<p>
 			We may update these terms at any time. Continued use of our products after changes constitutes acceptance of
 			updated terms.
 		</p>
 		<br /><br />
 
-		<h2 class="mb-4">Contact</h2>
+		<h2 class="mb-4 font-mono">Contact</h2>
 		<p>
 			For questions about these terms, please reach out via the contact form at the bottom of <a
 				href="https://paulplay.studio/legal"

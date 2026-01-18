@@ -2,7 +2,7 @@
 	import Button from "./ui/button/button.svelte";
 </script>
 
-<aside class="relative my-8 w-full space-y-4 border p-6 text-background">
+<aside class="relative w-full space-y-4 border p-6 text-background">
 	<img
 		alt="background"
 		src="/images/legal/privacy-shield.jpg"

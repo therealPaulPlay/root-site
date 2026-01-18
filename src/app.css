@@ -133,6 +133,10 @@
 		@apply font-medium;
 	}
 
+	h1 {
+		@apply leading-12;
+	}
+
 	html {
 		@apply scroll-smooth;
 		@apply touch-none;

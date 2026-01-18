@@ -30,7 +30,7 @@
 <div class="min-h-screen">
 	<section class="mt-30 w-full space-y-4 border-y p-6 lg:p-8">
 		<div>
-			<h1 class="text-3xl">Settings</h1>
+			<h1 class="text-4xl">Settings</h1>
 		</div>
 	</section>
 
