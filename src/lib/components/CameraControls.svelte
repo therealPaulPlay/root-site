@@ -6,7 +6,7 @@
 	import { RiCloseLine, RiFileShredLine, RiRefreshLine, RiRestartLine } from "svelte-remixicon";
 
 	let {
-		controlsLoading = $bindable({}),
+		buttonsLoading = $bindable({}),
 		toggleMicrophone = () => {},
 		toggleRecordingSound = () => {},
 		toggleEventDetection = () => {},
@@ -29,26 +29,26 @@
 </script>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between gap-4 rounded-lg border p-4">
+	<div class="flex items-center justify-between gap-4 border p-4">
 		<div>
 			<Label class="text-base">Microphone</Label>
 			<p class="text-sm text-muted-foreground">Record audio together with video.</p>
 		</div>
-		<Button onclick={toggleMicrophone} variant="outline" disabled={controlsLoading.mic}>
-			{#if controlsLoading.mic}
+		<Button onclick={toggleMicrophone} variant="outline" disabled={buttonsLoading.mic}>
+			{#if buttonsLoading.mic}
 				<Spinner class="size-4" />
 			{:else}
 				{micEnabled ? "Enabled" : "Disabled"}
 			{/if}
 		</Button>
 	</div>
-	<div class="flex items-center justify-between gap-4 rounded-lg border p-4">
+	<div class="flex items-center justify-between gap-4 border p-4">
 		<div>
 			<Label class="text-base">Recording sound</Label>
 			<p class="text-sm text-muted-foreground">Play sound when recording or streaming.</p>
 		</div>
-		<Button onclick={toggleRecordingSound} variant="outline" disabled={controlsLoading.sound}>
-			{#if controlsLoading.sound}
+		<Button onclick={toggleRecordingSound} variant="outline" disabled={buttonsLoading.sound}>
+			{#if buttonsLoading.sound}
 				<Spinner class="size-4" />
 			{:else}
 				{recordingSoundEnabled ? "Enabled" : "Disabled"}
@@ -56,14 +56,14 @@
 		</Button>
 	</div>
 
-	<div class="space-y-4 rounded-lg border p-4">
+	<div class="space-y-4 border p-4">
 		<div class="flex items-center justify-between gap-4">
 			<div>
 				<Label class="text-base">Event detection</Label>
 				<p class="text-sm text-muted-foreground">Detect and record events automatically.</p>
 			</div>
-			<Button onclick={toggleEventDetection} variant="outline" disabled={controlsLoading.eventDetection}>
-				{#if controlsLoading.eventDetection}
+			<Button onclick={toggleEventDetection} variant="outline" disabled={buttonsLoading.eventDetection}>
+				{#if buttonsLoading.eventDetection}
 					<Spinner class="size-4" />
 				{:else}
 					{eventDetectionEnabled ? "Enabled" : "Disabled"}
@@ -83,7 +83,7 @@
 								eventDetectionTypes = eventDetectionTypes.filter((t) => t !== type);
 								updateEventDetectionTypes();
 							}}
-							disabled={controlsLoading.eventDetectionTypes}
+							disabled={buttonsLoading.eventDetectionTypes}
 						>
 							<RiCloseLine class="size-3" />
 						</Button>
@@ -92,7 +92,7 @@
 				<input
 					bind:value={eventDetectionTypesInput}
 					placeholder={eventDetectionTypes.length === 0 ? "person, pet, etc." : ""}
-					disabled={controlsLoading.eventDetectionTypes}
+					disabled={buttonsLoading.eventDetectionTypes}
 					class="flex-1 text-sm outline-none"
 					onkeydown={(e) => {
 						if (e.key === "," || e.key === "Enter") {
@@ -113,9 +113,9 @@
 	<div class="border p-4">
 		<div class="mb-4 flex items-center justify-between gap-4">
 			<Label class="text-base">Paired devices</Label>
-			<Button onclick={loadDevices} variant="outline" size="sm" disabled={controlsLoading.devices}>
+			<Button onclick={loadDevices} variant="outline" size="sm" disabled={buttonsLoading.devices}>
 				Refresh
-				{#if controlsLoading.devices}
+				{#if buttonsLoading.devices}
 					<Spinner class="size-4" />
 				{:else}
 					<RiRefreshLine class="size-4" />
@@ -146,9 +146,9 @@
 							>
 								<AlertDialog.Trigger
 									class={buttonVariants({ variant: "outline", size: "sm" })}
-									disabled={controlsLoading[`remove-${device.id}`]}
+									disabled={buttonsLoading[`remove-${device.id}`]}
 								>
-									{#if controlsLoading[`remove-${device.id}`]}
+									{#if buttonsLoading[`remove-${device.id}`]}
 										<Spinner class="size-4" />
 									{:else}
 										<RiCloseLine class="size-4" />
@@ -183,9 +183,9 @@
 	<AlertDialog.Root bind:open={restartDialogOpen}>
 		<AlertDialog.Trigger
 			class="{buttonVariants({ variant: 'outline' })} w-full gap-2"
-			disabled={controlsLoading.restart}
+			disabled={buttonsLoading.restart}
 		>
-			{#if controlsLoading.restart}
+			{#if buttonsLoading.restart}
 				<Spinner class="size-4" />
 			{:else}
 				<RiRestartLine class="size-4" />
@@ -212,8 +212,8 @@
 	</AlertDialog.Root>
 
 	<AlertDialog.Root bind:open={resetDialogOpen}>
-		<AlertDialog.Trigger class="{buttonVariants({ variant: 'outline' })} w-full gap-2" disabled={controlsLoading.reset}>
-			{#if controlsLoading.reset}
+		<AlertDialog.Trigger class="{buttonVariants({ variant: 'outline' })} w-full gap-2" disabled={buttonsLoading.reset}>
+			{#if buttonsLoading.reset}
 				<Spinner class="size-4" />
 			{:else}
 				<RiFileShredLine class="size-4" />

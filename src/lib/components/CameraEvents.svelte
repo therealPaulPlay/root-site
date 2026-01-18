@@ -140,16 +140,16 @@
 </div>
 
 {#if events.length === 0}
-	<div class="mt-6 rounded-lg border p-8 text-center text-muted-foreground">No events recorded yet.</div>
+	<div class="mt-6 border p-8 text-center text-muted-foreground">No events recorded yet.</div>
 {:else if Object.keys(groupedEvents).length === 0}
-	<div class="mt-6 rounded-lg border p-8 text-center text-muted-foreground">No events match the selected filters.</div>
+	<div class="mt-6 border p-8 text-center text-muted-foreground">No events match the selected filters.</div>
 {:else}
 	{#each Object.entries(groupedEvents) as [dateKey, dateEvents]}
 		<div class="sticky -top-6 z-10 flex items-center gap-4 bg-background mask-b-from-70% mask-b-to-100% py-4">
 			<span class="shrink-0 text-sm font-medium text-muted-foreground">{dateKey}</span>
 			<Separator class="flex-1" />
 		</div>
-		<div class="divide-y overflow-y-auto rounded-lg border">
+		<div class="divide-y overflow-y-auto border">
 			{#each dateEvents as event}
 				<div class="flex flex-wrap items-center gap-4 p-4 hover:bg-muted/50">
 					<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted" {@attach observeThumbnail(event.id)}>
@@ -185,8 +185,8 @@
 						size="sm"
 						class="gap-2 max-sm:grow"
 					>
-						<RiEyeLine class="size-4" />
 						View
+						<RiEyeLine class="size-4" />
 					</Button>
 				</div>
 			{/each}

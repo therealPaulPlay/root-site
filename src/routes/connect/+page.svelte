@@ -11,6 +11,7 @@
 	import {
 		RiArrowRightSLine,
 		RiDeleteBinLine,
+		RiDownload2Line,
 		RiEdit2Line,
 		RiErrorWarningLine,
 		RiSettings3Line,
@@ -27,6 +28,7 @@
 	let previewTimeoutOver = $state(false);
 	let previewTimeout;
 	let previewImages = $state({});
+	let updateStatuses = $state({});
 
 	let renameDialogOpen = $state({});
 	let renameDialogLoading = $state({});
@@ -55,6 +57,9 @@
 					relayCommInstance.send(p.id, "getPreview").catch((error) => {
 						console.error(`Failed to get preview for product ${p.id}:`, error);
 					});
+					relayCommInstance.send(p.id, "getUpdateStatus").catch((error) => {
+						console.error(`Failed to get update status for product ${p.id}:`, error);
+					});
 				});
 
 				relayCommInstance.on("getPreviewResult", (msg) => {
@@ -65,6 +70,16 @@
 						return;
 					}
 					previewImages[msg.productId] = msg.payload.image;
+				});
+
+				relayCommInstance.on("getUpdateStatusResult", (msg) => {
+					if (!msg.payload.success) {
+						const error = `Failed to get update status for product ${msg.productId}: ${msg.payload.error || "Unknown error"}`;
+						toast.error(error);
+						console.error(error);
+						return;
+					}
+					updateStatuses[msg.productId] = msg.payload;
 				});
 
 				relayCommInstance.on("removeDeviceResult", (msg) => {
@@ -254,15 +269,23 @@
 						</AlertDialog.Content>
 					</AlertDialog.Root>
 				</span>
-				<Label class="mb-6 mt-0.5">{product.model}</Label>
+				<span class="mt-0.5 mb-6 inline-flex items-center gap-2 text-nowrap">
+					<Label class="leading-4!">{product.model}</Label>
+					{#if updateStatuses[product.id]?.status && updateStatuses[product.id]?.status !== "up-to-date"}
+						<span class="inline-flex items-center gap-1 overflow-hidden bg-accent px-1 text-xs uppercase">
+							<RiDownload2Line class="size-3! shrink-0" />
+							<p class="truncate">{updateStatuses[product.id].status.replaceAll("-", " ")}</p>
+						</span>
+					{/if}
+				</span>
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<p
-					class="mt-auto w-fit max-w-full overflow-hidden text-xs text-nowrap text-neutral-300 hover:truncate"
+					class="mt-auto w-fit max-w-full overflow-hidden text-xs text-nowrap text-muted-foreground hover:truncate"
 					onclick={() => (idForProductVisible = product.id)}
 					onmouseenter={() => (idForProductVisible = product.id)}
 					onmouseleave={() => (idForProductVisible = null)}
 				>
-					ID: <span class={idForProductVisible == product.id ? "" : "bg-neutral-300/35 text-transparent"}
+					ID: <span class={idForProductVisible == product.id ? "" : "bg-accent text-transparent"}
 						>{product.id}</span
 					>
 				</p>
