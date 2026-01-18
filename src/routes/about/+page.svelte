@@ -19,12 +19,11 @@
 		<p>
 			Working on web games by day, and on ROOT by night, I am persuing my <span class="bg-accent"
 				>dream of creating smart security products</span
-			>
-			– starting with the Observer – that <span class="bg-accent">respect user privacy</span>.
+			>, starting with the Observer, that <span class="bg-accent">respect user privacy</span>.
 		</p>
 		<p>
-			While I was going all-in on privacy (Modded LineageOS, tracker-blocking firewall) a couple of years
-			ago, I no longer have the time to tinker with my tools – they <span class="bg-accent">need to just work</span>.
+			I used to go all-in on privacy – modded LineageOS, tracker-blocking firewall, you name it. But
+			I no longer have the time to tinker with my tools. They <span class="bg-accent">need to just work</span>.
 			That's my goal with ROOT: Privacy without sacrificing the user experience.
 		</p>
 	</div>

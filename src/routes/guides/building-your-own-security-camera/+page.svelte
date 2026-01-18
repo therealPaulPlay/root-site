@@ -9,17 +9,17 @@
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 </script>
 
-<ContentHero duration="5 minutes" releaseDate="Jan 16th, 2026" />
+<ContentHero duration="5 minutes" releaseDate="Jan 16th, 2026" src="/images/guides/diy-security-camera.jpg" />
 
 <ContentContainer>
 	<div class="space-y-1">
-		<Label class="text-lg font-semibold">A complete guide</Label>
+		<Label class="text-lg font-semibold">A DIY Guide</Label>
 		<h1 class="text-4xl">Building your own private security camera</h1>
 	</div>
 
 	<p>
 		While there are many home security cameras on the market, it's difficult to find one that guarantees absolute
-		privacy. Popular options are known for storing recordings either completely unencrypted, or encrypted with keys the
+		privacy. Popular security systems are known for storing footage either completely unencrypted, or encrypted with keys the
 		manufacturer has access to.
 	</p>
 
@@ -30,7 +30,7 @@
 	</p>
 
 	<p>
-		Other great camera operating systems like
+		Other camera operating systems like
 		<a target="_blank" href="https://frigate.video/" class="underline">Frigate</a> and
 		<a target="_blank" href="https://github.com/motioneye-project/motioneye" class="underline">MotionEye</a>
 		excel at power-user and local NVR setups. ROOT's firmware takes a different approach:
@@ -41,13 +41,12 @@
 		<li>Intuitive web app that focuses on simplicity</li>
 		<li>Relay server that allows for remotely accessing cameras</li>
 		<li>Local-first architecture where recordings are stored on-device</li>
-		<li>Motion, person, pet and car detection – without a hub</li>
+		<li>Person, pet and car detection using local AI – without a hub</li>
 	</ul>
 
 	<p>
-		No software development skills are needed for building your own ROOT-powered security camera. Installing the ROOT
-		software is as simple as flashing the firmware onto the SD card of your Raspberry Pi and following the web app's
-		setup process.
+		No programming skills are needed for building your own ROOT-powered surveillance camera. Installing the ROOT
+		software is as easy as flashing the firmware onto the SD card of your Raspberry Pi.
 	</p>
 	<br />
 
@@ -75,8 +74,8 @@
 	</p>
 	<FirmwareDownloadButton />
 	<p>
-		Once downloaded, extract the .img file by double-clicking (macOS) or right-clicking and selecting
-		"Extract All" (Windows).
+		Once downloaded, extract the .img file by double-clicking (macOS) or right-clicking and selecting "Extract All"
+		(Windows).
 	</p>
 	<br />
 
@@ -112,8 +111,6 @@
 		<li>Wire the passive buzzer to GPIO 18 and 3.3V (optional). This allows the camera to play sounds.</li>
 		<li>Insert the flashed SD card into the card slot.</li>
 	</ol>
-
-	<ContentProductPromotion />
 	<br />
 
 	<h2 class="text-3xl">Step 4: Host the relay server</h2>
@@ -157,4 +154,6 @@
 		Once it's ready, head over to <a class="underline" href="/connect/add" target="_blank">ROOT Connect</a> to finish setting
 		up your camera.
 	</p>
+	<br />
+	<ContentProductPromotion />
 </ContentContainer>

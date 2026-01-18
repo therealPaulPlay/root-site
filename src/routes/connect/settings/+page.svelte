@@ -58,14 +58,14 @@
 		>
 	</section>
 
-	<section class="mt-10 flex w-full flex-wrap gap-2 border-y p-6 lg:p-8">
-		<IframeDialog src="/privacy">
+	<section class="mt-10 flex flex-col gap-2 border-y p-6 lg:p-8">
+		<IframeDialog src="/privacy" variant="link" class="p-0!">
 			Privacy Policy <RiExternalLinkLine class="size-4" />
 		</IframeDialog>
-		<IframeDialog src="/terms">
+		<IframeDialog src="/terms" variant="link" class="p-0!">
 			Terms of Use <RiExternalLinkLine class="size-4" />
 		</IframeDialog>
-		<IframeDialog src="/source-code">
+		<IframeDialog src="/source-code" variant="link" class="p-0!">
 			Source code <RiExternalLinkLine class="size-4" />
 		</IframeDialog>
 	</section>

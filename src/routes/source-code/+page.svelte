@@ -33,19 +33,21 @@
 
 <section class="relative mb-20 w-full space-y-4 border-y p-6 lg:p-8">
 	<h1 class="text-4xl">Source code</h1>
-	<p>
-		<Button href={REPOSITORY_URLS.site} target="_blank" variant="link" class="inline-flex items-center gap-2 px-0!"
-			>Website <RiExternalLinkLine class="h-4! w-4!" /></Button
-		>
-	</p>
-	<p>
-		<Button href={REPOSITORY_URLS.relay} target="_blank" variant="link" class="inline-flex items-center gap-2 px-0!"
-			>Relay server <RiExternalLinkLine class="h-4! w-4!" /></Button
-		>
-	</p>
-	<p>
-		<Button href={REPOSITORY_URLS.firmware} target="_blank" variant="link" class="inline-flex items-center gap-2 px-0!"
-			>Firmware <RiExternalLinkLine class="h-4! w-4!" /></Button
-		>
-	</p>
+	<div class="space-y-2">
+		<p>
+			<Button href={REPOSITORY_URLS.site} target="_blank" variant="link" class="px-0!"
+				>Website <RiExternalLinkLine class="h-4! w-4!" /></Button
+			>
+		</p>
+		<p>
+			<Button href={REPOSITORY_URLS.relay} target="_blank" variant="link" class=" px-0!"
+				>Relay server <RiExternalLinkLine class="h-4! w-4!" /></Button
+			>
+		</p>
+		<p>
+			<Button href={REPOSITORY_URLS.firmware} target="_blank" variant="link" class="px-0!"
+				>Firmware <RiExternalLinkLine class="h-4! w-4!" /></Button
+			>
+		</p>
+	</div>
 </section>

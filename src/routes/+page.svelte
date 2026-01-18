@@ -363,10 +363,10 @@
 				{#each privacyIssueArticleSnippets as item}
 					<Carousel.Item class="max-w-105 min-w-50 lg:basis-5/11">
 						<div class="flex h-full flex-col border bg-accent p-4">
-							<p class="text-foreground/65 italic">
+							<p class="text-foreground/65">
 								<span class="text-foreground">{item.text?.split(" ")?.[0]}</span>
 								{item.text?.split(" ")?.slice(1)?.join(" ")} -
-								<a target="_blank" class="not-italic hover:underline" href={item.source}>{item.sourceName}</a>
+								<a target="_blank" class="hover:underline" href={item.source}>{item.sourceName}</a>
 							</p>
 						</div>
 					</Carousel.Item>

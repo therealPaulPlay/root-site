@@ -9,7 +9,7 @@
 		class="absolute inset-0 -z-1 h-full w-full object-cover brightness-15"
 	/>
 	<h3 class="text-2xl">A truly private security camera.</h3>
-	<p class="max-w-lg">The ROOT Observer redefines home security with privacy at the cryptographic level.</p>
+	<p class="max-w-lg text-left!">The ROOT Observer redefines home security with privacy at the cryptographic level.</p>
 	<Button
 		class="mt-2 bg-background text-foreground hover:bg-background/80 hover:text-foreground"
 		href="https://tally.so/r/NpXY1N"
