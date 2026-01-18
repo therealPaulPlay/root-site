@@ -5,7 +5,7 @@
 	let { title = "Default title", subtitle = "This is the default subtitle text.", href = "/" } = $props();
 </script>
 
-<Card.Root>
+<Card.Root class="max-w-lg">
 	<Card.Header>
 		<Card.Title>{title}</Card.Title>
 		<Card.Description>{subtitle}</Card.Description>
