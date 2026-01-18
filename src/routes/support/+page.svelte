@@ -154,7 +154,7 @@
 	<h2 class="text-3xl">Guides</h2>
 	<div class="flex w-full flex-wrap items-center gap-6">
 		<GuideCard
-			title="Building your own security camera"
+			title="Building your own"
 			subtitle="Learn how you can build your own Raspberry Pi security camera using the private ROOT software."
 			href="/guides/building-your-own-security-camera"
 		/>
