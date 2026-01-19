@@ -172,9 +172,9 @@
 	<title>Add product</title>
 </svelte:head>
 
-<div class="flex min-h-svh w-full flex-col justify-center">
+<div class="flex h-svh w-full flex-col justify-center">
 	{#if stepImage[step - 1] && step !== 3}
-		<div class="h-[50svh] max-h-[60svw] w-full overflow-hidden border-b">
+		<div class="h-[50svh] max-h-[60svw] w-full shrink-0 overflow-hidden border-b">
 			<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover" />
 		</div>
 	{:else if step === 3}
@@ -189,7 +189,7 @@
 		</div>
 	{/if}
 
-	<div class="flex grow flex-col space-y-4 p-6 lg:p-8">
+	<div class="of-top of-bottom flex grow flex-col space-y-4 overflow-y-auto p-6 lg:p-8">
 		<h3 class="text-3xl">{step}. {stepTitle[step - 1] || "Default."}</h3>
 
 		{#if step == 1}
@@ -216,7 +216,8 @@
 					try {
 						connectedBleDevice = await bluetoothInstance.scan();
 					} catch (error) {
-						if (!error.message?.includes("User cancelled")) toast.error("Error selecting bluetooth device: " + error.message);
+						if (!error.message?.includes("User cancelled"))
+							toast.error("Error selecting bluetooth device: " + error.message);
 						return;
 					}
 
@@ -431,44 +432,6 @@
 			</div>
 		{/if}
 
-		<AlertDialog.Root bind:open={wifiConnectDialogOpen}>
-			<AlertDialog.Content>
-				<AlertDialog.Header>
-					<AlertDialog.Title>Connect to {pendingWifiNetwork?.ssid || "default SSID"}</AlertDialog.Title>
-					<AlertDialog.Description>
-						Please input the WiFi password and choose the country that this WiFi network is located in.
-					</AlertDialog.Description>
-				</AlertDialog.Header>
-				<div class="mb-4 space-y-4">
-					<div class="space-y-1">
-						<Label for="password-input" class="text-sm font-medium">Password</Label>
-						<Input id="password-input" type="text" bind:value={wifiPasswordInput} placeholder="wifi-password-123" />
-					</div>
-					<div class="space-y-1">
-						<Label for="country-select" class="text-sm font-medium">Country</Label>
-						<NativeSelect.Root id="country-select" bind:value={wifiCountryCode}>
-							<NativeSelect.Option value="">Select country</NativeSelect.Option>
-							{#each Object.entries(countryCodes) as [code, name]}
-								<NativeSelect.Option value={code}>{name}</NativeSelect.Option>
-							{/each}
-						</NativeSelect.Root>
-					</div>
-				</div>
-				<AlertDialog.Footer>
-					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-					<AlertDialog.Action
-						onclick={connectToWifi}
-						disabled={!pendingWifiNetwork || !wifiPasswordInput || !wifiCountryCode || currentlyConnectingWifi}
-					>
-						{#if currentlyConnectingWifi}
-							<Spinner />
-						{/if}
-						Connect</AlertDialog.Action
-					>
-				</AlertDialog.Footer>
-			</AlertDialog.Content>
-		</AlertDialog.Root>
-
 		{#if step == 6}
 			{#if !relayConfigured}
 				<p class="max-w-3xl">
@@ -523,48 +486,87 @@
 				</div>
 			</div>
 		{/if}
+	</div>
 
-		<!-- Controls -->
-		<div class="mt-auto flex w-full justify-between gap-8 pt-4">
-			<AlertDialog.Root>
-				<AlertDialog.Trigger class={buttonVariants({ variant: "outline" })}>
-					<RiArrowLeftLine class="h-4! w-4!" />Abort
-				</AlertDialog.Trigger>
-				<AlertDialog.Content>
-					<AlertDialog.Header>
-						<AlertDialog.Title>Abort?</AlertDialog.Title>
-						<AlertDialog.Description>
-							{#if successfulPair}
-								WARNING: Aborting the setup with an already paired device will NOT reset the full pairing progress.
-								Finishing the WiFi and Relay setup is highly recommended.
-							{:else}
-								All setup progress will be lost.
-							{/if}
-						</AlertDialog.Description>
-					</AlertDialog.Header>
-					<AlertDialog.Footer>
-						<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-						<AlertDialog.Action onclick={() => goto("/connect")}>Confirm</AlertDialog.Action>
-					</AlertDialog.Footer>
-				</AlertDialog.Content>
-			</AlertDialog.Root>
-			<Button
-				disabled={!stepConditionMet}
-				onclick={() => {
-					if (step < stepAmount) step++;
-					else goto("/connect");
-				}}
-			>
-				{#if step < stepAmount}
-					Next
-					<RiArrowRightLine class="h-4! w-4!" />
-				{:else}
-					Done
-				{/if}</Button
-			>
-		</div>
+	<!-- Controls -->
+	<div class="mt-auto flex w-full justify-between gap-8 p-6 pb-8! lg:p-8">
+		<AlertDialog.Root>
+			<AlertDialog.Trigger class={buttonVariants({ variant: "outline" })}>
+				<RiArrowLeftLine class="h-4! w-4!" />Abort
+			</AlertDialog.Trigger>
+			<AlertDialog.Content>
+				<AlertDialog.Header>
+					<AlertDialog.Title>Abort?</AlertDialog.Title>
+					<AlertDialog.Description>
+						{#if successfulPair}
+							WARNING: Aborting the setup with an already paired device will NOT reset the full pairing progress.
+							Finishing the WiFi and Relay setup is highly recommended.
+						{:else}
+							All setup progress will be lost.
+						{/if}
+					</AlertDialog.Description>
+				</AlertDialog.Header>
+				<AlertDialog.Footer>
+					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+					<AlertDialog.Action onclick={() => goto("/connect")}>Confirm</AlertDialog.Action>
+				</AlertDialog.Footer>
+			</AlertDialog.Content>
+		</AlertDialog.Root>
+		<Button
+			disabled={!stepConditionMet}
+			onclick={() => {
+				if (step < stepAmount) step++;
+				else goto("/connect");
+			}}
+		>
+			{#if step < stepAmount}
+				Next
+				<RiArrowRightLine class="h-4! w-4!" />
+			{:else}
+				Done
+			{/if}</Button
+		>
 	</div>
 </div>
+
+<!-- Wifi dialog -->
+<AlertDialog.Root bind:open={wifiConnectDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Connect to {pendingWifiNetwork?.ssid || "default SSID"}</AlertDialog.Title>
+			<AlertDialog.Description>
+				Please input the WiFi password and choose the country that this WiFi network is located in.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<div class="mb-4 space-y-4">
+			<div class="space-y-1">
+				<Label for="password-input" class="text-sm font-medium">Password</Label>
+				<Input id="password-input" type="text" bind:value={wifiPasswordInput} placeholder="wifi-password-123" />
+			</div>
+			<div class="space-y-1">
+				<Label for="country-select" class="text-sm font-medium">Country</Label>
+				<NativeSelect.Root id="country-select" bind:value={wifiCountryCode}>
+					<NativeSelect.Option value="">Select country</NativeSelect.Option>
+					{#each Object.entries(countryCodes) as [code, name]}
+						<NativeSelect.Option value={code}>{name}</NativeSelect.Option>
+					{/each}
+				</NativeSelect.Root>
+			</div>
+		</div>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action
+				onclick={connectToWifi}
+				disabled={!pendingWifiNetwork || !wifiPasswordInput || !wifiCountryCode || currentlyConnectingWifi}
+			>
+				{#if currentlyConnectingWifi}
+					<Spinner />
+				{/if}
+				Connect</AlertDialog.Action
+			>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
 
 <!-- Already Paired Dialog -->
 <Dialog.Root bind:open={alreadyPairedDialogOpen}>

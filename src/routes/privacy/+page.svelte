@@ -2,7 +2,7 @@
 	<title>Privacy Policy</title>
 </svelte:head>
 
-<section class="-z-1 h-60 w-full md:h-80 lg:h-120 xl:h-screen">
+<section class="-z-1 h-60 w-full md:h-80 lg:h-120 xl:h-svh">
 	<img alt="privacy shield" src="/images/legal/privacy-shield.jpg" class="h-full w-full object-cover" />
 </section>
 

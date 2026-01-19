@@ -172,15 +172,14 @@
 	</Button>
 </div>
 
-{#snippet productItem(product)}
+{#snippet productItem(product, isFirst = false)}
 	{@const isRenameDialogOpen = renameDialogOpen[product.id] ?? false}
 	{@const isRemoveDialogOpen = removeDialogOpen[product.id] ?? false}
-	<div class="relative flex h-fit min-h-32 w-full shrink-0 border-y max-md:flex-wrap">
-		<!-- preview image -->
+	<div class="relative flex h-fit min-h-32 w-full shrink-0 {isFirst ? 'border-b' : 'border-y'} max-md:flex-wrap">
+		<!-- Preview image -->
 		<div
 			class="aspect-video w-full content-center bg-foreground text-center text-background max-md:border-b md:w-1/3 md:border-r"
 		>
-			<!-- todo -->
 			{#if !previewImages[product.id]}
 				{#if !previewTimeoutOver}
 					<Spinner class="mx-auto size-8" />
@@ -285,9 +284,7 @@
 					onmouseenter={() => (idForProductVisible = product.id)}
 					onmouseleave={() => (idForProductVisible = null)}
 				>
-					ID: <span class={idForProductVisible == product.id ? "" : "bg-accent text-transparent"}
-						>{product.id}</span
-					>
+					ID: <span class={idForProductVisible == product.id ? "" : "bg-accent text-transparent"}>{product.id}</span>
 				</p>
 			</div>
 			<div class="flex h-full flex-col border-l">
@@ -299,14 +296,19 @@
 	</div>
 {/snippet}
 
-<div class="of-top of-bottom flex h-screen w-full flex-col items-center justify-start gap-8 overflow-y-auto py-30">
-	{#if products.length}
-		{#each products as product}
-			{@render productItem(product)}
-		{/each}
-	{:else}
-		<Label class="my-auto overflow-hidden text-nowrap">Click "<RiVideoAddLine class="size-4! -mx-1.25" />" to connect a camera.</Label>
-	{/if}
+<!-- Scrollable product view -->
+<div class="mt-[7.5rem] h-[calc(100svh-7.5rem)]" class:border-t={products.length}>
+	<div class="of-top of-bottom flex h-full w-full flex-col items-center justify-start gap-8 overflow-y-auto pb-30">
+		{#if products.length}
+			{#each products as product, index}
+				{@render productItem(product, index === 0)}
+			{/each}
+		{:else}
+			<Label class="mx-auto my-auto overflow-hidden text-nowrap"
+				>Click "<RiVideoAddLine class="-mx-1.25 size-4!" />" to connect a camera.</Label
+			>
+		{/if}
+	</div>
 </div>
 
 <WebBluetoothUnsupportedDialog />

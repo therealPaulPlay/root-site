@@ -9,8 +9,8 @@
 
 	let { children } = $props();
 
-	onMount(init);
-	onMount(initializeBackGestureHandler);
+	onMount(init); // Overfade
+	onMount(initializeBackGestureHandler); // Back gesture support for going back
 	onDestroy(removeBackGestureHandler);
 </script>
 
@@ -28,7 +28,7 @@
 
 <main class="items-start-safe relative container mx-auto flex">
 	<Navbar />
-	<article class="no-scrollbar relative flex min-h-screen w-full flex-col overflow-x-hidden sm:border-x">
+	<article class="no-scrollbar relative flex min-h-svh w-full flex-col overflow-x-hidden sm:border-x">
 		{@render children?.()}
 		<Footer />
 	</article>

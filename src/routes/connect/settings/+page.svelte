@@ -27,46 +27,49 @@
 	</Button>
 </div>
 
-<div class="min-h-screen">
+<div class="flex h-svh flex-col">
 	<section class="mt-30 w-full space-y-4 border-y p-6 lg:p-8">
 		<div>
 			<h1 class="text-4xl">Settings</h1>
 		</div>
 	</section>
 
-	<section class="mt-10 w-full space-y-8 border-y p-6 lg:p-8">
-		<div class="flex max-w-lg flex-col gap-4">
-			<div class="space-y-1">
-				<Label for="relay-domain" class="text-sm font-medium">Relay domain</Label>
-				<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={DEFAULT_RELAY_DOMAIN} />
+	<!-- Scroll area -->
+	<div class="of-top of-bottom of-length-2 max-h-full w-full overflow-y-auto">
+		<section class="mt-10 w-full space-y-8 border-y p-6 lg:p-8">
+			<div class="flex max-w-lg flex-col gap-4">
+				<div class="space-y-1">
+					<Label for="relay-domain" class="text-sm font-medium">Relay domain</Label>
+					<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={DEFAULT_RELAY_DOMAIN} />
+				</div>
+				<p class="text-xs text-muted-foreground">
+					The relay server domain that the connect panel will use. Connected products must be configured to use the same
+					domain.
+				</p>
 			</div>
-			<p class="text-xs text-muted-foreground">
-				The relay server domain that the connect panel will use. Connected products must be configured to use the same
-				domain.
-			</p>
-		</div>
 
-		<Button
-			disabled={relayDomainInput === relayDomain}
-			onclick={() => {
-				const domain = relayDomainInput.trim();
-				if (domain) {
-					localStorage.setItem("relayDomain", domain);
-					relayDomain = domain;
-				}
-			}}>Save</Button
-		>
-	</section>
+			<Button
+				disabled={relayDomainInput === relayDomain}
+				onclick={() => {
+					const domain = relayDomainInput.trim();
+					if (domain) {
+						localStorage.setItem("relayDomain", domain);
+						relayDomain = domain;
+					}
+				}}>Save</Button
+			>
+		</section>
 
-	<section class="mt-10 flex flex-col gap-2 border-y p-6 lg:p-8">
-		<IframeDialog src="/privacy" variant="link" class="p-0!">
-			Privacy Policy <RiExternalLinkLine class="size-4" />
-		</IframeDialog>
-		<IframeDialog src="/terms" variant="link" class="p-0!">
-			Terms of Use <RiExternalLinkLine class="size-4" />
-		</IframeDialog>
-		<IframeDialog src="/source-code" variant="link" class="p-0!">
-			Source code <RiExternalLinkLine class="size-4" />
-		</IframeDialog>
-	</section>
+		<section class="mt-10 mb-10 flex flex-col gap-2 border-y p-6 lg:p-8">
+			<IframeDialog src="/privacy" variant="link" class="p-0!">
+				Privacy Policy <RiExternalLinkLine class="size-4" />
+			</IframeDialog>
+			<IframeDialog src="/terms" variant="link" class="p-0!">
+				Terms of Use <RiExternalLinkLine class="size-4" />
+			</IframeDialog>
+			<IframeDialog src="/source-code" variant="link" class="p-0!">
+				Source code <RiExternalLinkLine class="size-4" />
+			</IframeDialog>
+		</section>
+	</div>
 </div>

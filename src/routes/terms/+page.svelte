@@ -2,7 +2,7 @@
 	<title>Terms of Use</title>
 </svelte:head>
 
-<section class="-z-1 h-60 md:h-80 w-full lg:h-120 xl:h-screen">
+<section class="-z-1 h-60 md:h-80 w-full lg:h-120 xl:h-svh">
 	<img alt="privacy shield" src="/images/legal/rules.jpg" class="h-full w-full object-cover" />
 </section>
 
