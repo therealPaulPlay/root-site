@@ -462,7 +462,7 @@
 		</h3>
 	</div>
 	<div class="relative overflow-hidden border-t px-6 py-12 lg:px-8">
-		<p class="mb-1 w-fit bg-foreground px-0.5 text-background uppercase">Coming soon</p>
+		<p class="mb-1 w-fit bg-foreground px-1 text-background uppercase font-medium">Coming soon</p>
 		<h3 class="mb-4 text-3xl">Observer</h3>
 		<p class="lg:max-w-1/2">An indoor security camera with on-device AI vision.</p>
 		<img
