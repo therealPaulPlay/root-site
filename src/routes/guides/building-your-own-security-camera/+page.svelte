@@ -9,7 +9,7 @@
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 </script>
 
-<ContentHero duration="5 minutes" releaseDate="Jan 16th, 2026" src="/images/guides/diy-security-camera.jpg" />
+<ContentHero duration="5 minutes" releaseDate="Jan 19th, 2026" src="/images/guides/diy-security-camera.jpg" />
 
 <ContentContainer>
 	<div class="space-y-1">
@@ -19,18 +19,18 @@
 
 	<p>
 		While there are many home security cameras on the market, it's hard to find one that guarantees absolute
-		privacy. Popular security systems are known for storing footage either completely unencrypted, or encrypted with keys the
-		manufacturer has access to.
+		privacy. Most popular security systems store footage in the cloud, where the manufacturer has full access to
+		your recordings.
 	</p>
 
 	<p>
 		ROOT offers a complete software suite that includes
 		<a href="/connect" target="_blank" class="underline">ROOT Connect</a> (mobile app coming soon), a relay server, and camera
-		firmware – all open-source and engineered to keep your data safe.
+		firmware – all open-source and engineered to keep your data safe and end-2-end encrypted.
 	</p>
 
 	<p>
-		Other camera operating systems like
+		Other open-source camera operating systems like
 		<a target="_blank" href="https://frigate.video/" class="underline">Frigate</a> and
 		<a target="_blank" href="https://github.com/motioneye-project/motioneye" class="underline">MotionEye</a>
 		excel at power-user and local NVR setups. ROOT's firmware takes a different approach:
@@ -151,7 +151,7 @@
 	</p>
 
 	<p>
-		Once it's ready, head over to <a class="underline" href="/connect/add" target="_blank">ROOT Connect</a> to finish setting
+		Once it's ready, head over to <a class="underline" href="/connect" target="_blank">ROOT Connect</a> to finish setting
 		up your camera.
 	</p>
 	<br />
