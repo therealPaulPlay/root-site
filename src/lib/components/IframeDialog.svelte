@@ -5,7 +5,7 @@
 </script>
 
 <Dialog.Root>
-	<Dialog.Trigger class={`${buttonVariants({ variant: variant })} ${classes}`}>
+	<Dialog.Trigger class={`${variant ? buttonVariants({ variant: variant }) : ""} ${classes}`}>
 		{@render children?.()}
 	</Dialog.Trigger>
 	<Dialog.Content class="flex h-[calc(100svh-7.5rem)] flex-col overflow-hidden pt-12">
