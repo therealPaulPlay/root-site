@@ -305,7 +305,7 @@
 			{@render productItem(product)}
 		{/each}
 	{:else}
-		<Label class="my-auto truncate">No cameras connected.</Label>
+		<Label class="my-auto overflow-hidden text-nowrap">Click "<RiVideoAddLine class="size-4! -mx-1.25" />" to connect a camera.</Label>
 	{/if}
 </div>
 
