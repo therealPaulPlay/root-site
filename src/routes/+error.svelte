@@ -6,7 +6,7 @@
 	<title>Error</title>
 </svelte:head>
 
-<div class="my-auto mx-auto text-center">
+<div class="h-svh text-center content-center">
 	<p>{page.status} ({page.error.message}).</p>
 	<p>Beep. Bop.</p>
 </div>
