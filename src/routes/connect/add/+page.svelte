@@ -216,7 +216,7 @@
 					try {
 						connectedBleDevice = await bluetoothInstance.scan();
 					} catch (error) {
-						toast.error("Error selecting bluetooth device: " + error.message);
+						if (!error.message?.includes("User cancelled")) toast.error("Error selecting bluetooth device: " + error.message);
 						return;
 					}
 
