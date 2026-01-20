@@ -31,7 +31,7 @@ export class RelayComm {
 		return new Promise((resolve, reject) => {
 			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?device-id=${this.deviceId}`);
 			this.#ws.onopen = () => {
-				if (this.#muteConnectionErrors) toast.info("Reconnected."); // If errors are muted (indicating that relay connection is in bad state), toast on reconnect
+				if (this.#muteConnectionErrors) toast.info("Reconnected"); // If errors are muted (indicating that relay connection is in bad state), toast on reconnect
 				this.#muteConnectionErrors = false;
 				console.info("Relay connection opened");
 				resolve();
