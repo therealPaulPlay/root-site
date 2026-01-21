@@ -157,7 +157,7 @@
 						class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto p-4 break-all"
 					>
 						{#each health.logs as log}
-							<div><span class="text-muted-foreground">[{log.time}]</span> {log.msg}</div>
+							<div><span class="text-muted-foreground">[{new Date(log.timestamp).toLocaleTimeString()}]</span> {log.msg}</div>
 						{/each}
 					</div>
 				</div>
