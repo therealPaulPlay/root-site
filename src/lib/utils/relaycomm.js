@@ -31,7 +31,7 @@ export class RelayComm {
 		return new Promise((resolve, reject) => {
 			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?device-id=${this.deviceId}`);
 			this.#ws.onopen = () => {
-				if (this.#muteConnectionErrors) toast.info("Reconnected"); // If errors are muted (indicating that relay connection is in bad state), toast on reconnect
+				if (this.#muteConnectionErrors) toast.info("Reconnected!"); // If errors are muted (indicating that relay connection is in bad state), toast on reconnect
 				this.#muteConnectionErrors = false;
 				console.info("Relay connection opened");
 				resolve();
@@ -54,7 +54,7 @@ export class RelayComm {
 
 				// Only attempt reconnect if this was not an intentional disconnect
 				if (!this.#intentionalDisconnect) {
-					if (!this.#muteConnectionErrors) toast.error("Relay connection closed, attempting reconnect");
+					if (!this.#muteConnectionErrors) toast.error("Relay connection closed, attempting reconnect...");
 					this.#muteConnectionErrors = true;
 					this.#ws = null; // To prevent .disconnect() attempt on .connect() - not needed, since we are already disconnected
 					this.#reconnectTimeout = setTimeout(() => this.connect().catch((e) => { console.error("Reconnecting to the relay failed – retrying in 5s:", e) }), 5000);
