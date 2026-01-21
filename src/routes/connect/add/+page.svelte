@@ -393,9 +393,8 @@
 										wifiCountryCode = "";
 										wifiConnectDialogOpen = true;
 									}}
-									class="flex w-full items-center justify-between gap-2 p-2 hover:bg-accent/50 {network.unsupported
-										? 'pointer-events-none opacity-50'
-										: ''} {network.ssid === selectedWiFiSSID
+									class="flex w-full items-center justify-between gap-2 p-2 hover:bg-accent/50 {network.ssid ===
+									selectedWiFiSSID
 										? 'pointer-events-none bg-foreground text-background'
 										: ''}"
 								>
@@ -408,7 +407,6 @@
 										<p class="truncate text-sm text-nowrap">
 											{network.ssid}
 											{network.ssid === selectedWiFiSSID ? "(Connected)" : ""}
-											{network.unsupported ? "(Unsupported)" : ""}
 										</p>
 									</span>
 									<span class="text-sm text-nowrap">{network.signal}/100</span>
