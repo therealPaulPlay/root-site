@@ -6,6 +6,7 @@
 	import ContentProductPromotion from "$lib/components/ContentProductPromotion.svelte";
 	import FirmwareDownloadButton from "$lib/components/FirmwareDownloadButton.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
+	import * as Dialog from "$lib/components/ui/dialog";
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 </script>
 
@@ -18,9 +19,8 @@
 	</div>
 
 	<p>
-		While there are many home security cameras on the market, it's hard to find one that guarantees absolute
-		privacy. Most popular security systems store footage in the cloud, where the manufacturer has full access to
-		your recordings.
+		While there are many home security cameras on the market, it's hard to find one that guarantees absolute privacy.
+		Most popular security systems store footage in the cloud, where the manufacturer has full access to your recordings.
 	</p>
 
 	<p>
@@ -45,8 +45,30 @@
 	</ul>
 
 	<p>
-		No programming skills are needed for building your own ROOT-powered surveillance camera. Installing the ROOT
-		software is as easy as flashing the firmware onto the SD card of your Raspberry Pi.
+		No programming skills are needed for building your own ROOT-powered camera. Installing the software is as easy as
+		flashing the firmware onto the SD card of your Raspberry Pi.
+	</p>
+
+	<p>
+		<Dialog.Root>
+			<Dialog.Trigger class="text-start text-muted-foreground hover:underline"
+				>&gt; Why should I care about privacy?</Dialog.Trigger
+			>
+			<Dialog.Content class="w-full max-w-250!">
+				<Dialog.Header>
+					<Dialog.Title>Why privacy matters</Dialog.Title>
+				</Dialog.Header>
+				<iframe
+					class="aspect-video w-full"
+					src="https://www.youtube.com/embed/pcSlowAhvUk?si=Bv0q3nb1OqOsj9Hh"
+					title="YouTube video player"
+					frameborder="0"
+					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+					referrerpolicy="strict-origin-when-cross-origin"
+					allowfullscreen
+				></iframe>
+			</Dialog.Content>
+		</Dialog.Root>
 	</p>
 	<br />
 

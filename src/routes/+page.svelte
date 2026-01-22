@@ -14,7 +14,6 @@
 	import { blur } from "svelte/transition";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { decryptTextEffect } from "$lib/utils/decryptTextEffect.js";
-	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Carousel from "$lib/components/ui/carousel";
 	import Label from "$lib/components/ui/label/label.svelte";
 
@@ -24,7 +23,8 @@
 
 	// Dynamic eye grid
 	let eyeGridElement = $state();
-	let eyeCount = $state(70);
+	let eyeGrid = $state({ cols: 0, rows: 0, gapX: 0, gapY: 0 });
+	let eyeCount = $derived(eyeGrid.cols * eyeGrid.rows);
 	let lastMousePosition = $state({ x: 0, y: 0 });
 
 	onMount(() => {
@@ -62,10 +62,10 @@
 		];
 
 		// Delay to ensure DOM is ready
-		setTimeout(() => {
-			updateMarqueeText(); // Update marquee text based on width
-			updateEyeGrid(); // Update eye grid based on container size
-		}, 0);
+		requestAnimationFrame(() => {
+			updateMarqueeText();
+			updateEyeGrid();
+		});
 
 		// Start the auto-rotation timer
 		const trackingExampleInterval = setInterval(() => {
@@ -114,20 +114,23 @@
 		marqueeText = `${plus}Shockingly+++Private+++Products${plus}`;
 	}
 
+	// Eye grid calculation
+	const EYE_SIZE = { w: 48, h: 32, minGap: 8 };
+
 	function updateEyeGrid() {
 		if (!eyeGridElement) return;
-		const containerWidth = eyeGridElement.parentElement.offsetWidth;
-		const containerHeight = eyeGridElement.parentElement.offsetHeight;
-		const eyeWidth = 48; // w-12 = 48px
-		const eyeHeight = 32; // h-8 = 32px
-		const gap = 8; // gap-2 = 8px
+		const { clientWidth: w, clientHeight: h } = eyeGridElement.parentElement;
+		const { w: ew, h: eh, minGap } = EYE_SIZE;
 
-		const cols = Math.floor((containerWidth + gap) / (eyeWidth + gap));
-		const rows = Math.floor((containerHeight + gap) / (eyeHeight + gap));
+		const cols = Math.floor((w + minGap) / (ew + minGap));
+		const rows = Math.floor((h + minGap) / (eh + minGap));
 
-		// Update eye count and column count
-		eyeCount = Math.min(42, cols * rows); // Cap at 120 eyes
-		eyeGridElement.style.setProperty("--eye-grid-cols", cols.toString());
+		eyeGrid = {
+			cols,
+			rows,
+			gapX: cols > 1 ? (w - cols * ew) / (cols - 1) : 0,
+			gapY: rows > 1 ? (h - rows * eh) / (rows - 1) : 0
+		};
 	}
 
 	function updateEyePupils(clientX, clientY) {
@@ -208,11 +211,14 @@
 		<div class="absolute inset-0 -z-1 h-full w-full bg-foreground/25 mask-t-from-70% backdrop-blur-lg"></div>
 		<!-- Hero text container -->
 		<div class="z-2 max-w-xl space-y-4">
-			<h3 class="text-5xl leading-12.5 text-background lg:text-nowrap" {@attach decryptTextEffect("Privacy, redefined.")}>
+			<h3
+				class="text-5xl leading-12.5 text-background lg:text-nowrap"
+				{@attach decryptTextEffect("Privacy, redefined.")}
+			>
 				Privacy, redefined.
 			</h3>
-			<p class="max-w-lg text-background">
-				The Observer rethinks security cameras with cryptographically guaranteed privacy.
+			<p class="max-w-lg text-pretty text-background">
+				The ROOT Observer rethinks security cameras with cryptographically guaranteed privacy.
 			</p>
 			<Button
 				size="lg"
@@ -236,31 +242,12 @@
 			Unlike most smart home cameras, <span class="bg-accent">ROOT products ensure only you can access</span> video, audio
 			and sensor data using end-to-end encryption and a local-first architecture.
 		</p>
-		<Dialog.Root>
-			<Dialog.Trigger class="mt-4 text-start text-muted-foreground hover:underline"
-				>&gt; Why should I care about privacy?</Dialog.Trigger
-			>
-			<Dialog.Content class="w-full max-w-250!">
-				<Dialog.Header>
-					<Dialog.Title>Why privacy matters.</Dialog.Title>
-				</Dialog.Header>
-				<iframe
-					class="aspect-video w-full"
-					src="https://www.youtube.com/embed/pcSlowAhvUk?si=Bv0q3nb1OqOsj9Hh"
-					title="YouTube video player"
-					frameborder="0"
-					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-					referrerpolicy="strict-origin-when-cross-origin"
-					allowfullscreen
-				></iframe>
-			</Dialog.Content>
-		</Dialog.Root>
 	</div>
-	<div class="relative m-6 flex w-1/3 w-full flex-col justify-center overflow-hidden max-lg:max-h-30">
+	<div class="relative m-6 min-h-35 flex-1 overflow-hidden max-lg:h-30 lg:m-8">
 		{#snippet eyeSnippet(id)}
 			{@const pupilId = `pupil-${id}`}
 			{@const innerPupilId = `inner-pupil-${id}`}
-			<svg viewBox="15 0 120 90" class="h-8 w-12">
+			<svg viewBox="0 0 120 90" class="h-8 w-12">
 				<defs>
 					<clipPath id="eyeClip{id}">
 						<path d="M20 45 Q60 5 100 45 Q60 85 20 45 Z" />
@@ -305,7 +292,13 @@
 			</svg>
 		{/snippet}
 
-		<div bind:this={eyeGridElement} class="eye-grid -mr-3 grid gap-2">
+		<div
+			bind:this={eyeGridElement}
+			class="absolute inset-0 grid"
+			style:grid-template-columns="repeat({eyeGrid.cols}, {EYE_SIZE.w}px)"
+			style:column-gap="{eyeGrid.gapX}px"
+			style:row-gap="{eyeGrid.gapY}px"
+		>
 			{#each Array(eyeCount) as _, i}
 				{@render eyeSnippet(i)}
 			{/each}
@@ -345,7 +338,7 @@
 			>.
 		</p>
 		<p class="max-w-150">
-			As political landscapes shift, the question isn't just who can access this data today, but <span class="bg-accent"
+			As political landscapes shift, the question isn't who can access this data today, but <span class="bg-accent"
 				>who might access it tomorrow</span
 			>. Privacy is about preparation.
 		</p>
@@ -462,9 +455,9 @@
 		</h3>
 	</div>
 	<div class="relative overflow-hidden border-t px-6 py-12 lg:px-8">
-		<p class="mb-1 w-fit bg-foreground px-1 text-background uppercase font-medium">Coming soon</p>
+		<p class="mb-1 w-fit bg-foreground px-1 font-medium text-background uppercase">Coming soon</p>
 		<h3 class="mb-4 text-3xl">Observer</h3>
-		<p class="lg:max-w-1/2">An indoor security camera with on-device AI vision.</p>
+		<p class="lg:max-w-1/2">Intelligent indoor security camera with AI vision.</p>
 		<img
 			src="/images/home/observer-simplified-line.svg"
 			alt="observer illustration"
@@ -474,10 +467,6 @@
 </section>
 
 <style>
-	.eye-grid {
-		grid-template-columns: repeat(var(--eye-grid-cols, 10), minmax(0, 1fr));
-	}
-
 	.packet-right {
 		animation: slide-right 2s linear infinite;
 	}
