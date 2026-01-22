@@ -376,7 +376,7 @@
 			{#if !wifiConfigured}
 				<p class="max-w-3xl">Please choose a WiFi network that the ROOT product can connect to.</p>
 			{:else}
-				<p class="max-w-3xl">The product is connected to Wifi. The selected network can be changed below if needed.</p>
+				<p class="max-w-3xl">The product is connected to Wifi. The selected network can be changed below.</p>
 			{/if}
 			<div class="mt-4 space-y-8">
 				<div class="relative h-32 w-full max-w-xl overflow-hidden border">
@@ -436,7 +436,7 @@
 					Please set a relay domain. Custom relay servers give extra flexibility for advanced users.
 				</p>
 			{:else}
-				<p class="max-w-3xl">The relay domain is configured. It can be edited below if needed.</p>
+				<p class="max-w-3xl">The relay domain is configured. It can be edited below.</p>
 			{/if}
 
 			<div class="mt-4 space-y-8">
