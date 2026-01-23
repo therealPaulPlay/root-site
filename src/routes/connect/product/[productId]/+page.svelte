@@ -130,6 +130,7 @@
 			relayCommInstance.on("getHealthResult", handleHealthResult);
 			relayCommInstance.on("getUpdateStatusResult", handleUpdateStatusResult);
 			relayCommInstance.on("startUpdateResult", handleStartUpdateResult);
+			relayCommInstance.on("setVersionDevResult", handleSetVersionDevResult);
 			relayCommInstance.on("restartResult", handleRestartResult);
 			relayCommInstance.on("resetResult", handleResetResult);
 			relayCommInstance.on("startStreamResult", handleStartStreamResult);
@@ -660,7 +661,7 @@
 			toast.error("Failed to restart product: " + msg.payload.error || "Unknown error");
 			return;
 		}
-		toast.success("Restarting.");
+		toast.success("Restarting!");
 		goto("/connect");
 	}
 
@@ -679,7 +680,7 @@
 			toast.error("Failed to reset device: " + msg.payload.error || "Unknown error");
 			return;
 		}
-		toast.success("Reset initiated.");
+		toast.success("Reset initiated!");
 		goto("/connect");
 	}
 
@@ -749,6 +750,22 @@
 		}
 		toast.success("Update started!");
 		loadHealth();
+	}
+
+	function setVersionDev() {
+		relayCommInstance.send(productId, "setVersionDev").catch((error) => {
+			toast.error("Failed to set version to dev: " + error.message);
+			console.error("Failed to set version to dev:", error);
+		});
+	}
+
+	function handleSetVersionDevResult(msg) {
+		if (!msg.payload.success) {
+			toast.error("Failed to set version to dev: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		toast.success("Version set to dev!");
+		loadUpdateStatus();
 	}
 </script>
 
@@ -847,6 +864,7 @@
 					{healthLoading}
 					{updateStatusLoading}
 					{startUpdate}
+					{setVersionDev}
 				/>
 			</Tabs.Content>
 		</Tabs.Root>

@@ -3,6 +3,7 @@
 	import Button from "./ui/button/button.svelte";
 	import Label from "./ui/label/label.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
+	import * as AlertDialog from "./ui/alert-dialog";
 
 	let {
 		health,
@@ -14,10 +15,12 @@
 		buttonsLoading = $bindable(),
 		loadHealth = () => {},
 		loadUpdateStatus = () => {},
-		startUpdate = () => {}
+		startUpdate = () => {},
+		setVersionDev = () => {}
 	} = $props();
 
 	let logsContainer = $state();
+	let devDialogOpen = $state(false);
 
 	$effect(() => {
 		if (logsContainer && health?.logs?.length && activeTab === healthTab) {
@@ -52,7 +55,10 @@
 			<div class="space-y-2 text-sm">
 				<div class="flex justify-between">
 					<span class="text-muted-foreground">Version</span>
-					<span>{updateStatus.currentVersion}</span>
+					<button
+						onclick={() => updateStatus.currentVersion !== "dev" && (devDialogOpen = true)}
+						>{updateStatus.currentVersion}</button
+					>
 				</div>
 				<div class="flex justify-between">
 					<span class="text-muted-foreground">Update status</span>
@@ -157,7 +163,10 @@
 						class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto p-4 break-all"
 					>
 						{#each health.logs as log}
-							<div><span class="text-muted-foreground">[{new Date(log.timestamp).toLocaleTimeString()}]</span> {log.msg}</div>
+							<div>
+								<span class="text-muted-foreground">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+								{log.msg}
+							</div>
 						{/each}
 					</div>
 				</div>
@@ -167,3 +176,20 @@
 		<div class="border p-8 text-center text-muted-foreground">No health data available.</div>
 	{/if}
 </div>
+
+<AlertDialog.Root bind:open={devDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Switch to dev version?</AlertDialog.Title>
+			<AlertDialog.Description>This sets the firmware version to dev and checks for updates.</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action
+				onclick={() => {
+					setVersionDev();
+				}}>Yes, switch</AlertDialog.Action
+			>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
