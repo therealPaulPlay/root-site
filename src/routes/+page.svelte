@@ -93,7 +93,8 @@
 	});
 
 	// Binary background
-	const binaryEffectArray = Array(20).fill(0);
+	const binaryEffectLineCount = 20;
+	const binaryEffectArray = Array(binaryEffectLineCount).fill(0);
 	let binaryEffectString = $state(Array.from({ length: 500 }, () => Math.round(Math.random())).join(""));
 
 	// Retro marquee
@@ -374,12 +375,12 @@
 <section class="relative mb-20 flex w-full items-center justify-center overflow-hidden border-y py-30">
 	<div class="absolute -inset-2.5 -z-1 bg-foreground select-none">
 		{#each binaryEffectArray as row, index}
-			<p class="w-full text-lg font-thin text-background" style:opacity={0.5 - 0.05 * index}>
+			<p class="w-full text-lg font-thin text-background" style:opacity={0.5 - (1 / binaryEffectLineCount) * index}>
 				{binaryEffectString?.slice(Math.floor(Math.random() * 100))}
 			</p>
 		{/each}
 	</div>
-	<div class="flex flex-col items-center justify-between gap-8">
+	<div class="flex flex-col items-center justify-between gap-6">
 		<a class="scroll-mt-50 px-6 py-8 font-display text-7xl font-medium text-background uppercase" name="mission"
 			>The mission</a
 		>
