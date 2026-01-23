@@ -55,8 +55,7 @@
 			<div class="space-y-2 text-sm">
 				<div class="flex justify-between">
 					<span class="text-muted-foreground">Version</span>
-					<button
-						onclick={() => updateStatus.currentVersion !== "dev" && (devDialogOpen = true)}
+					<button onclick={() => updateStatus.currentVersion !== "dev" && (devDialogOpen = true)}
 						>{updateStatus.currentVersion}</button
 					>
 				</div>
@@ -181,7 +180,10 @@
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Switch to dev version?</AlertDialog.Title>
-			<AlertDialog.Description>This sets the firmware version to dev and checks for updates.</AlertDialog.Description>
+			<AlertDialog.Description
+				>This sets the firmware version to dev and checks for updates. Currently, this does not install a different
+				firmware, it just allows for re-installing the same firmware.</AlertDialog.Description
+			>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
