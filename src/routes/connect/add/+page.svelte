@@ -149,7 +149,7 @@
 				countryCode: wifiCountryCode
 			});
 
-			const response = await bluetoothInstance.writeAndRead("wifiConnect", {
+			const response = await bluetoothInstance.writeAndPoll("wifiConnect", {
 				deviceId: localStorage.getItem("deviceId"),
 				payload
 			});
@@ -552,7 +552,7 @@
 			</div>
 		</div>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={currentlyConnectingWifi}>Cancel</AlertDialog.Cancel>
 			<AlertDialog.Action
 				onclick={connectToWifi}
 				disabled={!pendingWifiNetwork || !wifiPasswordInput || !wifiCountryCode || currentlyConnectingWifi}

@@ -25,10 +25,11 @@
 	let products = $state([]);
 	let relayCommInstance;
 
-	let previewTimeoutOver = $state(false);
-	let previewTimeout;
 	let previewImages = $state({});
 	let updateStatuses = $state({});
+	let loadedProducts = new Set();
+	let previewFailed = $state({});
+	let productElements = {};
 
 	let renameDialogOpen = $state({});
 	let renameDialogLoading = $state({});
@@ -39,6 +40,34 @@
 
 	function loadProducts() {
 		products = getAllProducts();
+	}
+
+	let observers = [];
+
+	function loadProductData(productId) {
+		if (loadedProducts.has(productId)) return;
+		loadedProducts.add(productId);
+		relayCommInstance.send(productId, "getPreview").catch((error) => {
+			previewFailed[productId] = true;
+			console.error(`Failed to get preview for product ${productId}:`, error);
+		});
+		relayCommInstance.send(productId, "getUpdateStatus").catch((error) => {
+			console.error(`Failed to get update status for product ${productId}:`, error);
+		});
+	}
+
+	function setupObservers() {
+		for (const [productId, element] of Object.entries(productElements)) {
+			if (!element) continue;
+			const observer = new IntersectionObserver(
+				([entry]) => {
+					if (entry.isIntersecting) loadProductData(productId);
+				},
+				{ rootMargin: "100px" }
+			);
+			observer.observe(element);
+			observers.push(observer);
+		}
 	}
 
 	onMount(async () => {
@@ -52,18 +81,11 @@
 				if (!deviceId) throw new Error("No device ID set! Cannot connect to relay.");
 				relayCommInstance = new RelayComm(relayDomain, localStorage.getItem("deviceId"));
 				await relayCommInstance.connect();
-
-				products.forEach((p) => {
-					relayCommInstance.send(p.id, "getPreview").catch((error) => {
-						console.error(`Failed to get preview for product ${p.id}:`, error);
-					});
-					relayCommInstance.send(p.id, "getUpdateStatus").catch((error) => {
-						console.error(`Failed to get update status for product ${p.id}:`, error);
-					});
-				});
+				setupObservers();
 
 				relayCommInstance.on("getPreviewResult", (msg) => {
 					if (!msg.payload.success) {
+						previewFailed[msg.productId] = true;
 						const error = `Failed to get preview for product ${msg.productId}: ${msg.payload.error || "Unknown error"}`;
 						toast.error(error);
 						console.error(error);
@@ -109,11 +131,6 @@
 					}
 					delete renameDialogOpen[msg.productId];
 				});
-
-				previewTimeout = setTimeout(() => {
-					previewTimeoutOver = true;
-					previewTimeout = null;
-				}, RELAY_REQUEST_TIMEOUT);
 			} catch (error) {
 				console.error("Error connecting to relay and getting data from products:", error);
 			}
@@ -121,8 +138,8 @@
 	});
 
 	onDestroy(() => {
+		observers.forEach((o) => o.disconnect());
 		if (relayCommInstance) relayCommInstance.disconnect();
-		if (previewTimeout) clearTimeout(previewTimeout);
 	});
 
 	function handleRename(product) {
@@ -175,16 +192,19 @@
 {#snippet productItem(product, isFirst = false)}
 	{@const isRenameDialogOpen = renameDialogOpen[product.id] ?? false}
 	{@const isRemoveDialogOpen = removeDialogOpen[product.id] ?? false}
-	<div class="relative flex h-fit min-h-32 w-full shrink-0 {isFirst ? 'border-b' : 'border-y'} max-md:flex-wrap">
+	<div
+		bind:this={productElements[product.id]}
+		class="relative flex h-fit min-h-32 w-full shrink-0 {isFirst ? 'border-b' : 'border-y'} max-md:flex-wrap"
+	>
 		<!-- Preview image -->
 		<div
 			class="aspect-video w-full content-center bg-foreground text-center text-background max-md:border-b md:w-1/3 md:border-r"
 		>
 			{#if !previewImages[product.id]}
-				{#if !previewTimeoutOver}
-					<Spinner class="mx-auto size-8" />
-				{:else}
+				{#if previewFailed[product.id]}
 					<RiErrorWarningLine class="mx-auto size-8" />
+				{:else}
+					<Spinner class="mx-auto size-8" />
 				{/if}
 			{:else}
 				<img
@@ -254,9 +274,7 @@
 								<AlertDialog.Description>Unpair this product and remove it from your device.</AlertDialog.Description>
 							</AlertDialog.Header>
 							<AlertDialog.Footer>
-								<AlertDialog.Cancel class={removeDialogLoading[product.id] ? "pointer-events-none opacity-50" : ""}
-									>Cancel</AlertDialog.Cancel
-								>
+								<AlertDialog.Cancel disabled={removeDialogLoading[product.id]}>Cancel</AlertDialog.Cancel>
 								<AlertDialog.Action
 									disabled={removeDialogLoading[product.id]}
 									onclick={() => removeProductAndRemoveDevice(product.id)}

@@ -3,12 +3,13 @@
 	import { buttonVariants } from "$lib/components/ui/button/index.js";
 	import { cn } from "$lib/utils.js";
 
-	let { ref = $bindable(null), class: className, ...restProps } = $props();
+	let { ref = $bindable(null), class: className, disabled = false, ...restProps } = $props();
 </script>
 
 <AlertDialogPrimitive.Cancel
 	bind:ref
 	data-slot="alert-dialog-cancel"
-	class={cn(buttonVariants({ variant: "outline" }), className)}
+	class={cn(buttonVariants({ variant: "outline" }), disabled && "pointer-events-none opacity-50", className)}
+	{disabled}
 	{...restProps}
 />

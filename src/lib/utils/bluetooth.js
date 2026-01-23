@@ -106,7 +106,7 @@ export class Bluetooth {
 		return response;
 	}
 
-	async writeAndRead(charName, data) {
+	async write(charName, data) {
 		await ensureInitialized();
 		if (!this.isConnected()) throw new Error("No BLE device connected!");
 
@@ -118,20 +118,27 @@ export class Bluetooth {
 		const dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
 		await BleClient.write(this.#deviceId, SERVICE_UUID, uuid, dataView);
+	}
 
-		// Read the response from the same characteristic
-		const value = await BleClient.read(this.#deviceId, SERVICE_UUID, uuid);
-		const text = new TextDecoder().decode(value);
+	async writeAndRead(charName, data) {
+		await this.write(charName, data);
+		return await this.read(charName);
+	}
 
-		let response;
-		try {
-			response = JSON.parse(text);
-		} catch (e) {
-			console.error("Failed to parse BLE response (write/read):", text);
-			throw new Error(`Invalid JSON response from device: ${text.substring(0, 100)}`);
+	async writeAndPoll(charName, data, timeoutMs = 35000, pollIntervalMs = 1000) {
+		await this.write(charName, data);
+
+		const startTime = Date.now();
+		while (Date.now() - startTime < timeoutMs) {
+			await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+
+			if (!this.isConnected()) throw new Error("Polling aborted as no BLE device is connected!");
+
+			const response = await this.read(charName);
+			if (response.status === "pending") continue;
+			return response;
 		}
 
-		if (!response.success) throw new Error(response.error || "No error provided!");
-		return response;
+		throw new Error("Operation timed out");
 	}
 }

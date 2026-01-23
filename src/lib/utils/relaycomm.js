@@ -6,6 +6,7 @@ export const RELAY_REQUEST_TIMEOUT = 10_000;
 
 export class RelayComm {
 	#ws = null;
+	#connected = false;
 	#encryptions = new Map();
 	#prevEncryptions = new Map(); // productId -> previous encryption (temporary during key renewal)
 	#renewalPromises = new Map(); // productId -> Promise (for ongoing renewals)
@@ -20,6 +21,10 @@ export class RelayComm {
 		this.deviceId = deviceId;
 	}
 
+	get connected() {
+		return this.#connected;
+	}
+
 	async connect() {
 		if (this.#ws?.readyState === WebSocket.OPEN) return;
 
@@ -31,6 +36,7 @@ export class RelayComm {
 		return new Promise((resolve, reject) => {
 			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?device-id=${this.deviceId}`);
 			this.#ws.onopen = () => {
+				this.#connected = true;
 				if (this.#muteConnectionErrors) toast.info("Reconnected!"); // If errors are muted (indicating that relay connection is in bad state), toast on reconnect
 				this.#muteConnectionErrors = false;
 				console.info("Relay connection opened");
@@ -50,6 +56,7 @@ export class RelayComm {
 				}
 			};
 			this.#ws.onclose = () => {
+				this.#connected = false;
 				console.warn("Relay connection closed");
 
 				// Only attempt reconnect if this was not an intentional disconnect
@@ -121,6 +128,7 @@ export class RelayComm {
 			}, RELAY_REQUEST_TIMEOUT);
 
 			const onRenewHandler = async (msg) => {
+				if (msg.productId !== productId) return; // Not for this product
 				clearTimeout(timeout);
 				this.off("renewKeyResult", onRenewHandler);
 
@@ -166,6 +174,7 @@ export class RelayComm {
 					}, RELAY_REQUEST_TIMEOUT);
 
 					const onAckHandler = (ackMsg) => {
+						if (ackMsg.productId !== productId) return; // Not for this product
 						clearTimeout(ackTimeout);
 						this.off("renewKeyAckResult", onAckHandler);
 
