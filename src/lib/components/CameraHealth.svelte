@@ -77,7 +77,7 @@
 			</div>
 			{#if updateStatus.availableVersion}
 				<div class="flex w-full items-center justify-end">
-					<Button onclick={startUpdate} disabled={buttonsLoading.update} variant="outline">
+					<Button onclick={startUpdate} disabled={buttonsLoading.update || ["downloading", "installing"].includes(updateStatus.status)} variant="outline">
 						{#if buttonsLoading.update}
 							<Spinner class="size-4" />
 						{:else}
