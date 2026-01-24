@@ -662,7 +662,9 @@
 			return;
 		}
 		toast.success("Restarting!");
-		goto("/connect");
+		setTimeout(() => {
+			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
+		}, 2000);
 	}
 
 	function resetProduct() {
@@ -681,7 +683,9 @@
 			return;
 		}
 		toast.success("Reset initiated!");
-		goto("/connect");
+		setTimeout(() => {
+			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
+		}, 2000);
 	}
 
 	// Health handlers
