@@ -94,9 +94,16 @@
 
 	// Audio streaming
 	let audioContext;
+	let audioGainNode;
 	let audioMuted = $state(false);
 	let nextAudioTime = 0;
 	let audioStarted = $state(false);
+
+	// Mute/unmute via gain node
+	$effect(() => {
+		const muted = audioMuted; // Make reactive
+		if (audioGainNode) audioGainNode.gain.value = muted ? 0 : 1;
+	});
 
 	onMount(async () => {
 		product = getProduct(productId);
@@ -425,6 +432,9 @@
 	// Audio streaming functions
 	function setupAudioContext() {
 		audioContext = new AudioContext();
+		audioGainNode = audioContext.createGain();
+		audioGainNode.gain.value = audioMuted ? 0 : 1;
+		audioGainNode.connect(audioContext.destination);
 		nextAudioTime = 0;
 		audioStarted = false;
 	}
@@ -436,7 +446,7 @@
 			console.error("Audio stream error:", msg.payload.error);
 			return;
 		}
-		if (!audioContext || audioMuted) return;
+		if (!audioContext) return;
 
 		// Decode PCM data
 		const bytes = atob(msg.payload.chunk);
@@ -475,7 +485,7 @@
 			const chunk = bufferedChunks.shift();
 			const source = audioContext.createBufferSource();
 			source.buffer = chunk;
-			source.connect(audioContext.destination);
+			source.connect(audioGainNode);
 			source.start(nextAudioTime);
 			nextAudioTime += chunk.duration;
 		}
