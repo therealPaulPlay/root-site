@@ -49,9 +49,11 @@
 		loadedProducts.add(productId);
 		relayCommInstance.send(productId, "getPreview").catch((error) => {
 			previewFailed[productId] = true;
+			toast.error(`Failed to get preview for product ${productId}: ` + (error.message || "Unknown error"));
 			console.error(`Failed to get preview for product ${productId}:`, error);
 		});
 		relayCommInstance.send(productId, "getUpdateStatus").catch((error) => {
+			toast.error(`Failed to get update status for product ${productId}: ` + (error.message || "Unknown error"));
 			console.error(`Failed to get update status for product ${productId}:`, error);
 		});
 	}
@@ -86,9 +88,9 @@
 				relayCommInstance.on("getPreviewResult", (msg) => {
 					if (!msg.payload.success) {
 						previewFailed[msg.productId] = true;
-						const error = `Failed to get preview for product ${msg.productId}: ${msg.payload.error || "Unknown error"}`;
-						toast.error(error);
-						console.error(error);
+						toast.error(
+							`Failed to get preview for product ${msg.productId}: ` + (msg.payload.error || "Unknown error")
+						);
 						return;
 					}
 					previewImages[msg.productId] = msg.payload.image;
@@ -96,9 +98,9 @@
 
 				relayCommInstance.on("getUpdateStatusResult", (msg) => {
 					if (!msg.payload.success) {
-						const error = `Failed to get update status for product ${msg.productId}: ${msg.payload.error || "Unknown error"}`;
-						toast.error(error);
-						console.error(error);
+						toast.error(
+							`Failed to get update status for product ${msg.productId}: ` + (msg.payload.error || "Unknown error")
+						);
 						return;
 					}
 					updateStatuses[msg.productId] = msg.payload;
@@ -106,9 +108,11 @@
 
 				relayCommInstance.on("removeDeviceResult", (msg) => {
 					if (!msg.payload.success) {
-						const error = `Failed to remove this device from product ${msg.productId}: ${msg.payload.error || "Unknown error"}`;
-						toast.error(error);
-						console.error(error);
+						toast.error(
+							`Failed to inform product ${msg.productId} about device removal: ` +
+								(msg.payload.error || "Unknown error")
+						);
+						// Don't return, just acknowledge the error
 					}
 					// Close dialog & stop loading
 					delete removeDialogOpen[msg.productId];
@@ -120,7 +124,7 @@
 				relayCommInstance.on("setProductAliasResult", (msg) => {
 					delete renameDialogLoading[msg.productId];
 					if (!msg.payload.success) {
-						toast.error(`Failed to rename product: ${msg.payload.error || "Unknown error"}`);
+						toast.error(`Failed to rename product ${msg.productId}: ` + (msg.payload.error || "Unknown error"));
 						return;
 					}
 					// Update locally only on success
@@ -152,8 +156,8 @@
 
 		renameDialogLoading[product.id] = true;
 		relayCommInstance.send(product.id, "setProductAlias", { alias: newName }).catch((error) => {
-			toast.error("Failed to rename product: " + error.message);
-			console.error("Failed to rename product:", error);
+			toast.error(`Failed to rename product ${product.id}: ` + error.message);
+			console.error(`Failed to rename product ${product.id}:`, error);
 			delete renameDialogLoading[product.id];
 		});
 	}
@@ -165,8 +169,8 @@
 		relayCommInstance
 			.send(productId, "removeDevice", { targetDeviceId: localStorage.getItem("deviceId") })
 			.catch((error) => {
-				toast.error("Failed to inform product about device removal: " + error.message);
-				console.error("Failed to inform product about device removal:", error);
+				toast.error(`Failed to inform product ${productId} about device removal: ` + error.message);
+				console.error(`Failed to inform product ${productId} about device removal:`, error);
 				delete removeDialogOpen[productId]; // Close dialog
 				delete removeDialogLoading[productId]; // Stop loading
 				removeProduct(productId); // Remove prodcut locally anyway

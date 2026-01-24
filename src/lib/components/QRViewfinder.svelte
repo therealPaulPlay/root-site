@@ -4,6 +4,7 @@
 	import Label from "./ui/label/label.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import { toast } from "svelte-sonner";
+	import { RiErrorWarningLine } from "svelte-remixicon";
 
 	let { bluetoothInstance } = $props();
 
@@ -13,9 +14,7 @@
 	let canvas = $state();
 	let ctx;
 	let initialUpdateCompleted = $state(false);
-	let isDestroyed = false;
-
-	let hasShownError = false; // Prevent error toast spam
+	let isDestroyed = $state(false);
 
 	async function updateViewfinder() {
 		if (!bluetoothInstance?.isConnected() || isDestroyed) return;
@@ -44,11 +43,11 @@
 			}
 
 			initialUpdateCompleted = true;
-			hasShownError = false;
 		} catch (error) {
 			console.error("Viewfinder error:", error);
-			if (!hasShownError) toast.error("Viewfinder error:", error.message);
-			hasShownError = true;
+			toast.error("Viewfinder error: " + error.message);
+			ctx?.clearRect(0, 0, canvas.width, canvas.height);
+			isDestroyed = true;
 		}
 	}
 
@@ -73,7 +72,9 @@
 <div class="mr-auto w-fit space-y-1">
 	<Label>Viewfinder</Label>
 	<div class="relative w-fit">
-		{#if !initialUpdateCompleted}
+		{#if isDestroyed}
+			<RiErrorWarningLine class="absolute inset-0 mx-auto my-auto size-6! text-background" />
+		{:else if !initialUpdateCompleted}
 			<Spinner class="absolute inset-0 mx-auto my-auto size-6! text-background" />
 		{/if}
 		<canvas
