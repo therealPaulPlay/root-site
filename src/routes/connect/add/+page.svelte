@@ -378,7 +378,7 @@
 			{:else}
 				<p class="max-w-3xl">The product is connected to Wifi. The selected network can be changed below.</p>
 			{/if}
-			<div class="mt-4 space-y-8">
+			<div class="mt-4 space-y-4 ">
 				<div class="relative h-32 w-full max-w-xl overflow-hidden border">
 					<div class="of-top of-bottom no-scrollbar h-full w-full divide-y overflow-y-auto">
 						{#if wifiNetworks.length}
@@ -439,7 +439,7 @@
 				<p class="max-w-3xl">The relay domain is configured. It can be edited below.</p>
 			{/if}
 
-			<div class="mt-4 space-y-8">
+			<div class="mt-4 space-y-4">
 				<div class="space-y-1">
 					<Label for="relay-domain">Domain</Label>
 					<Input type="text" placeholder="relay.com" class="max-w-xs" id="relay-domain" bind:value={relayDomainInput} />

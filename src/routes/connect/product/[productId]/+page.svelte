@@ -674,7 +674,7 @@
 		toast.success("Restarting!");
 		setTimeout(() => {
 			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
-		}, 2000);
+		}, 1000);
 	}
 
 	function resetProduct() {
@@ -695,7 +695,7 @@
 		toast.success("Reset initiated!");
 		setTimeout(() => {
 			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
-		}, 2000);
+		}, 1000);
 	}
 
 	// Health handlers
