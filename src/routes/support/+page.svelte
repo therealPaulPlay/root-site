@@ -156,7 +156,7 @@
 		<GuideCard
 			title="Building your own"
 			subtitle="Learn how you can build your own Raspberry Pi security camera using the private ROOT software."
-			href="/guides/building-your-own-security-camera"
+			href="/blog/building-your-own-security-camera"
 		/>
 	</div>
 </section>

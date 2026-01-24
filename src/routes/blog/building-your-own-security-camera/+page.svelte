@@ -10,7 +10,7 @@
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 </script>
 
-<ContentHero duration="5 minutes" releaseDate="Jan 19th, 2026" src="/images/guides/diy-security-camera.jpg" />
+<ContentHero duration="5 minutes" releaseDate="Jan 19th, 2026" src="/images/content/building-your-own-security-camera/diy-security-camera.jpg" />
 
 <ContentContainer>
 	<div class="space-y-1">
@@ -112,7 +112,7 @@
 
 	<p>In the imager, choose your Raspberry Pi model, continue, and then select the custom image option.</p>
 
-	<ContentImage alt="pi imager" src="/images/guides/pi-imager.jpg" />
+	<ContentImage alt="pi imager" src="/images/content/building-your-own-security-camera/pi-imager.jpg" />
 
 	<p>
 		Follow the remaining steps in the setup process and skip the customization, since that part is done directly through
@@ -156,7 +156,7 @@
 		> on GitHub and click the deploy button in the readme.
 	</p>
 
-	<ContentImage alt="pi imager" src="/images/guides/relay-server-deploy-button.jpg" />
+	<ContentImage alt="pi imager" src="/images/content/building-your-own-security-camera/relay-server-deploy-button.jpg" />
 
 	<br />
 

@@ -5,42 +5,42 @@
   xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <url>
     <loc>https://rootprivacy.com/</loc>
-    <lastmod>2026-01-16</lastmod>
+    <lastmod>2026-01-24</lastmod>
   </url>
   <url>
     <loc>https://rootprivacy.com/about</loc>
-    <lastmod>2026-01-16</lastmod>
+    <lastmod>2026-01-24</lastmod>
+  </url>
+  <url>
+    <loc>https://rootprivacy.com/blog/building-your-own-security-camera</loc>
+    <lastmod>2026-01-24</lastmod>
   </url>
   <url>
     <loc>https://rootprivacy.com/connect</loc>
-    <lastmod>2026-01-16</lastmod>
+    <lastmod>2026-01-24</lastmod>
   </url>
   <url>
     <loc>https://rootprivacy.com/connect/add</loc>
-    <lastmod>2026-01-16</lastmod>
+    <lastmod>2026-01-24</lastmod>
   </url>
   <url>
     <loc>https://rootprivacy.com/connect/settings</loc>
-    <lastmod>2026-01-16</lastmod>
-  </url>
-  <url>
-    <loc>https://rootprivacy.com/guides/building-your-own-security-camera</loc>
-    <lastmod>2026-01-16</lastmod>
+    <lastmod>2026-01-24</lastmod>
   </url>
   <url>
     <loc>https://rootprivacy.com/privacy</loc>
-    <lastmod>2026-01-16</lastmod>
+    <lastmod>2026-01-24</lastmod>
   </url>
   <url>
     <loc>https://rootprivacy.com/source-code</loc>
-    <lastmod>2026-01-16</lastmod>
+    <lastmod>2026-01-24</lastmod>
   </url>
   <url>
     <loc>https://rootprivacy.com/support</loc>
-    <lastmod>2026-01-16</lastmod>
+    <lastmod>2026-01-24</lastmod>
   </url>
   <url>
     <loc>https://rootprivacy.com/terms</loc>
-    <lastmod>2026-01-16</lastmod>
+    <lastmod>2026-01-24</lastmod>
   </url>
 </urlset>
