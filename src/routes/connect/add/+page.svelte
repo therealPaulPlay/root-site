@@ -376,7 +376,7 @@
 			{#if !wifiConfigured}
 				<p class="max-w-3xl">Please choose a WiFi network that the ROOT product can connect to.</p>
 			{:else}
-				<p class="max-w-3xl">The product is connected to Wifi. The selected network can be changed below.</p>
+				<p class="max-w-3xl">The product is connected to Wifi. The network can be changed below.</p>
 			{/if}
 			<div class="mt-4 space-y-4 ">
 				<div class="relative h-32 w-full max-w-xl overflow-hidden border">
