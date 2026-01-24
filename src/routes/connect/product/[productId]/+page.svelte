@@ -442,10 +442,7 @@
 	let bufferedChunks = [];
 
 	function handleStreamAudioChunk(msg) {
-		if (!msg.payload.success) {
-			console.error("Audio stream error:", msg.payload.error);
-			return;
-		}
+		if (!msg.payload.success) return console.error("Audio stream error:", msg.payload.error);
 		if (!audioContext) return;
 
 		// Decode PCM data
