@@ -26,6 +26,8 @@
 
 			while (hasMore && !isDestroyed) {
 				const response = await bluetoothInstance.read("viewfinder");
+				if (!response.success) throw new Error(response.error || "Unknown error");
+
 				chunkMap[response.index] = response.data;
 				hasMore = response.hasMore;
 			}

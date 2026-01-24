@@ -1,9 +1,21 @@
 <script>
-	import { RiVolumeUpLine, RiVolumeMuteLine, RiFullscreenLine, RiFullscreenExitLine } from "svelte-remixicon";
+	import {
+		RiVolumeUpLine,
+		RiVolumeMuteLine,
+		RiFullscreenLine,
+		RiFullscreenExitLine,
+		RiErrorWarningLine
+	} from "svelte-remixicon";
 	import Button from "./ui/button/button.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
 
-	let { videoElement = $bindable(), audioMuted = $bindable(), streamLoading = true, showMuteButton = false } = $props();
+	let {
+		videoElement = $bindable(),
+		audioMuted = $bindable(),
+		streamLoading = true,
+		streamEnded = false,
+		showMuteButton = false
+	} = $props();
 
 	let isFullscreen = $state(false);
 
@@ -19,9 +31,13 @@
 </script>
 
 <div class="relative aspect-video max-h-[45svh] w-full bg-black" class:border-0!={isFullscreen}>
-	{#if streamLoading}
+	{#if streamLoading || streamEnded}
 		<div class="flex h-full w-full items-center justify-center text-background">
-			<Spinner class="size-8" />
+			{#if streamLoading}
+				<Spinner class="size-8" />
+			{:else if streamEnded}
+				<RiErrorWarningLine class="size-8" />
+			{/if}
 		</div>
 	{/if}
 	<video bind:this={videoElement} class="h-full w-full" playsinline muted></video>

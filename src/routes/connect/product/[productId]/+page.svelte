@@ -24,6 +24,7 @@
 	let product = $state(null);
 	let relayCommInstance;
 	let streamLoading = $state(true);
+	let streamEnded = $state(false);
 	let streamHeartbeatInterval;
 
 	// Events
@@ -160,8 +161,8 @@
 	});
 
 	onDestroy(() => {
+		endStream();
 		if (typeof window !== "undefined") document.removeEventListener("visibilitychange", handleVisibilityChange);
-		stopStream();
 		if (relayCommInstance) relayCommInstance.disconnect();
 	});
 
@@ -309,7 +310,7 @@
 		});
 
 		videoElement.addEventListener("error", () => {
-			// Ignore empty src errors (code 4) from stopStream()
+			// Ignore empty src errors (code 4)
 			if (videoElement?.error && videoElement.error.code !== 4) {
 				console.error("Video playback error:", videoElement.error);
 			}
@@ -317,12 +318,14 @@
 	}
 
 	function startStream() {
+		streamLoading = true;
+		streamEnded = false;
 		relayCommInstance.send(productId, "startStream").catch((error) => {
-			onStreamStopped(error);
+			onStreamEnded(error);
 		});
 	}
 
-	function stopStream() {
+	function endStream() {
 		pendingChunks = [];
 		if (streamHeartbeatInterval) {
 			clearInterval(streamHeartbeatInterval);
@@ -344,13 +347,14 @@
 		bufferedChunks = [];
 		nextAudioTime = 0;
 		audioStarted = false;
-		streamLoading = true;
+		streamEnded = true;
+		streamLoading = false;
 	}
 
-	function onStreamStopped(reason) {
-		toast.error("Stream failed: " + reason);
-		console.error("Stream failed: ", reason);
-		stopStream();
+	function onStreamEnded(reason) {
+		toast.error("Stream ended: " + reason);
+		console.error("Stream ended: ", reason);
+		endStream();
 	}
 
 	function startStreamHeartbeat() {
@@ -376,7 +380,7 @@
 
 	function handleStreamVideoChunk(msg) {
 		if (!msg.payload.success) {
-			onStreamStopped(msg.payload.error);
+			onStreamEnded(msg.payload.error);
 			return;
 		}
 
@@ -425,7 +429,7 @@
 	}
 
 	function handleVisibilityChange() {
-		if (document.hidden) stopStream();
+		if (document.hidden) endStream();
 		else startStream();
 	}
 
@@ -786,7 +790,7 @@
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
 		</Button>
 	</div>
-	<StreamPlayer bind:audioMuted bind:videoElement {streamLoading} showMuteButton={audioStarted} />
+	<StreamPlayer bind:audioMuted bind:videoElement {streamLoading} {streamEnded} showMuteButton={audioStarted} />
 	<div class="w-full basis-full overflow-hidden">
 		<Tabs.Root
 			bind:value={activeTab}
