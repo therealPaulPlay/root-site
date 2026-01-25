@@ -30,7 +30,7 @@
 	<p>
 		ROOT offers a complete software suite that includes
 		<a href="/connect" target="_blank" class="underline">ROOT Connect</a> (mobile app coming soon), a relay server, and camera
-		firmware – all open-source and engineered to keep your data safe and end-2-end encrypted.
+		firmware – all open-source and engineered to keep your data safe and end-to-end encrypted.
 	</p>
 
 	<p>
