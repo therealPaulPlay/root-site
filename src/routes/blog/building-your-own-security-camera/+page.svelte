@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-	<title>How to build your own privacy-preserving home security camera (Raspberry Pi Zero 2)</title>
+	<title>Building your own private security camera (Raspberry Pi Zero 2)</title>
 </svelte:head>
 
 <ContentHero
