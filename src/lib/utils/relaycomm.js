@@ -106,6 +106,7 @@ export class RelayComm {
 
 	async #renewKey(productId) {
 		const newKeypair = await Encryption.generateKeypair();
+		const renewRequestId = crypto.randomUUID();
 
 		// Step 1: Encrypt with OLD key
 		const oldEncryption = await this.#getEncryption(productId);
@@ -117,10 +118,11 @@ export class RelayComm {
 			target: "product",
 			productId,
 			deviceId: this.deviceId,
+			requestId: renewRequestId,
 			payload: encrypted
 		}));
 
-		// Step 2: Wait for camera to confirm it's ready (encrypted with NEW key)
+		// Step 2: Wait for camera to confirm it's ready
 		return new Promise((resolve, reject) => {
 			const timeout = setTimeout(() => {
 				this.off("renewKeyResult", onRenewHandler);
@@ -128,7 +130,7 @@ export class RelayComm {
 			}, RELAY_REQUEST_TIMEOUT);
 
 			const onRenewHandler = async (msg) => {
-				if (msg.productId !== productId) return; // Not for this product
+				if (msg.requestId !== renewRequestId) return;
 				clearTimeout(timeout);
 				this.off("renewKeyResult", onRenewHandler);
 
@@ -158,12 +160,14 @@ export class RelayComm {
 				try {
 					const newEncryption = await this.#getEncryption(productId); // Will use new key
 					const ackEncrypted = await newEncryption.encrypt(JSON.stringify({ ack: true }));
+					const ackRequestId = crypto.randomUUID();
 
 					this.#ws.send(JSON.stringify({
 						type: "renewKeyAck",
 						target: "product",
 						productId,
 						deviceId: this.deviceId,
+						requestId: ackRequestId,
 						payload: ackEncrypted
 					}));
 
@@ -174,16 +178,16 @@ export class RelayComm {
 					}, RELAY_REQUEST_TIMEOUT);
 
 					const onAckHandler = (ackMsg) => {
-						if (ackMsg.productId !== productId) return; // Not for this product
+						if (ackMsg.requestId !== ackRequestId) return;
 						clearTimeout(ackTimeout);
 						this.off("renewKeyAckResult", onAckHandler);
 
 						if (!ackMsg.payload.success) {
-							reject(new Error(`Key renewal ACK failed: ` + (ackMsg.payload.error || "Unknown error")));
+							reject(new Error(`Key renewal ACK for product ${productId} failed: ` + (ackMsg.payload.error || "Unknown error")));
 							return;
 						}
 
-						console.log(`RelayComm: Key renewed for device ${productId}`);
+						console.log(`RelayComm: Key renewed for product ${productId}`);
 						resolve();
 					};
 

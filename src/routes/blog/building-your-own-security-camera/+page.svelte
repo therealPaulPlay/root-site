@@ -10,7 +10,11 @@
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 </script>
 
-<ContentHero duration="5 minutes" releaseDate="Jan 19th, 2026" src="/images/content/building-your-own-security-camera/diy-security-camera.jpg" />
+<ContentHero
+	duration="5 minutes"
+	releaseDate="Jan 19th, 2026"
+	src="/images/blog/building-your-own-security-camera/diy-security-camera.jpg"
+/>
 
 <ContentContainer>
 	<div class="space-y-1">
@@ -74,9 +78,7 @@
 
 	<h2 class="text-3xl">Required hardware</h2>
 
-	<ContentNote
-		text="No startup sound will play without the buzzer. Raspberry Pi 3, 4 and 5 may work too – ensure the microphone is plugged into USB 0."
-	/>
+	<ContentNote text="No startup sound will play without the buzzer. Raspberry Pi 3, 4 and 5 may work too." />
 
 	<ul class="ml-4 list-disc space-y-2">
 		<li>Raspberry Pi Zero 2w</li>
@@ -112,7 +114,7 @@
 
 	<p>In the imager, choose your Raspberry Pi model, continue, and then select the custom image option.</p>
 
-	<ContentImage alt="pi imager" src="/images/content/building-your-own-security-camera/pi-imager.jpg" />
+	<ContentImage alt="pi imager" src="/images/blog/building-your-own-security-camera/pi-imager.jpg" />
 
 	<p>
 		Follow the remaining steps in the setup process and skip the customization, since that part is done directly through
@@ -129,7 +131,7 @@
 			Connect the camera module's ribbon cable to the camera port on your Pi. Make sure the contacts face the correct
 			direction.
 		</li>
-		<li>Plug the USB microphone into USB port 0 (optional). This enables audio recording for your camera.</li>
+		<li>Plug the microphone into a USB port (optional). This enables audio recording for your camera.</li>
 		<li>Wire the passive buzzer to GPIO 18 and 3.3V (optional). This allows the camera to play sounds.</li>
 		<li>Insert the flashed SD card into the card slot.</li>
 	</ol>
@@ -156,7 +158,10 @@
 		> on GitHub and click the deploy button in the readme.
 	</p>
 
-	<ContentImage alt="pi imager" src="/images/content/building-your-own-security-camera/relay-server-deploy-button.jpg" />
+	<ContentImage
+		alt="pi imager"
+		src="/images/blog/building-your-own-security-camera/relay-server-deploy-button.jpg"
+	/>
 
 	<br />
 
