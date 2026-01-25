@@ -10,6 +10,10 @@
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 </script>
 
+<svelte:head>
+	<title>How to build your own privacy-preserving home security camera (Raspberry Pi Zero 2)</title>
+</svelte:head>
+
 <ContentHero
 	duration="5 minutes"
 	releaseDate="Jan 19th, 2026"
@@ -158,10 +162,7 @@
 		> on GitHub and click the deploy button in the readme.
 	</p>
 
-	<ContentImage
-		alt="pi imager"
-		src="/images/blog/building-your-own-security-camera/relay-server-deploy-button.jpg"
-	/>
+	<ContentImage alt="pi imager" src="/images/blog/building-your-own-security-camera/relay-server-deploy-button.jpg" />
 
 	<br />
 
