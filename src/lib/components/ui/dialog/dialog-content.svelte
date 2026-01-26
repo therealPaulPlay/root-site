@@ -1,8 +1,8 @@
 <script>
 	import { Dialog as DialogPrimitive } from "bits-ui";
-	import XIcon from "@lucide/svelte/icons/x";
 	import * as Dialog from "./index.js";
 	import { cn } from "$lib/utils.js";
+	import { RiCloseLine } from "svelte-remixicon";
 
 	let {
 		ref = $bindable(null),
@@ -28,9 +28,9 @@
 		{@render children?.()}
 		{#if showCloseButton}
 			<DialogPrimitive.Close
-				class="absolute end-4 top-4 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+				class="absolute end-4 top-4 opacity-70 z-100 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-6"
 			>
-				<XIcon />
+				<RiCloseLine />
 				<span class="sr-only">Close</span>
 			</DialogPrimitive.Close>
 		{/if}

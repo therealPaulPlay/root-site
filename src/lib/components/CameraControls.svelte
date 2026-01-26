@@ -224,7 +224,7 @@
 			<AlertDialog.Header>
 				<AlertDialog.Title>Factory reset?</AlertDialog.Title>
 				<AlertDialog.Description>
-					This will erase all data and settings. This action cannot be undone.
+					This will erase all data of this product and unpair all devices. This action cannot be undone.
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
@@ -233,7 +233,7 @@
 					onclick={() => {
 						resetDialogOpen = false;
 						resetProduct();
-					}}>Reset product</AlertDialog.Action
+					}}>Reset</AlertDialog.Action
 				>
 			</AlertDialog.Footer>
 		</AlertDialog.Content>

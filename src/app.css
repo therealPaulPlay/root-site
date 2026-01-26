@@ -142,6 +142,7 @@
 		@apply touch-none;
 	}
 
+	a,
 	img,
 	svg {
 		/* Prevent haptic touch previews */

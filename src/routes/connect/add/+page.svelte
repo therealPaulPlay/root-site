@@ -487,7 +487,7 @@
 	</div>
 
 	<!-- Controls -->
-	<div class="mt-auto flex w-full justify-between gap-8 p-6 pb-8! lg:p-8">
+	<div class="mt-auto flex w-full justify-between gap-8 p-6 pb-8! max-sm:pb-10! lg:p-8">
 		<AlertDialog.Root>
 			<AlertDialog.Trigger class={buttonVariants({ variant: "outline" })}>
 				<RiArrowLeftLine class="h-4! w-4!" />Abort

@@ -49,11 +49,9 @@
 		loadedProducts.add(productId);
 		relayCommInstance.send(productId, "getPreview").catch((error) => {
 			previewFailed[productId] = true;
-			toast.error(`Failed to get preview for product ${productId}: ` + (error.message || "Unknown error"));
 			console.error(`Failed to get preview for product ${productId}:`, error);
 		});
 		relayCommInstance.send(productId, "getUpdateStatus").catch((error) => {
-			toast.error(`Failed to get update status for product ${productId}: ` + (error.message || "Unknown error"));
 			console.error(`Failed to get update status for product ${productId}:`, error);
 		});
 	}
@@ -239,7 +237,7 @@
 						</Dialog.Trigger>
 						<Dialog.Content>
 							<Dialog.Header>
-								<Dialog.Title>Rename "{product.name}"?</Dialog.Title>
+								<Dialog.Title>Edit name</Dialog.Title>
 							</Dialog.Header>
 							<div class="flex flex-col gap-4">
 								<div class="space-y-1">
@@ -274,8 +272,8 @@
 						</AlertDialog.Trigger>
 						<AlertDialog.Content>
 							<AlertDialog.Header>
-								<AlertDialog.Title>Remove "{product.name}"?</AlertDialog.Title>
-								<AlertDialog.Description>Unpair this product and remove it from your device.</AlertDialog.Description>
+								<AlertDialog.Title>Remove?</AlertDialog.Title>
+								<AlertDialog.Description>Unpair "{product.name}" and remove it from this device.</AlertDialog.Description>
 							</AlertDialog.Header>
 							<AlertDialog.Footer>
 								<AlertDialog.Cancel disabled={removeDialogLoading[product.id]}>Cancel</AlertDialog.Cancel>

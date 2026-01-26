@@ -7,7 +7,7 @@
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import * as Tabs from "$lib/components/ui/tabs";
-	import { getProduct } from "$lib/utils/pairedProductsStorage";
+	import { getProduct, removeProduct } from "$lib/utils/pairedProductsStorage";
 	import { RelayComm, RELAY_REQUEST_TIMEOUT } from "$lib/utils/relaycomm";
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 	import { goto } from "$app/navigation";
@@ -703,6 +703,7 @@
 			return;
 		}
 		toast.success("Reset initiated!");
+		removeProduct(msg.productId); // Remove product, since factory resetting will remove all paired devices
 		setTimeout(() => {
 			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
 		}, 1000);

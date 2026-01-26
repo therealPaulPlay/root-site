@@ -7,6 +7,7 @@
 
 	import { Toaster as Sonner } from "svelte-sonner";
 	import { mode } from "mode-watcher";
+	import { RiAlertLine, RiCheckboxCircleLine, RiErrorWarningLine, RiInformationLine, RiLoader4Line } from "svelte-remixicon";
 
 	let { ...restProps } = $props();
 </script>
@@ -17,18 +18,18 @@
 	style="--normal-bg: var(--color-popover); --normal-text: var(--color-popover-foreground); --normal-border: var(--color-border);"
 	{...restProps}
 	>{#snippet loadingIcon()}
-		<Loader2Icon class="size-4 animate-spin" />
+		<RiLoader4Line class="size-4 animate-spin" />
 	{/snippet}
 	{#snippet successIcon()}
-		<CircleCheckIcon class="size-4" />
+		<RiCheckboxCircleLine class="size-4" />
 	{/snippet}
 	{#snippet errorIcon()}
-		<OctagonXIcon class="size-4" />
+		<RiErrorWarningLine class="size-4" />
 	{/snippet}
 	{#snippet infoIcon()}
-		<InfoIcon class="size-4" />
+		<RiInformationLine class="size-4" />
 	{/snippet}
 	{#snippet warningIcon()}
-		<TriangleAlertIcon class="size-4" />
+		<RiAlertLine class="size-4" />
 	{/snippet}
 </Sonner>
