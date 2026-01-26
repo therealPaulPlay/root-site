@@ -334,13 +334,13 @@
 	<div class="min-w-2/3 space-y-4 p-6 lg:border-l lg:p-8">
 		<h3 class="text-3xl">Why it matters.</h3>
 		<p class="max-w-150">
-			Large tech corporations collect huge amounts of user information to <span class="bg-accent"
-				>piece together accurate profiles</span
+			Large tech corporations collect huge amounts of user information <span class="bg-accent"
+				>to piece together accurate profiles</span
 			>.
 		</p>
 		<p class="max-w-150">
-			As political landscapes shift, the question isn't who can access this data today, but <span class="bg-accent"
-				>who might access it tomorrow</span
+			As political landscapes shift, the question isn't who can access this data today, <span class="bg-accent"
+				>but who might access it tomorrow</span
 			>. Privacy is about preparation.
 		</p>
 	</div>
@@ -435,8 +435,8 @@
 		<h3 class="text-3xl">A secure architecture.</h3>
 		<p class="max-w-130">
 			All data is end-to-end encrypted with forward secrecy to ensure <span class="bg-accent"
-				>past messages stay secure even if keys are compromised.</span
-			>
+				>past messages stay secure even if keys are compromised</span
+			>.
 		</p>
 		<p class="max-w-130">
 			Recordings are stored locally and streamed on-demand, making them accessible from anywhere in the world with no
@@ -458,7 +458,7 @@
 	<div class="relative overflow-hidden border-t px-6 py-12 lg:px-8">
 		<p class="mb-1 w-fit bg-foreground px-1 font-medium text-background uppercase">Coming soon</p>
 		<h3 class="mb-4 text-3xl">Observer</h3>
-		<p class="lg:max-w-1/2">Intelligent indoor security camera with AI vision.</p>
+		<p class="lg:max-w-1/2">Privacy-first indoor security camera with AI vision.</p>
 		<img
 			src="/images/home/observer-simplified-line.svg"
 			alt="observer illustration"

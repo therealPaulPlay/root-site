@@ -172,17 +172,17 @@
 		relayCommInstance.send(productId, "getEvents").catch((error) => {
 			toast.error("Failed to load events: " + error.message);
 			console.error("Failed to load events:", error);
+			eventsLoading = false;
 		});
 	}
 
 	function handleEventsResult(msg) {
+		eventsLoading = false;
 		if (!msg.payload.success) {
 			toast.error("Failed to load events: " + msg.payload.error || "Unknown error");
-			eventsLoading = false;
 			return;
 		}
 		events = msg.payload.events || [];
-		eventsLoading = false;
 	}
 
 	// Thumbnail loading with rate limiting
@@ -494,8 +494,11 @@
 
 	// Controls handlers
 	function loadMicrophone() {
+		buttonsLoading.mic = true;
 		relayCommInstance.send(productId, "getMicrophone").catch((error) => {
+			toast.error("Failed to load microphone setting: " + error.message);
 			console.error("Failed to load microphone setting:", error);
+			buttonsLoading.mic = false;
 		});
 	}
 
@@ -529,8 +532,11 @@
 	}
 
 	function loadRecordingSound() {
+		buttonsLoading.sound = true;
 		relayCommInstance.send(productId, "getRecordingSound").catch((error) => {
+			toast.error("Failed to load recording sound setting: " + error.message);
 			console.error("Failed to load recording sound setting:", error);
+			buttonsLoading.sound = false;
 		});
 	}
 
@@ -563,8 +569,11 @@
 	}
 
 	function loadEventDetectionConfig() {
+		buttonsLoading.eventDetection = true;
 		relayCommInstance.send(productId, "getEventDetectionConfig").catch((error) => {
+			toast.error("Failed to load event detection config: " + error.message);
 			console.error("Failed to load event detection config:", error);
+			buttonsLoading.eventDetection = false;
 		});
 	}
 
@@ -602,7 +611,7 @@
 		relayCommInstance
 			.send(productId, "setEventDetectionTypes", { enabledTypes: eventDetectionTypes })
 			.catch((error) => {
-				toast.error("Failed to update event detection types: " + error.message);
+				toast.error("Failed to update event detection types: " + error.message || "Unknown error");
 				console.error("Failed to update event detection types:", error);
 				buttonsLoading.eventDetectionTypes = false;
 			});
@@ -798,10 +807,6 @@
 				if (!relayCommInstance) return;
 				if (v === TABS.CONTROLS && !tabsLoaded[TABS.CONTROLS]) {
 					tabsLoaded[TABS.CONTROLS] = true;
-					buttonsLoading.mic = true;
-					buttonsLoading.sound = true;
-					buttonsLoading.eventDetection = true;
-					buttonsLoading.devices = true;
 					loadMicrophone();
 					loadRecordingSound();
 					loadEventDetectionConfig();
