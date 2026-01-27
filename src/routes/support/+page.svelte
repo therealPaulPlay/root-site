@@ -155,7 +155,7 @@
 	<div class="flex w-full flex-wrap items-center gap-6">
 		<GuideCard
 			title="Building your own"
-			subtitle="Learn how you can build your own Raspberry Pi security camera using the private ROOT software."
+			subtitle="Learn how you can build your own Raspberry Pi security camera using the privacy-preserving ROOT software."
 			href="/blog/building-your-own-security-camera"
 		/>
 	</div>
