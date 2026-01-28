@@ -266,11 +266,16 @@
 		recordingLoadingPercent = total > 0 ? Math.round((received / total) * 100) : 0;
 
 		if (chunkIndex === totalChunks - 1) {
-			const totalLength = recordingChunks[fileType].reduce((sum, chunk) => sum + chunk.length, 0);
+			const receivedChunks = recordingChunks[fileType].filter(Boolean);
+			if (receivedChunks.length !== totalChunks) {
+				recordingLoading = false;
+				return toast.error(`Recording incomplete: received ${receivedChunks.length}/${totalChunks} chunks`);
+			}
+			const totalLength = receivedChunks.reduce((sum, chunk) => sum + chunk.length, 0);
 			const combined = new Uint8Array(totalLength);
 			let offset = 0;
 
-			for (const chunk of recordingChunks[fileType]) {
+			for (const chunk of receivedChunks) {
 				combined.set(chunk, offset);
 				offset += chunk.length;
 			}
