@@ -3,7 +3,8 @@
 	import Label from "./ui/label/label.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { RiCloseLine, RiFileShredLine, RiRefreshLine, RiRestartLine } from "svelte-remixicon";
+	import * as ToggleGroup from "$lib/components/ui/toggle-group";
+	import { RiCheckLine, RiCloseLine, RiFileShredLine, RiRefreshLine, RiRestartLine } from "svelte-remixicon";
 
 	let {
 		buttonsLoading = $bindable({}),
@@ -18,8 +19,7 @@
 		micEnabled,
 		recordingSoundEnabled,
 		eventDetectionEnabled,
-		eventDetectionTypes,
-		eventDetectionTypesInput = $bindable(),
+		eventDetectionTypes = $bindable([]),
 		devices = []
 	} = $props();
 
@@ -71,42 +71,32 @@
 			</Button>
 		</div>
 		<div class:opacity-50={!eventDetectionEnabled} class:pointer-events-none={!eventDetectionEnabled}>
-			<Label class="mb-2 text-muted-foreground">Types (empty = all)</Label>
-			<div class="flex min-h-10 flex-wrap items-center gap-2 border bg-background px-2 py-2">
-				{#each eventDetectionTypes as type}
-					<div class="inline-flex items-center gap-1 bg-secondary px-2 py-0.75 text-xs">
-						<span>{type}</span>
-						<Button
-							variant="ghost"
-							class="h-fit px-0 py-0"
-							onclick={() => {
-								eventDetectionTypes = eventDetectionTypes.filter((t) => t !== type);
-								updateEventDetectionTypes();
-							}}
-							disabled={buttonsLoading.eventDetectionTypes}
-						>
-							<RiCloseLine class="size-3" />
-						</Button>
-					</div>
-				{/each}
-				<input
-					bind:value={eventDetectionTypesInput}
-					placeholder={eventDetectionTypes.length === 0 ? "person, pet, etc." : ""}
-					disabled={buttonsLoading.eventDetectionTypes}
-					class="flex-1 text-sm outline-none"
-					onkeydown={(e) => {
-						if (e.key === "," || e.key === "Enter") {
-							e.preventDefault();
-							const lowercaseType = eventDetectionTypesInput.toLowerCase().trim();
-							if (lowercaseType && !eventDetectionTypes.includes(lowercaseType)) {
-								eventDetectionTypes = [...eventDetectionTypes, lowercaseType];
-								updateEventDetectionTypes();
-								eventDetectionTypesInput = "";
-							}
-						}
-					}}
-				/>
-			</div>
+			<ToggleGroup.Root
+				type="multiple"
+				bind:value={eventDetectionTypes}
+				onValueChange={() => updateEventDetectionTypes()}
+				variant="outline"
+				spacing={2}
+				size="sm"
+				class="overflow-x-auto max-w-full of-left of-right no-scrollbar"
+			>
+				<ToggleGroup.Item value="person" class="gap-1">
+					Person
+					{#if eventDetectionTypes.includes("person")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
+				</ToggleGroup.Item>
+				<ToggleGroup.Item value="pet" class="gap-2">
+					Pet
+					{#if eventDetectionTypes.includes("pet")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
+				</ToggleGroup.Item>
+				<ToggleGroup.Item value="car" class="gap-2">
+					Car
+					{#if eventDetectionTypes.includes("car")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
+				</ToggleGroup.Item>
+				<ToggleGroup.Item value="motion" class="gap-2">
+					Other motion
+					{#if eventDetectionTypes.includes("motion")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
+				</ToggleGroup.Item>
+			</ToggleGroup.Root>
 		</div>
 	</div>
 
@@ -129,7 +119,7 @@
 				{#each devices as device}
 					<div
 						class="flex items-center justify-between gap-4 border p-4 {device.id === localStorage.getItem('deviceId')
-							? 'bg-foreground text-background'
+							? 'bg-muted'
 							: ''}"
 					>
 						<div class="flex-1 truncate">

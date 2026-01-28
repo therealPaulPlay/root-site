@@ -51,7 +51,6 @@
 	let recordingSoundEnabled = $state(false);
 	let eventDetectionEnabled = $state(false);
 	let eventDetectionTypes = $state([]);
-	let eventDetectionTypesInput = $state("");
 
 	// Universal button / controls loading state
 	let buttonsLoading = $state({});
@@ -584,7 +583,8 @@
 			return;
 		}
 		eventDetectionEnabled = msg.payload.enabled;
-		eventDetectionTypes = msg.payload.enabledTypes || [];
+		const types = msg.payload.enabledTypes || [];
+		eventDetectionTypes = types.length > 0 ? types : ["person", "pet", "car"];
 	}
 
 	function toggleEventDetection() {
@@ -868,8 +868,7 @@
 					{micEnabled}
 					{recordingSoundEnabled}
 					{eventDetectionEnabled}
-					{eventDetectionTypes}
-					bind:eventDetectionTypesInput
+					bind:eventDetectionTypes
 					{devices}
 				/>
 			</Tabs.Content>

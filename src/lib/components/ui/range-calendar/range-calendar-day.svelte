@@ -17,9 +17,9 @@
 		"flex size-(--cell-size) flex-col items-center justify-center gap-1 p-0 leading-none font-normal whitespace-nowrap select-none",
 		"[&[data-today]:not([data-selected])]:bg-accent [&[data-today]:not([data-selected])]:text-accent-foreground [&[data-today][data-disabled]]:text-muted-foreground data-[range-middle]:rounded-none",
 		// range Start
-		"data-[range-start]:bg-primary dark:data-[range-start]:hover:bg-accent data-[range-start]:text-primary-foreground",
+		"data-[range-start]:border-ring! data-[range-start]:bg-muted dark:data-[range-start]:hover:bg-accent",
 		// range End
-		"data-[range-end]:bg-primary dark:data-[range-end]:hover:bg-accent data-[range-end]:text-primary-foreground",
+		"data-[range-end]:border-ring! data-[range-start]:bg-muted dark:data-[range-end]:hover:bg-accent",
 		// Outside months
 		"[&[data-outside-month]:not([data-selected])]:text-muted-foreground [&[data-outside-month]:not([data-selected])]:hover:text-accent-foreground",
 		// Disabled

@@ -8,7 +8,6 @@
 	import {
 		RiCalendarLine,
 		RiErrorWarningLine,
-		RiEyeLine,
 		RiFilter3Line,
 		RiRefreshLine,
 		RiSearchAi2Line,
@@ -18,6 +17,7 @@
 	import { buttonVariants } from "./ui/button";
 	import Button from "./ui/button/button.svelte";
 	import Separator from "./ui/separator/separator.svelte";
+	import { SvelteSet } from "svelte/reactivity";
 
 	let {
 		events = [],
@@ -41,6 +41,7 @@
 	let dateRangeValue = $state(undefined);
 	let selectedTypes = $state([]);
 	let selectedEvent = $state(null);
+	let viewedEventIds = new SvelteSet();
 
 	const hasDateFilter = $derived(dateRangeValue?.start && dateRangeValue?.end);
 	const hasTypeFilter = $derived(selectedTypes.length > 0);
@@ -93,7 +94,9 @@
 <div class="flex flex-wrap items-center justify-end gap-2">
 	<!-- Date range filter -->
 	<Popover.Root bind:open={dateRangeOpen}>
-		<Popover.Trigger class="{buttonVariants({ variant: hasDateFilter ? 'default' : 'outline', size: 'sm' })} gap-2">
+		<Popover.Trigger
+			class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2 {hasDateFilter ? 'bg-muted' : ''}"
+		>
 			<RiCalendarLine class="size-4" />
 			Date
 		</Popover.Trigger>
@@ -115,7 +118,9 @@
 
 	<!-- Type filter -->
 	<Popover.Root bind:open={typeFilterOpen}>
-		<Popover.Trigger class="{buttonVariants({ variant: hasTypeFilter ? 'default' : 'outline', size: 'sm' })} gap-2">
+		<Popover.Trigger
+			class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2 {hasTypeFilter ? 'bg-muted' : ''}"
+		>
 			<RiFilter3Line class="size-4" />
 			Type
 		</Popover.Trigger>
@@ -162,7 +167,17 @@
 		</div>
 		<div class="divide-y overflow-y-auto border">
 			{#each dateEvents as event}
-				<div class="flex flex-wrap items-center gap-4 p-4 hover:bg-muted/50">
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<div
+					class="group flex flex-wrap items-center gap-4 p-4 hover:bg-accent active:bg-accent"
+					role="button"
+					tabindex="0"
+					onclick={() => {
+						selectedEvent = event;
+						viewedEventIds.add(event.id);
+						viewRecording(event);
+					}}
+				>
 					<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted" {@attach observeThumbnail(event.id)}>
 						{#if eventThumbnails[event.id]}
 							<img
@@ -176,29 +191,24 @@
 							</div>
 						{/if}
 					</div>
-					<div class="flex-1 gap-4">
+					<div class="flex-1">
 						<p class="mb-2 w-full font-medium">{new Date(event.timestamp).toLocaleTimeString()}</p>
-						<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
-							<RiSearchAi2Line class="size-4" />
-							{capitalizeType(event.event_type) || "N/A"}
-						</p>
-						<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
-							<RiTimeLine class="size-4" />
-							{event.duration || "N/A"}s
-						</p>
+						<div class="flex flex-col gap-1">
+							<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+								<RiSearchAi2Line class="size-4" />
+								{capitalizeType(event.event_type) || "N/A"}
+							</p>
+							<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+								<RiTimeLine class="size-4" />
+								{event.duration || "N/A"}s
+							</p>
+						</div>
 					</div>
-					<Button
-						onclick={() => {
-							selectedEvent = event;
-							viewRecording(event);
-						}}
-						variant="outline"
-						size="sm"
-						class="gap-2 max-sm:grow"
-					>
-						View
-						<RiEyeLine class="size-4" />
-					</Button>
+					{#if viewedEventIds.has(event.id)}
+						<span class="mr-2 ml-auto bg-accent px-1 text-sm group-hover:brightness-95 group-active:brightness-95"
+							>Viewed</span
+						>
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -223,7 +233,11 @@
 >
 	<Dialog.Content class="max-w-4xl">
 		<Dialog.Header>
-			<Dialog.Title>{selectedEvent ? formatDate(selectedEvent.timestamp) + ", " + new Date(selectedEvent.timestamp).toLocaleTimeString() : ""}</Dialog.Title>
+			<Dialog.Title
+				>{selectedEvent
+					? formatDate(selectedEvent.timestamp) + ", " + new Date(selectedEvent.timestamp).toLocaleTimeString()
+					: ""}</Dialog.Title
+			>
 		</Dialog.Header>
 		<div class="relative flex aspect-video w-full items-center justify-center border bg-foreground">
 			{#if recordingLoading}
@@ -236,7 +250,7 @@
 					src={recordingVideoUrl}
 					bind:this={recordingVideoElement}
 					controls
-					class="w-full h-full"
+					class="h-full w-full"
 					onloadeddata={tryPlayRecording}
 					onplay={() => {
 						if (recordingAudioElement) {

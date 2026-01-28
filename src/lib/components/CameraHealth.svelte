@@ -63,7 +63,7 @@
 				{/if}
 				{#if updateStatus.status}
 					<div class="flex justify-between">
-						<span class="text-muted-foreground">Update status</span>
+						<span class="text-muted-foreground">Status</span>
 						<span>{updateStatus.status}</span>
 					</div>
 				{/if}

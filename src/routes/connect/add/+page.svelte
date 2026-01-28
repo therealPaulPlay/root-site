@@ -395,7 +395,7 @@
 									}}
 									class="flex w-full items-center justify-between gap-2 p-2 hover:bg-accent/50 {network.ssid ===
 									selectedWiFiSSID
-										? 'pointer-events-none bg-foreground text-background'
+										? 'pointer-events-none bg-muted'
 										: ''}"
 								>
 									<span class="inline-flex items-center gap-2 overflow-hidden">
