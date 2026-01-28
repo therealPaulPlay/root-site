@@ -64,13 +64,23 @@
 
 	const groupedEvents = $derived(
 		filteredEvents.reduce((groups, event) => {
-			const dateKey = new Date(event.timestamp).toLocaleDateString();
+			const dateKey = formatDate(event.timestamp);
 			(groups[dateKey] ||= []).push(event);
 			return groups;
 		}, {})
 	);
 
 	const capitalizeType = (type) => type?.charAt(0).toUpperCase() + type?.slice(1);
+
+	function formatDate(date) {
+		const d = new Date(date);
+		const today = new Date();
+		const yesterday = new Date();
+		yesterday.setDate(yesterday.getDate() - 1);
+		if (d.toDateString() === today.toDateString()) return "Today";
+		if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+		return d.toLocaleDateString();
+	}
 
 	function tryPlayRecording() {
 		if (!recordingVideoElement || recordingVideoElement.readyState < 2) return;
@@ -213,7 +223,7 @@
 >
 	<Dialog.Content class="max-w-4xl">
 		<Dialog.Header>
-			<Dialog.Title>{selectedEvent ? new Date(selectedEvent.timestamp).toLocaleString() : ""}</Dialog.Title>
+			<Dialog.Title>{selectedEvent ? formatDate(selectedEvent.timestamp) + ", " + new Date(selectedEvent.timestamp).toLocaleTimeString() : ""}</Dialog.Title>
 		</Dialog.Header>
 		<div class="relative flex aspect-video w-full items-center justify-center border bg-foreground">
 			{#if recordingLoading}
@@ -226,7 +236,7 @@
 					src={recordingVideoUrl}
 					bind:this={recordingVideoElement}
 					controls
-					class="w-full"
+					class="w-full h-full"
 					onloadeddata={tryPlayRecording}
 					onplay={() => {
 						if (recordingAudioElement) {
