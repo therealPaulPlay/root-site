@@ -4,9 +4,8 @@
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { getAllProducts, removeProduct, saveProduct } from "$lib/utils/pairedProductsStorage";
-	import { RelayComm, RELAY_REQUEST_TIMEOUT } from "$lib/utils/relaycomm";
+	import { RelayComm } from "$lib/utils/relaycomm";
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
-	import { error } from "@sveltejs/kit";
 	import { onDestroy, onMount } from "svelte";
 	import {
 		RiArrowRightSLine,
@@ -27,9 +26,7 @@
 
 	let previewImages = $state({});
 	let updateStatuses = $state({});
-	let loadedProducts = new Set();
 	let previewFailed = $state({});
-	let productElements = {};
 
 	let renameDialogOpen = $state({});
 	let renameDialogLoading = $state({});
@@ -42,11 +39,9 @@
 		products = getAllProducts();
 	}
 
-	let observers = [];
+	let loadAbort;
 
 	function loadProductData(productId) {
-		if (loadedProducts.has(productId)) return;
-		loadedProducts.add(productId);
 		relayCommInstance.send(productId, "getPreview").catch((error) => {
 			previewFailed[productId] = true;
 			console.error(`Failed to get preview for product ${productId}:`, error);
@@ -56,17 +51,13 @@
 		});
 	}
 
-	function setupObservers() {
-		for (const [productId, element] of Object.entries(productElements)) {
-			if (!element) continue;
-			const observer = new IntersectionObserver(
-				([entry]) => {
-					if (entry.isIntersecting) loadProductData(productId);
-				},
-				{ rootMargin: "100px" }
-			);
-			observer.observe(element);
-			observers.push(observer);
+	async function startLoadQueue() {
+		const abort = new AbortController();
+		loadAbort = abort;
+		for (let i = 0; i < products.length; i++) {
+			if (abort.signal.aborted) return;
+			loadProductData(products[i].id);
+			if ((i + 1) % 4 === 0) await new Promise((r) => setTimeout(r, 1000)); // Rate limit: 4/s
 		}
 	}
 
@@ -81,7 +72,7 @@
 				if (!deviceId) throw new Error("No device ID set! Cannot connect to relay.");
 				relayCommInstance = new RelayComm(relayDomain, localStorage.getItem("deviceId"));
 				await relayCommInstance.connect();
-				setupObservers();
+				startLoadQueue();
 
 				relayCommInstance.on("getPreviewResult", (msg) => {
 					if (!msg.payload.success) {
@@ -140,7 +131,7 @@
 	});
 
 	onDestroy(() => {
-		observers.forEach((o) => o.disconnect());
+		if (loadAbort) loadAbort.abort();
 		if (relayCommInstance) relayCommInstance.disconnect();
 	});
 
@@ -194,10 +185,7 @@
 {#snippet productItem(product, isFirst = false)}
 	{@const isRenameDialogOpen = renameDialogOpen[product.id] ?? false}
 	{@const isRemoveDialogOpen = removeDialogOpen[product.id] ?? false}
-	<div
-		bind:this={productElements[product.id]}
-		class="relative flex h-fit min-h-32 w-full shrink-0 {isFirst ? 'border-b' : 'border-y'} max-md:flex-wrap"
-	>
+	<div class="relative flex h-fit min-h-32 w-full shrink-0 {isFirst ? 'border-b' : 'border-y'} max-md:flex-wrap">
 		<!-- Preview image -->
 		<div
 			class="aspect-video w-full content-center bg-foreground text-center text-background max-md:border-b md:w-1/3 md:border-r"
@@ -273,7 +261,9 @@
 						<AlertDialog.Content>
 							<AlertDialog.Header>
 								<AlertDialog.Title>Remove?</AlertDialog.Title>
-								<AlertDialog.Description>Unpair "{product.name}" and remove it from this device.</AlertDialog.Description>
+								<AlertDialog.Description
+									>Unpair "{product.name}" and remove it from this device.</AlertDialog.Description
+								>
 							</AlertDialog.Header>
 							<AlertDialog.Footer>
 								<AlertDialog.Cancel disabled={removeDialogLoading[product.id]}>Cancel</AlertDialog.Cancel>
