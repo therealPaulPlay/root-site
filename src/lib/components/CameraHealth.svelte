@@ -53,16 +53,20 @@
 		<div class="space-y-4 border p-4">
 			<Label class="text-base">Firmware</Label>
 			<div class="space-y-2 text-sm">
-				<div class="flex justify-between">
-					<span class="text-muted-foreground">Version</span>
-					<button onclick={() => updateStatus.currentVersion !== "dev" && (devDialogOpen = true)}
-						>{updateStatus.currentVersion}</button
-					>
-				</div>
-				<div class="flex justify-between">
-					<span class="text-muted-foreground">Update status</span>
-					<span>{updateStatus.status}</span>
-				</div>
+				{#if updateStatus.currentVersion}
+					<div class="flex justify-between">
+						<span class="text-muted-foreground">Version</span>
+						<button onclick={() => updateStatus.currentVersion !== "dev" && (devDialogOpen = true)}
+							>{updateStatus.currentVersion}</button
+						>
+					</div>
+				{/if}
+				{#if updateStatus.status}
+					<div class="flex justify-between">
+						<span class="text-muted-foreground">Update status</span>
+						<span>{updateStatus.status}</span>
+					</div>
+				{/if}
 				{#if updateStatus.availableVersion}
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">Available</span>
@@ -77,7 +81,11 @@
 			</div>
 			{#if updateStatus.availableVersion}
 				<div class="flex w-full items-center justify-end">
-					<Button onclick={startUpdate} disabled={buttonsLoading.update || ["downloading", "installing"].includes(updateStatus.status)} variant="outline">
+					<Button
+						onclick={startUpdate}
+						disabled={buttonsLoading.update || ["downloading", "installing"].includes(updateStatus.status)}
+						variant="outline"
+					>
 						{#if buttonsLoading.update}
 							<Spinner class="size-4" />
 						{:else}
@@ -96,20 +104,24 @@
 		<div class="space-y-4 border p-4">
 			<Label class="text-base">Network</Label>
 			<div class="space-y-2 text-sm">
-				<div class="flex justify-between">
-					<span class="text-muted-foreground">WiFi status</span>
-					<span>{health.wifi.connected ? "Connected" : "Disconnected"}</span>
-				</div>
+				{#if health.wifi.connected !== undefined}
+					<div class="flex justify-between">
+						<span class="text-muted-foreground">WiFi status</span>
+						<span>{health.wifi.connected ? "Connected" : "Disconnected"}</span>
+					</div>
+				{/if}
 				{#if health.wifi.ssid}
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">SSID</span>
 						<span>{health.wifi.ssid}</span>
 					</div>
 				{/if}
-				<div class="flex justify-between">
-					<span class="text-muted-foreground">Relay</span>
-					<span class="truncate">{health.relayDomain}</span>
-				</div>
+				{#if health.relayDomain}
+					<div class="flex justify-between">
+						<span class="text-muted-foreground">Relay</span>
+						<span class="truncate">{health.relayDomain}</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 
