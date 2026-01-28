@@ -7,6 +7,7 @@
 	import { CalendarDate, getLocalTimeZone } from "@internationalized/date";
 	import {
 		RiCalendarLine,
+		RiErrorWarningLine,
 		RiEyeLine,
 		RiFilter3Line,
 		RiRefreshLine,
@@ -255,6 +256,8 @@
 						<track kind="captions" />
 					</audio>
 				{/if}
+			{:else}
+				<RiErrorWarningLine class="size-8 text-background" />
 			{/if}
 		</div>
 	</Dialog.Content>
