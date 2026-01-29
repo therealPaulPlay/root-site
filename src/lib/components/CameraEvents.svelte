@@ -47,7 +47,7 @@
 
 	const hasDateFilter = $derived(dateRangeValue?.start && dateRangeValue?.end);
 	const hasTypeFilter = $derived(selectedTypes.length > 0);
-	const availableTypes = $derived([...new Set(events.map((e) => capitalizeType(e.event_type)).filter(Boolean))].sort());
+	const availableTypes = $derived([...new Set(events.map((e) => e.event_type).filter(Boolean))].sort());
 	const filteredEvents = $derived(
 		events.filter((event) => {
 			// Date range filter
@@ -59,7 +59,7 @@
 			}
 
 			// Type filter
-			if (hasTypeFilter && !selectedTypes.includes(capitalizeType(event.event_type))) return false;
+			if (hasTypeFilter && !selectedTypes.includes(event.event_type)) return false;
 
 			return true;
 		})
@@ -72,8 +72,6 @@
 			return groups;
 		}, {})
 	);
-
-	const capitalizeType = (type) => type?.charAt(0).toUpperCase() + type?.slice(1);
 
 	function formatDate(date) {
 		const d = new Date(date);
@@ -129,7 +127,7 @@
 		<Popover.Content class="w-56 p-4" align="start">
 			<div class="space-y-3">
 				{#each availableTypes as type}
-					<Label class="text-nowrap">
+					<Label class="text-nowrap normal-case">
 						<Checkbox
 							checked={selectedTypes.includes(type)}
 							onCheckedChange={() => {
@@ -137,7 +135,7 @@
 								else selectedTypes = [...selectedTypes, type];
 							}}
 						/>
-						<p class="truncate">{type}</p>
+						<p class="truncate capitalize">{type}</p>
 					</Label>
 				{/each}
 				{#if availableTypes.length === 0}
@@ -164,7 +162,7 @@
 {:else}
 	{#each Object.entries(groupedEvents) as [dateKey, dateEvents]}
 		<div class="sticky -top-6 z-10 flex items-center gap-4 bg-background mask-b-from-70% mask-b-to-100% py-4">
-			<span class="shrink-0 text-sm font-medium text-muted-foreground">{dateKey}</span>
+			<span class="shrink-0 text-sm text-muted-foreground">{dateKey}</span>
 			<Separator class="flex-1" />
 		</div>
 		<div class="divide-y overflow-y-auto border">
@@ -200,9 +198,9 @@
 					<div class="flex-1">
 						<p class="mb-2 w-full font-medium">{new Date(event.timestamp).toLocaleTimeString()}</p>
 						<div class="flex flex-col gap-1">
-							<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+							<p class="inline-flex items-center gap-1 text-sm text-muted-foreground capitalize">
 								<RiSearchAi2Line class="size-4" />
-								{capitalizeType(event.event_type) || "N/A"}
+								{event.event_type || "N/A"}
 							</p>
 							<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
 								<RiTimeLine class="size-4" />
@@ -211,7 +209,7 @@
 						</div>
 					</div>
 					{#if viewedEventIds.has(event.id)}
-						<div class="absolute top-2 right-2 w-1 h-1 bg-border"></div>
+						<div class="absolute top-2 right-2 h-1 w-1 bg-border"></div>
 					{/if}
 				</div>
 			{/each}
@@ -249,7 +247,7 @@
 				<p class="absolute mt-22 w-full -translate-y-1/2 text-center text-sm text-background">
 					{recordingLoadingPercent}%
 				</p>
-			{:else if recordingVideoUrl}
+			{:else if recordingVideoUrl || !viewRecordingDialog}
 				<video
 					src={recordingVideoUrl}
 					bind:this={recordingVideoElement}
