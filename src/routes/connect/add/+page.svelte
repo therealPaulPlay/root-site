@@ -182,7 +182,7 @@
 			class="flex min-h-fit w-full items-center justify-center overflow-hidden border-b bg-white! py-8 md:py-12 lg:py-16"
 		>
 			{#if pairingCode}
-				<div class="pl-0.5 pt-0.5">
+				<div class="pt-0.5 pl-0.5">
 					<QrCode value={pairingCode} size={275} errorCorrection="H" />
 				</div>
 			{:else}
@@ -381,7 +381,9 @@
 				<p class="max-w-3xl">The product is connected to Wifi. The network can be changed below.</p>
 			{/if}
 			<div class="mt-4 space-y-4">
-				<div class="relative h-32 w-full max-w-xl overflow-hidden border">
+				<div
+					class="relative h-32 w-full max-w-xl overflow-hidden px-px outline outline-1 -outline-offset-1 outline-border"
+				>
 					<div class="of-top of-bottom no-scrollbar h-full w-full overflow-y-auto">
 						{#if wifiNetworks.length}
 							{#each wifiNetworks as network}
@@ -395,7 +397,7 @@
 										wifiCountryCode = "";
 										wifiConnectDialogOpen = true;
 									}}
-									class="flex w-full items-center border-b justify-between gap-2 p-2 hover:bg-accent/50 {network.ssid ===
+									class="flex w-full items-center justify-between gap-2 border-b p-2 hover:bg-accent/50 {network.ssid ===
 									selectedWiFiSSID
 										? 'pointer-events-none bg-muted'
 										: ''}"
