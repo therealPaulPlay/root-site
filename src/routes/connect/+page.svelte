@@ -57,7 +57,7 @@
 		for (let i = 0; i < products.length; i++) {
 			if (abort.signal.aborted) return;
 			loadProductData(products[i].id);
-			if ((i + 1) % 4 === 0) await new Promise((r) => setTimeout(r, 1000)); // Rate limit: 4/s
+			if ((i + 1) % 5 === 0) await new Promise((r) => setTimeout(r, 1000)); // Rate limit: 5/s (10 requests/s)
 		}
 	}
 

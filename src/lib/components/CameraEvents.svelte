@@ -25,6 +25,8 @@
 		eventsLoading = false,
 		recordingHasAudio = false,
 		eventThumbnails = {},
+		loadingThumbnails = [],
+		thumbnailQueue = new SvelteSet(),
 		observeThumbnail = () => {},
 		viewRecording = () => {},
 		dateRangeOpen = $bindable(false),
@@ -169,7 +171,7 @@
 			{#each dateEvents as event}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<div
-					class="group flex flex-wrap items-center gap-4 p-4 hover:bg-accent active:bg-accent"
+					class="relative flex flex-wrap items-center gap-4 p-4 hover:bg-accent active:bg-accent"
 					role="button"
 					tabindex="0"
 					onclick={() => {
@@ -187,7 +189,11 @@
 							/>
 						{:else}
 							<div class="flex h-full w-full items-center justify-center">
-								<Spinner class="size-4" />
+								{#if loadingThumbnails.has(event.id) || thumbnailQueue.includes(event.id)}
+									<Spinner class="size-4" />
+								{:else}
+									<RiErrorWarningLine class="size-4" />
+								{/if}
 							</div>
 						{/if}
 					</div>
@@ -205,9 +211,7 @@
 						</div>
 					</div>
 					{#if viewedEventIds.has(event.id)}
-						<span class="mr-2 ml-auto bg-accent px-1 text-sm group-hover:brightness-95 group-active:brightness-95"
-							>Viewed</span
-						>
+						<div class="absolute top-2 right-2 w-1 h-1 bg-border"></div>
 					{/if}
 				</div>
 			{/each}

@@ -18,6 +18,7 @@
 	import CameraHealth from "$lib/components/CameraHealth.svelte";
 	import CameraEvents from "$lib/components/CameraEvents.svelte";
 	import { RiArrowLeftLine } from "svelte-remixicon";
+	import { SvelteSet } from "svelte/reactivity";
 
 	const productId = page.params.productId;
 
@@ -184,27 +185,24 @@
 		events = msg.payload.events || [];
 	}
 
-	// Thumbnail loading with rate limiting
-	let thumbnailQueue = [];
-	let loadingThumbnails = new Set();
-	let thumbnailInterval;
+	// Thumbnail loading with rate limiting (10/s)
+	let thumbnailQueue = $state([]);
+	let loadingThumbnails = new SvelteSet();
+	let thumbnailsThisSecond = 0;
 
 	function queueThumbnail(eventId) {
-		if (!eventThumbnails[eventId] && !loadingThumbnails.has(eventId) && !thumbnailQueue.includes(eventId)) {
-			thumbnailQueue.push(eventId);
-			if (!thumbnailInterval) {
-				thumbnailInterval = setInterval(() => {
-					const toLoad = thumbnailQueue.splice(0, 5);
-					toLoad.forEach((id) => {
-						loadingThumbnails.add(id);
-						relayCommInstance.send(productId, "getThumbnail", { id }).catch(() => loadingThumbnails.delete(id));
-					});
-					if (thumbnailQueue.length === 0) {
-						clearInterval(thumbnailInterval);
-						thumbnailInterval = null;
-					}
-				}, 1000);
-			}
+		if (eventThumbnails[eventId] || loadingThumbnails.has(eventId) || thumbnailQueue.includes(eventId)) return;
+		thumbnailQueue.push(eventId);
+		drainThumbnailQueue();
+	}
+
+	function drainThumbnailQueue() {
+		while (thumbnailQueue.length > 0 && thumbnailsThisSecond < 10) {
+			if (thumbnailsThisSecond === 0) setTimeout(() => { thumbnailsThisSecond = 0; drainThumbnailQueue(); }, 1000);
+			const id = thumbnailQueue.shift();
+			thumbnailsThisSecond++;
+			loadingThumbnails.add(id);
+			relayCommInstance.send(productId, "getThumbnail", { id }).catch(() => loadingThumbnails.delete(id));
 		}
 	}
 
@@ -847,6 +845,8 @@
 					{viewRecording}
 					{eventsLoading}
 					{eventThumbnails}
+					{loadingThumbnails}
+					{thumbnailQueue}
 					{recordingHasAudio}
 					bind:dateRangeOpen
 					bind:typeFilterOpen
