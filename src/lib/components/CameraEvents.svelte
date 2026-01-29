@@ -169,7 +169,7 @@
 			{#each dateEvents as event}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<div
-					class="relative flex flex-wrap items-center gap-4 p-4 hover:bg-accent active:bg-accent"
+					class="relative flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-accent active:bg-accent"
 					role="button"
 					tabindex="0"
 					onclick={() => {
@@ -178,6 +178,19 @@
 						viewRecording(event);
 					}}
 				>
+					<div class="flex-1">
+						<p class="mb-2 w-full font-medium">{new Date(event.timestamp).toLocaleTimeString()}</p>
+						<div class="flex flex-col gap-1">
+							<p class="inline-flex items-center gap-1 text-sm text-muted-foreground capitalize">
+								<RiSearchAi2Line class="size-4" />
+								{event.event_type || "N/A"}
+							</p>
+							<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+								<RiTimeLine class="size-4" />
+								{event.duration || "N/A"}s
+							</p>
+						</div>
+					</div>
 					<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted" {@attach observeThumbnail(event.id)}>
 						{#if eventThumbnails[event.id]}
 							<img
@@ -195,21 +208,8 @@
 							</div>
 						{/if}
 					</div>
-					<div class="flex-1">
-						<p class="mb-2 w-full font-medium">{new Date(event.timestamp).toLocaleTimeString()}</p>
-						<div class="flex flex-col gap-1">
-							<p class="inline-flex items-center gap-1 text-sm text-muted-foreground capitalize">
-								<RiSearchAi2Line class="size-4" />
-								{event.event_type || "N/A"}
-							</p>
-							<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
-								<RiTimeLine class="size-4" />
-								{event.duration || "N/A"}s
-							</p>
-						</div>
-					</div>
 					{#if viewedEventIds.has(event.id)}
-						<div class="absolute top-2 right-2 h-1 w-1 bg-border"></div>
+						<div class="absolute top-2 left-2 h-1 w-1 bg-border"></div>
 					{/if}
 				</div>
 			{/each}
