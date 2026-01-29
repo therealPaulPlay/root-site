@@ -185,7 +185,7 @@
 		events = msg.payload.events || [];
 	}
 
-	// Thumbnail loading with rate limiting (10/s)
+	// Thumbnail loading with rate limiting (5/s)
 	let thumbnailQueue = $state([]);
 	let loadingThumbnails = new SvelteSet();
 	let thumbnailsThisSecond = 0;
@@ -197,7 +197,7 @@
 	}
 
 	function drainThumbnailQueue() {
-		while (thumbnailQueue.length > 0 && thumbnailsThisSecond < 10) {
+		while (thumbnailQueue.length > 0 && thumbnailsThisSecond < 5) {
 			if (thumbnailsThisSecond === 0) setTimeout(() => { thumbnailsThisSecond = 0; drainThumbnailQueue(); }, 1000);
 			const id = thumbnailQueue.shift();
 			thumbnailsThisSecond++;

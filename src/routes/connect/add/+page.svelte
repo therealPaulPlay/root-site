@@ -382,7 +382,7 @@
 			{/if}
 			<div class="mt-4 space-y-4">
 				<div
-					class="relative h-32 w-full max-w-xl overflow-hidden px-px outline outline-1 -outline-offset-1 outline-border"
+					class="relative h-32 w-full max-w-xl overflow-hidden p-px pb-0 outline outline-1 -outline-offset-1 outline-border"
 				>
 					<div class="of-top of-bottom no-scrollbar h-full w-full overflow-y-auto">
 						{#if wifiNetworks.length}
@@ -397,7 +397,7 @@
 										wifiCountryCode = "";
 										wifiConnectDialogOpen = true;
 									}}
-									class="flex w-full items-center justify-between gap-2 border-b p-2 hover:bg-accent/50 {network.ssid ===
+									class="flex w-full items-center justify-between gap-2 border-b p-2 hover:bg-accent/50 active:bg-accent/50 {network.ssid ===
 									selectedWiFiSSID
 										? 'pointer-events-none bg-muted'
 										: ''}"
