@@ -127,7 +127,7 @@
 		<Popover.Content class="w-56 p-4" align="start">
 			<div class="space-y-3">
 				{#each availableTypes as type}
-					<Label class="text-nowrap normal-case">
+					<Label class="text-nowrap">
 						<Checkbox
 							checked={selectedTypes.includes(type)}
 							onCheckedChange={() => {
@@ -135,7 +135,7 @@
 								else selectedTypes = [...selectedTypes, type];
 							}}
 						/>
-						<p class="truncate capitalize">{type}</p>
+						<p class="truncate">{type}</p>
 					</Label>
 				{/each}
 				{#if availableTypes.length === 0}
