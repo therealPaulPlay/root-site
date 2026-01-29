@@ -382,7 +382,7 @@
 			{/if}
 			<div class="mt-4 space-y-4">
 				<div class="relative h-32 w-full max-w-xl overflow-hidden border">
-					<div class="of-top of-bottom no-scrollbar h-full w-full divide-y overflow-y-auto">
+					<div class="of-top of-bottom no-scrollbar h-full w-full overflow-y-auto">
 						{#if wifiNetworks.length}
 							{#each wifiNetworks as network}
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -395,7 +395,7 @@
 										wifiCountryCode = "";
 										wifiConnectDialogOpen = true;
 									}}
-									class="flex w-full items-center justify-between gap-2 p-2 hover:bg-accent/50 {network.ssid ===
+									class="flex w-full items-center border-b justify-between gap-2 p-2 hover:bg-accent/50 {network.ssid ===
 									selectedWiFiSSID
 										? 'pointer-events-none bg-muted'
 										: ''}"
