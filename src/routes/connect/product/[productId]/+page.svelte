@@ -198,7 +198,11 @@
 
 	function drainThumbnailQueue() {
 		while (thumbnailQueue.length > 0 && thumbnailsThisSecond < 5) {
-			if (thumbnailsThisSecond === 0) setTimeout(() => { thumbnailsThisSecond = 0; drainThumbnailQueue(); }, 1000);
+			if (thumbnailsThisSecond === 0)
+				setTimeout(() => {
+					thumbnailsThisSecond = 0;
+					drainThumbnailQueue();
+				}, 1000);
 			const id = thumbnailQueue.shift();
 			thumbnailsThisSecond++;
 			loadingThumbnails.add(id);
@@ -777,7 +781,7 @@
 			return;
 		}
 		toast.success("Update started!");
-		loadHealth();
+		loadUpdateStatus();
 	}
 
 	function setVersionDev() {

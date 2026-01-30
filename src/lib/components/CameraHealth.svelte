@@ -21,6 +21,7 @@
 
 	let logsContainer = $state();
 	let devDialogOpen = $state(false);
+	let updateDialogOpen = $state(false);
 
 	$effect(() => {
 		if (logsContainer && health?.logs?.length && activeTab === healthTab) {
@@ -82,7 +83,7 @@
 			{#if updateStatus.availableVersion}
 				<div class="flex w-full items-center justify-end">
 					<Button
-						onclick={startUpdate}
+						onclick={() => (updateDialogOpen = true)}
 						disabled={buttonsLoading.update || ["downloading", "installing"].includes(updateStatus.status)}
 						variant="outline"
 					>
@@ -201,8 +202,29 @@
 			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
 			<AlertDialog.Action
 				onclick={() => {
+					devDialogOpen = false;
 					setVersionDev();
 				}}>Yes, switch</AlertDialog.Action
+			>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
+
+<AlertDialog.Root bind:open={updateDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Install update?</AlertDialog.Title>
+			<AlertDialog.Description
+				>Do not unplug or otherwise turn off the product until the update is completed.</AlertDialog.Description
+			>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action
+				onclick={() => {
+					updateDialogOpen = false;
+					startUpdate();
+				}}>Update</AlertDialog.Action
 			>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
