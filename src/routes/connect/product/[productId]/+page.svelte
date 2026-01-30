@@ -534,7 +534,10 @@
 			return;
 		}
 		micEnabled = msg.payload.enabled;
-		startStream(); // Restart stream to apply microphone changes
+		
+		// Restart stream to apply microphone changes
+		endStream();
+		startStream();
 	}
 
 	function loadRecordingSound() {
