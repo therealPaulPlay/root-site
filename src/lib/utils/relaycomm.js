@@ -202,27 +202,12 @@ export class RelayComm {
 	}
 
 	async #handleMessage(msg) {
-		// Decrypt payload
-		try {
-			msg.payload = JSON.parse(msg.payload);
-		} catch {
-			const encryption = await this.#getEncryption(msg.productId);
-			try {
-				msg.payload = JSON.parse(new TextDecoder().decode(await encryption.decrypt(msg.payload)));
-			} catch (decryptError) {
-				// Retry with old key if available (for in-flight chunks during key renewal)
-				const prevEncryption = this.#prevEncryptions.get(msg.productId);
-				if (prevEncryption) {
-					try {
-						msg.payload = JSON.parse(new TextDecoder().decode(await prevEncryption.decrypt(msg.payload)));
-					} catch (oldDecryptError) {
-						throw decryptError; // Both keys failed, throw original error
-					}
-				} else {
-					throw decryptError;
-				}
-			}
-		}
+		// Unencrypted error payloads are raw JSON (start with "{"), encrypted payloads are base64
+		if (msg.payload.startsWith("{")) msg.payload = JSON.parse(msg.payload);
+		else await this.#decryptField(msg, "payload", true);
+
+		// Decrypt binary data field if present
+		if (msg.binData) await this.#decryptField(msg, "binData", false);
 
 		// Route to handlers
 		const handlers = this.#handlers.get(msg.type);
@@ -234,6 +219,28 @@ export class RelayComm {
 			clearTimeout(timeout);
 			this.#pendingRequestTimeouts.delete(msg.requestId);
 			resolve();
+		}
+	}
+
+	async #decryptField(msg, field, parseJson) {
+		if (typeof msg[field] !== "string") throw new Error(`'${field}' field must be an encrypted base64 string`);
+		const encryption = await this.#getEncryption(msg.productId);
+		try {
+			const decrypted = await encryption.decrypt(msg[field]);
+			msg[field] = parseJson ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
+		} catch (decryptError) {
+			// Retry with old key if available (for in-flight chunks during key renewal)
+			const prevEncryption = this.#prevEncryptions.get(msg.productId);
+			if (prevEncryption) {
+				try {
+					const decrypted = await prevEncryption.decrypt(msg[field]);
+					msg[field] = parseJson ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
+				} catch {
+					throw decryptError; // Both keys failed, re-throw original error
+				}
+			} else {
+				throw decryptError;
+			}
 		}
 	}
 

@@ -382,7 +382,7 @@
 			{/if}
 			<div class="mt-4 space-y-4">
 				<div
-					class="relative h-32 w-full max-w-xl overflow-hidden p-px pb-0 outline outline-1 -outline-offset-1 outline-border"
+					class="relative h-28 w-full max-w-xl overflow-hidden p-px pb-0 outline outline-1 -outline-offset-1 outline-border"
 				>
 					<div class="of-top of-bottom no-scrollbar h-full w-full overflow-y-auto">
 						{#if wifiNetworks.length}

@@ -82,7 +82,7 @@
 						);
 						return;
 					}
-					previewImages[msg.productId] = msg.payload.image;
+					previewImages[msg.productId] = URL.createObjectURL(new Blob([msg.binData], { type: "image/jpeg" }));
 				});
 
 				relayCommInstance.on("getUpdateStatusResult", (msg) => {
@@ -133,6 +133,7 @@
 	onDestroy(() => {
 		if (loadAbort) loadAbort.abort();
 		if (relayCommInstance) relayCommInstance.disconnect();
+		for (const url of Object.values(previewImages)) URL.revokeObjectURL(url);
 	});
 
 	function handleRename(product) {
@@ -200,7 +201,7 @@
 				<img
 					alt="preview"
 					class="h-full w-full object-cover"
-					src={"data:image/jpg;base64," + previewImages[product.id]}
+					src={previewImages[product.id]}
 				/>
 			{/if}
 		</div>

@@ -193,11 +193,7 @@
 					</div>
 					<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted" {@attach observeThumbnail(event.id)}>
 						{#if eventThumbnails[event.id]}
-							<img
-								src={"data:image/jpg;base64," + eventThumbnails[event.id]}
-								alt="Event thumbnail"
-								class="h-full w-full object-cover"
-							/>
+							<img src={eventThumbnails[event.id]} alt="Event thumbnail" class="h-full w-full object-cover" />
 						{:else}
 							<div class="flex h-full w-full items-center justify-center">
 								{#if loadingThumbnails.has(event.id) || thumbnailQueue.includes(event.id)}
@@ -218,21 +214,7 @@
 {/if}
 
 <!-- Recording Viewer Dialog -->
-<Dialog.Root
-	bind:open={viewRecordingDialog}
-	onOpenChange={(open) => {
-		if (!open) {
-			if (recordingVideoUrl) {
-				URL.revokeObjectURL(recordingVideoUrl);
-				recordingVideoUrl = null;
-			}
-			if (recordingAudioUrl) {
-				URL.revokeObjectURL(recordingAudioUrl);
-				recordingAudioUrl = null;
-			}
-		}
-	}}
->
+<Dialog.Root bind:open={viewRecordingDialog}>
 	<Dialog.Content class="max-w-4xl">
 		<Dialog.Header>
 			<Dialog.Title

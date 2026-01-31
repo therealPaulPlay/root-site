@@ -164,6 +164,11 @@
 		endStream();
 		if (typeof window !== "undefined") document.removeEventListener("visibilitychange", handleVisibilityChange);
 		if (relayCommInstance) relayCommInstance.disconnect();
+
+		// Revoke object URLs to free memory
+		if (recordingVideoUrl) URL.revokeObjectURL(recordingVideoUrl);
+		if (recordingAudioUrl) URL.revokeObjectURL(recordingAudioUrl);
+		for (const url of Object.values(eventThumbnails)) URL.revokeObjectURL(url);
 	});
 
 	// Events handlers
@@ -217,7 +222,7 @@
 
 	function handleThumbnailResult(msg) {
 		if (!msg.payload.success) return toast.error("Failed to get thumbnail: " + msg.payload.error || "Unknown error");
-		eventThumbnails[msg.payload.eventId] = msg.payload.data;
+		eventThumbnails[msg.payload.eventId] = URL.createObjectURL(new Blob([msg.binData], { type: "image/jpeg" }));
 		loadingThumbnails.delete(msg.payload.eventId);
 	}
 
@@ -225,6 +230,8 @@
 		viewRecordingDialog = true;
 		recordingLoading = true;
 		recordingLoadingPercent = 0;
+		if (recordingVideoUrl) URL.revokeObjectURL(recordingVideoUrl);
+		if (recordingAudioUrl) URL.revokeObjectURL(recordingAudioUrl);
 		recordingVideoUrl = null;
 		recordingAudioUrl = null;
 		recordingHasAudio = false;
@@ -252,12 +259,10 @@
 		if (eventId && eventId !== currentRecordingEventId) return;
 
 		if (msg.payload.hasAudio !== undefined) recordingHasAudio = msg.payload.hasAudio;
-		if (!msg.payload.chunk) return;
+		if (!msg.binData) return;
 
-		const { fileType, chunkIndex, totalChunks, chunk } = msg.payload;
-		const bytes = atob(chunk);
-		const buffer = new Uint8Array(bytes.length);
-		for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
+		const { fileType, chunkIndex, totalChunks } = msg.payload;
+		const buffer = msg.binData;
 
 		recordingChunks[fileType][chunkIndex] = buffer;
 		recordingTotalChunks[fileType] = totalChunks;
@@ -343,6 +348,7 @@
 			videoStarted = false;
 		}
 		if (videoElement) {
+			if (videoElement.src) URL.revokeObjectURL(videoElement.src);
 			videoElement.src = "";
 			videoElement.load();
 		}
@@ -395,19 +401,15 @@
 
 		if (videoElement?.error) return;
 
-		const bytes = atob(msg.payload.chunk);
-		const buffer = new Uint8Array(bytes.length);
-		for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
-
 		// Queue chunks if MediaSource isn't ready yet
 		if (!mediaSource || mediaSource.readyState !== "open" || !sourceBuffer) {
-			pendingChunks.push(buffer);
+			pendingChunks.push(msg.binData);
 			return;
 		}
 
 		// Always queue chunks and let processPendingChunks handle them sequentially
 		streamLoading = false; // Hide loading spinner, now that chunks are coming in and displaying
-		pendingChunks.push(buffer);
+		pendingChunks.push(msg.binData);
 		processPendingChunks();
 		correctVideoDrift(); // Check for video drift and seek forward if too far behind
 	}
@@ -455,12 +457,9 @@
 		if (!msg.payload.success) return console.error("Audio stream error:", msg.payload.error);
 		if (!audioContext) return;
 
-		// Decode PCM data
-		const bytes = atob(msg.payload.chunk);
-		const pcmData = new Int16Array(bytes.length / 2);
-		for (let i = 0; i < pcmData.length; i++) {
-			pcmData[i] = bytes.charCodeAt(i * 2) | (bytes.charCodeAt(i * 2 + 1) << 8); // Bitwise OR (|)
-		}
+		// Decode PCM data from binary data field
+		const raw = msg.binData;
+		const pcmData = new Int16Array(raw.buffer, raw.byteOffset, raw.byteLength / 2);
 
 		// Convert Int16 PCM to Float32
 		const float32Data = new Float32Array(pcmData.length);
