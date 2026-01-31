@@ -20,8 +20,8 @@
 			<Accordion.Trigger>What sets ROOT cameras apart?</Accordion.Trigger>
 			<Accordion.Content class="flex flex-col gap-4 text-balance">
 				<p>
-					Our intelligent home security cameras utilize on-device processing, onboard storage, and end-2-end encryption
-					to keep recorded footage and audio private.
+					ROOT's intelligent home security cameras utilize on-device processing, onboard storage, and end-2-end
+					encryption to keep recorded footage and audio private.
 				</p>
 				<p>
 					Most other brands process and store footage in the cloud and thereby cannot offer similar privacy and

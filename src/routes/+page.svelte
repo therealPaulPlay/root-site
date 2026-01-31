@@ -162,7 +162,7 @@
 			sourceName: "NY AG"
 		},
 		{
-			text: "Ring let employees or contractors view private user videos and enabled hackers to take control of users’ personal accounts.",
+			text: "Ring let employees and contractors view private user videos and enabled hackers to take control of users’ personal accounts.",
 			source:
 				"https://consumer.ftc.gov/consumer-alerts/2023/05/rings-privacy-failures-led-spying-and-harassment-through-home-security-cameras?page=0&utm_source=chatgpt.com",
 			sourceName: "FTC"
@@ -439,8 +439,8 @@
 			>.
 		</p>
 		<p class="max-w-130">
-			Recordings are stored locally and streamed on-demand, making them accessible from anywhere in the world with no
-			cloud storage required.
+			Recordings are stored locally and streamed on-demand, making them accessible from anywhere in the world with
+			without cloud storage.
 		</p>
 	</div>
 </section>
