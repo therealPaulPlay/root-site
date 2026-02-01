@@ -14,7 +14,9 @@
 		RiCheckLine,
 		RiLock2Line,
 		RiLockUnlockLine,
-		RiRefreshLine
+		RiRefreshLine,
+		RiEyeLine,
+		RiEyeCloseLine
 	} from "svelte-remixicon";
 	import * as NativeSelect from "$lib/components/ui/native-select/index.js";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
@@ -70,6 +72,7 @@
 	let wifiConfigured = $state(false);
 	let wifiNetworks = $state([]);
 	let selectedWiFiSSID = $state("");
+	let showWifiPassword = $state(false);
 	let relayDomainInput = $state(DEFAULT_RELAY_DOMAIN);
 	let wifiPasswordInput = $state("");
 	let wifiCountryCode = $state("");
@@ -543,7 +546,28 @@
 		<div class="mb-4 space-y-4">
 			<div class="space-y-1">
 				<Label for="password-input" class="text-sm font-medium">Password</Label>
-				<Input id="password-input" type="text" bind:value={wifiPasswordInput} placeholder="wifi-password-123" />
+				<div class="relative flex gap-2">
+					<Input
+						id="password-input"
+						type={showWifiPassword ? "text" : "password"}
+						bind:value={wifiPasswordInput}
+						placeholder="wifi-password-123"
+						autocomplete="off"
+					/>
+					<Button
+						variant="ghost"
+						size="icon"
+						class="flex items-center justify-center"
+						onclick={() => (showWifiPassword = !showWifiPassword)}
+						tabindex={-1}
+					>
+						{#if showWifiPassword}
+							<RiEyeLine class="size-4" />
+						{:else}
+							<RiEyeCloseLine class="size-4" />
+						{/if}
+					</Button>
+				</div>
 			</div>
 			<div class="space-y-1">
 				<Label for="country-select" class="text-sm font-medium">Country</Label>
