@@ -4,16 +4,20 @@
 	import Label from "./ui/label/label.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import * as AlertDialog from "./ui/alert-dialog";
+	import MetricsChart from "./MetricsChart.svelte";
 
 	let {
 		health,
 		healthLoading,
+		metrics = [],
+		metricsLoading = false,
 		updateStatus,
 		updateStatusLoading,
 		activeTab,
 		healthTab = "",
 		buttonsLoading = $bindable(),
 		loadHealth = () => {},
+		loadMetrics = () => {},
 		loadUpdateStatus = () => {},
 		startUpdate = () => {},
 		setVersionDev = () => {}
@@ -22,10 +26,39 @@
 	let logsContainer = $state();
 	let devDialogOpen = $state(false);
 	let updateDialogOpen = $state(false);
+	let hoveredTimestamp = $state(null);
+	let initialScrollDone = $state(false);
 
+	// Index of the single nearest log to the hovered timestamp (within 2s)
+	const highlightedLogIndex = $derived.by(() => {
+		if (!hoveredTimestamp || !health?.logs?.length) return -1;
+		let closest = 0;
+		let closestDist = Math.abs(new Date(health.logs[0].timestamp).getTime() - hoveredTimestamp);
+		for (let i = 1; i < health.logs.length; i++) {
+			const dist = Math.abs(new Date(health.logs[i].timestamp).getTime() - hoveredTimestamp);
+			if (dist < closestDist) {
+				closest = i;
+				closestDist = dist;
+			}
+		}
+		return closestDist <= 2000 ? closest : -1;
+	});
+
+	// Scroll to bottom on initial load
 	$effect(() => {
-		if (logsContainer && health?.logs?.length && activeTab === healthTab) {
+		if (logsContainer && health?.logs?.length && activeTab === healthTab && !initialScrollDone) {
 			logsContainer.scrollTop = logsContainer.scrollHeight;
+			initialScrollDone = true;
+		}
+	});
+
+	// When hovering on chart, scroll logs container to the highlighted entry
+	$effect(() => {
+		if (highlightedLogIndex < 0 || !logsContainer) return;
+		const entry = logsContainer.children[highlightedLogIndex];
+		if (entry) {
+			const containerHeight = logsContainer.getBoundingClientRect().height;
+			logsContainer.scrollTop = entry.offsetTop - logsContainer.offsetTop - containerHeight / 2 + entry.offsetHeight / 2;
 		}
 	});
 </script>
@@ -34,11 +67,12 @@
 	<Button
 		onclick={() => {
 			loadHealth();
+			loadMetrics();
 			loadUpdateStatus();
 		}}
 		variant="outline"
 		size="sm"
-		disabled={healthLoading || updateStatusLoading}
+		disabled={healthLoading || metricsLoading || updateStatusLoading}
 	>
 		Refresh
 		{#if !healthLoading && !updateStatusLoading}
@@ -123,42 +157,12 @@
 						<span class="truncate">{health.relayDomain}</span>
 					</div>
 				{/if}
-			</div>
-		</div>
-
-		<div class="space-y-4 border p-4">
-			<Label class="text-base">Performance</Label>
-			<div class="space-y-2 text-sm">
-				{#if health.performance.cpuUsagePercent !== undefined}
-					<div class="flex justify-between">
-						<span class="text-muted-foreground">CPU usage</span>
-						<span>{health.performance.cpuUsagePercent.toFixed(1)}%</span>
-					</div>
-				{/if}
-				{#if health.performance.cpuTempCelsius !== undefined}
-					<div class="flex justify-between">
-						<span class="text-muted-foreground">CPU temperature</span>
-						<span>{health.performance.cpuTempCelsius.toFixed(1)}°C</span>
-					</div>
-				{/if}
-				{#if health.performance.memoryUsagePercent !== undefined}
-					<div class="flex justify-between">
-						<span class="text-muted-foreground">Memory usage</span>
-						<span>{health.performance.memoryUsagePercent.toFixed(1)}%</span>
-					</div>
-				{/if}
-				{#if health.performance.diskUsagePercent !== undefined}
-					<div class="flex justify-between">
-						<span class="text-muted-foreground">Disk usage</span>
-						<span>{health.performance.diskUsagePercent.toFixed(1)}%</span>
-					</div>
-				{/if}
-				{#if health.performance.uptimeSeconds !== undefined}
+				{#if health.uptimeSeconds !== undefined}
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">Uptime</span>
 						<span
-							>{Math.floor(health.performance.uptimeSeconds / 3600)}h {Math.floor(
-								(health.performance.uptimeSeconds % 3600) / 60
+							>{Math.floor(health.uptimeSeconds / 3600)}h {Math.floor(
+								(health.uptimeSeconds % 3600) / 60
 							)}m</span
 						>
 					</div>
@@ -174,8 +178,8 @@
 						bind:this={logsContainer}
 						class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto p-4 break-all"
 					>
-						{#each health.logs as log}
-							<div>
+						{#each health.logs as log, i}
+							<div class:bg-border={i === highlightedLogIndex}>
 								<span class="text-muted-foreground">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
 								{log.msg}
 							</div>
@@ -187,6 +191,15 @@
 	{:else}
 		<div class="border p-8 text-center text-muted-foreground text-sm">No health data available.</div>
 	{/if}
+
+	<div class="space-y-4 border p-4">
+		<Label class="text-base">Performance</Label>
+		{#if metrics.length > 0}
+			<MetricsChart {metrics} bind:hoveredTimestamp />
+		{:else}
+			<div class="border p-8 text-center text-muted-foreground text-sm">No metrics available.</div>
+		{/if}
+	</div>
 </div>
 
 <AlertDialog.Root bind:open={devDialogOpen}>

@@ -241,7 +241,7 @@
 						{#if expanded}
 							<div
 								class="absolute top-0 bottom-0 left-0 z-1 w-0.5 bg-border"
-								transition:slide={{ duration: 200, axis: "x" }}
+								transition:slide={{ duration: 150, axis: "x" }}
 							></div>
 						{/if}
 						<div class="border-b">{@render eventItem(cluster.events[0])}</div>
@@ -254,7 +254,7 @@
 							</div>
 						{:else}
 							<!-- Actual expanded events -->
-							<div class="divide-y" transition:slide={{ duration: 200 }}>
+							<div class="divide-y" transition:slide={{ duration: 150 }}>
 								{#each cluster.events.slice(1) as event}
 									{@render eventItem(event)}
 								{/each}
@@ -263,7 +263,7 @@
 						<Button
 							variant="outline"
 							size="sm"
-							class="absolute top-3 right-3 z-3 text-sm text-muted-foreground"
+							class="absolute top-3 right-3 z-3 text-sm"
 							onclick={() => (expanded ? expandedStacks.delete(cluster.id) : expandedStacks.add(cluster.id))}
 						>
 							<RiArrowDownSLine class="size-4 {expanded ? 'rotate-180' : ''}" />{cluster.events.length} events

@@ -63,6 +63,10 @@
 	let health = $state(null);
 	let healthLoading = $state(false);
 
+	// Metrics
+	let metrics = $state([]);
+	let metricsLoading = $state(false);
+
 	// Update status
 	let updateStatus = $state(null);
 	let updateStatusLoading = $state(false);
@@ -136,6 +140,7 @@
 			relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
 			relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
 			relayCommInstance.on("getHealthResult", handleHealthResult);
+			relayCommInstance.on("getMetricsResult", handleMetricsResult);
 			relayCommInstance.on("getUpdateStatusResult", handleUpdateStatusResult);
 			relayCommInstance.on("startUpdateResult", handleStartUpdateResult);
 			relayCommInstance.on("setVersionDevResult", handleSetVersionDevResult);
@@ -739,8 +744,26 @@
 			wifi: msg.payload.wifi,
 			relayDomain: msg.payload.relayDomain,
 			logs: msg.payload.logs,
-			performance: msg.payload.performance
+			uptimeSeconds: msg.payload.uptimeSeconds
 		};
+	}
+
+	function loadMetrics() {
+		metricsLoading = true;
+		relayCommInstance.send(productId, "getMetrics").catch((error) => {
+			toast.error("Failed to load metrics: " + error.message);
+			console.error("Failed to load metrics:", error);
+			metricsLoading = false;
+		});
+	}
+
+	function handleMetricsResult(msg) {
+		metricsLoading = false;
+		if (!msg.payload.success) {
+			toast.error("Failed to load metrics: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		metrics = msg.payload.metrics || [];
 	}
 
 	// Update status handlers
@@ -824,6 +847,7 @@
 				} else if (v === TABS.HEALTH && !tabsLoaded[TABS.HEALTH]) {
 					tabsLoaded[TABS.HEALTH] = true;
 					loadHealth();
+					loadMetrics();
 					loadUpdateStatus();
 				}
 			}}
@@ -887,8 +911,11 @@
 				<CameraHealth
 					bind:buttonsLoading
 					{loadHealth}
+					{loadMetrics}
 					{loadUpdateStatus}
 					{health}
+					{metrics}
+					{metricsLoading}
 					{updateStatus}
 					{activeTab}
 					healthTab={TABS.HEALTH}

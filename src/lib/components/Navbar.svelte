@@ -160,7 +160,7 @@
 		background: var(--background);
 		opacity: 1;
 		pointer-events: none;
-		transition: all 0.3s ease;
+		transition: all 250ms ease;
 		z-index: 1;
 	}
 
