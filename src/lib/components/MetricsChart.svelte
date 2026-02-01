@@ -1,4 +1,6 @@
 <script>
+	import Label from "./ui/label/label.svelte";
+
 	let { metrics = [], hoveredTimestamp = $bindable(null) } = $props();
 
 	const series = [
@@ -47,7 +49,9 @@
 	}
 
 	function buildPolyline(seriesItem) {
-		return metrics.map((p) => `${xScale(new Date(p.t).getTime())},${yScale(p[seriesItem.key] || 0, seriesItem.max)}`).join(" ");
+		return metrics
+			.map((p) => `${xScale(new Date(p.t).getTime())},${yScale(p[seriesItem.key] || 0, seriesItem.max)}`)
+			.join(" ");
 	}
 
 	function handlePointerMove(e) {
@@ -84,11 +88,9 @@
 				onclick={() => toggleSeries(s.key)}
 			>
 				<span class="inline-block size-2" style="background: {s.color}"></span>
-				<span>{s.label}</span>
+				<Label>{s.label}</Label>
 				{#if hoveredPoint && enabledKeys.has(s.key)}
-					<span class="text-muted-foreground tabular-nums"
-						>{(hoveredPoint[s.key] || 0).toFixed(1)}{s.unit}</span
-					>
+					<Label class="text-muted-foreground tabular-nums">{(hoveredPoint[s.key] || 0).toFixed(1)}{s.unit}</Label>
 				{/if}
 			</button>
 		{/each}
@@ -113,7 +115,7 @@
 				stroke="var(--border)"
 				stroke-width="1"
 			/>
-			<text x={padding.left - 4} y={gridY + 3} text-anchor="end" fill="var(--muted-foreground)" font-size="11"
+			<text x={padding.left - 4} y={gridY + 3} text-anchor="end" fill="var(--muted-foreground)" font-size="12"
 				>{gridVal}</text
 			>
 		{/each}
@@ -150,7 +152,7 @@
 		{/if}
 
 		{#if metrics.length > 1}
-			<text x={padding.left} y={chartHeight - 2} text-anchor="start" fill="var(--muted-foreground)" font-size="11">
+			<text x={padding.left} y={chartHeight - 2} text-anchor="start" fill="var(--muted-foreground)" font-size="12">
 				{formatTime(timeRange.min)}
 			</text>
 			<text
@@ -158,14 +160,14 @@
 				y={chartHeight - 2}
 				text-anchor="end"
 				fill="var(--muted-foreground)"
-				font-size="11"
+				font-size="12"
 			>
 				{formatTime(timeRange.max)}
 			</text>
 		{/if}
 	</svg>
 
-	<div class="mt-1 text-center text-xs text-muted-foreground">
+	<Label class="mt-1 text-muted-foreground block text-center">
 		{hoveredTimestamp ? formatTime(hoveredTimestamp) : "\u00A0"}
-	</div>
+	</Label>
 </div>
