@@ -177,9 +177,9 @@
 </div>
 
 {#if events.length === 0}
-	<div class="mt-6 border p-8 text-center text-muted-foreground">No events available.</div>
+	<div class="mt-6 border p-8 text-center text-muted-foreground text-sm">No events available.</div>
 {:else if Object.keys(groupedEvents).length === 0}
-	<div class="mt-6 border p-8 text-center text-muted-foreground">No events match the selected filters.</div>
+	<div class="mt-6 border p-8 text-center text-muted-foreground text-sm">No events match the selected filters.</div>
 {:else}
 	{#snippet eventItem(event)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->

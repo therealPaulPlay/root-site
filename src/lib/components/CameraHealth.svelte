@@ -98,7 +98,7 @@
 			{/if}
 		</div>
 	{:else}
-		<div class="border p-8 text-center text-muted-foreground">No update status available.</div>
+		<div class="border p-8 text-center text-muted-foreground text-sm">No update status available.</div>
 	{/if}
 
 	{#if health}
@@ -185,7 +185,7 @@
 			</div>
 		{/if}
 	{:else}
-		<div class="border p-8 text-center text-muted-foreground">No health data available.</div>
+		<div class="border p-8 text-center text-muted-foreground text-sm">No health data available.</div>
 	{/if}
 </div>
 
