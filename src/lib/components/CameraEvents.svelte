@@ -21,6 +21,7 @@
 	import Button from "./ui/button/button.svelte";
 	import Separator from "./ui/separator/separator.svelte";
 	import { SvelteSet } from "svelte/reactivity";
+	import CameraDetectionDialog from "./CameraDetectionDialog.svelte";
 
 	const groupEventsThreshold = 5 * 60 * 1000; // 5 minutes
 
@@ -50,10 +51,12 @@
 	let selectedEvent = $state(null);
 	let viewedEventIds = new SvelteSet();
 	let expandedStacks = new SvelteSet();
+	let detectionEvent = $state(null);
+	let detectionDialogOpen = $state(false);
 
 	const hasDateFilter = $derived(dateRangeValue?.start && dateRangeValue?.end);
 	const hasTypeFilter = $derived(selectedTypes.length > 0);
-	const availableTypes = $derived([...new Set(events.map((e) => e.event_type).filter(Boolean))].sort());
+	const availableTypes = $derived([...new Set(events.map((e) => e.eventType).filter(Boolean))].sort());
 	const filteredEvents = $derived(
 		events.filter((event) => {
 			if (hasDateFilter) {
@@ -62,7 +65,7 @@
 				const endDate = dateRangeValue.end.toDate(getLocalTimeZone()).getTime();
 				if (eventDate < startDate || eventDate > endDate) return false;
 			}
-			if (hasTypeFilter && !selectedTypes.includes(event.event_type)) return false;
+			if (hasTypeFilter && !selectedTypes.includes(event.eventType)) return false;
 			return true;
 		})
 	);
@@ -205,10 +208,17 @@
 			<div class="flex-1">
 				<p class="mb-2 w-full font-medium">{new Date(event.timestamp).toLocaleTimeString()}</p>
 				<div class="flex flex-col gap-1">
-					<p class="inline-flex items-center gap-1 text-sm text-muted-foreground capitalize">
-						<RiSearchAi2Line class="size-4" />{event.event_type || "N/A"}
-					</p>
-					<p class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+					<button
+						class="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground capitalize hover:underline active:underline"
+						onclick={(e) => {
+							e.stopPropagation();
+							detectionEvent = event;
+							detectionDialogOpen = true;
+						}}
+					>
+						<RiSearchAi2Line class="size-4" />{event.eventType || "N/A"}
+					</button>
+					<p class="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground">
 						<RiTimeLine class="size-4" />{event.duration || "N/A"}s
 					</p>
 				</div>
@@ -346,3 +356,9 @@
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
+
+<CameraDetectionDialog
+	bind:open={detectionDialogOpen}
+	event={detectionEvent}
+	thumbnailSrc={detectionEvent ? eventThumbnails[detectionEvent.id] : null}
+/>
