@@ -92,7 +92,7 @@
 			<div class="space-y-2 text-sm">
 				<div class="flex justify-between">
 					<span class="text-muted-foreground">Model</span>
-					<span>{model || "unknown"}</span>
+					<span>{model || "N/A"}</span>
 				</div>
 				{#if updateStatus.currentVersion}
 					<div class="flex justify-between">

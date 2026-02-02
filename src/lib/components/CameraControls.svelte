@@ -123,7 +123,7 @@
 							: ''}"
 					>
 						<div class="flex-1 truncate">
-							<p class="text-sm font-medium">{device.name || "Unknown device"}</p>
+							<p class="text-sm font-medium">{device.name || "N/A"}</p>
 							<p class="truncate text-xs text-muted-foreground">ID: {device.id}</p>
 						</div>
 						<!-- Removing the user's currently used device is done via the /connect page -->
@@ -148,7 +148,7 @@
 									<AlertDialog.Header>
 										<AlertDialog.Title>Remove device?</AlertDialog.Title>
 										<AlertDialog.Description>
-											This will unpair "{device.name || "Unknown device"}" from this product. The device will no longer
+											This will unpair "{device.name || "N/A"}" from this product. The device will no longer
 											be able to access this product.
 										</AlertDialog.Description>
 									</AlertDialog.Header>

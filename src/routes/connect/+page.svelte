@@ -281,7 +281,7 @@
 						class:invisible={!updateStatuses[product.id]?.status || updateStatuses[product.id]?.status == "up-to-date"}
 					>
 						<RiDownload2Line class="size-3! shrink-0" />
-						<p class="truncate">{updateStatuses[product.id]?.status.replaceAll("-", " ")}</p>
+						<p class="truncate">{updateStatuses[product.id]?.status.replaceAll("-", " ") || "N/A"}</p>
 					</span>
 				</span>
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
