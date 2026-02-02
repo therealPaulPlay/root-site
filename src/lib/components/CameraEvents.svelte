@@ -7,9 +7,11 @@
 	import { getLocalTimeZone } from "@internationalized/date";
 	import {
 		RiArrowDownSLine,
+		RiCalendarFill,
 		RiCalendarLine,
 		RiErrorWarningLine,
-		RiFilter3Line,
+		RiFilterFill,
+		RiFilterLine,
 		RiRefreshLine,
 		RiSearchAi2Line,
 		RiTimeLine
@@ -115,11 +117,12 @@
 <div class="flex flex-wrap items-center justify-end gap-2">
 	<!-- Date range filter -->
 	<Popover.Root bind:open={dateRangeOpen}>
-		<Popover.Trigger
-			class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2 {hasDateFilter ? 'bg-muted' : ''}"
-		>
-			<RiCalendarLine class="size-4" />
-			Date
+		<Popover.Trigger class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2">
+			{#if !hasDateFilter}
+				<RiCalendarLine class="size-4" />
+			{:else}
+				<RiCalendarFill class="size-4" />
+			{/if}
 		</Popover.Trigger>
 		<Popover.Content class="w-auto p-4" align="start">
 			<div class="space-y-4">
@@ -139,11 +142,12 @@
 
 	<!-- Type filter -->
 	<Popover.Root bind:open={typeFilterOpen}>
-		<Popover.Trigger
-			class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2 {hasTypeFilter ? 'bg-muted' : ''}"
-		>
-			<RiFilter3Line class="size-4" />
-			Type
+		<Popover.Trigger class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2">
+			{#if !hasTypeFilter}
+				<RiFilterLine class="size-4" />
+			{:else}
+				<RiFilterFill class="size-4" />
+			{/if}
 		</Popover.Trigger>
 		<Popover.Content class="w-56 p-4" align="start">
 			<div class="space-y-3">
@@ -177,9 +181,9 @@
 </div>
 
 {#if events.length === 0}
-	<div class="mt-6 border p-8 text-center text-muted-foreground text-sm">No events available.</div>
+	<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">No events available.</div>
 {:else if Object.keys(groupedEvents).length === 0}
-	<div class="mt-6 border p-8 text-center text-muted-foreground text-sm">No events match the selected filters.</div>
+	<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">No events match the selected filters.</div>
 {:else}
 	{#snippet eventItem(event)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
