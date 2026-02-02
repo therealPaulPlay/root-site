@@ -916,6 +916,7 @@
 					{health}
 					{metrics}
 					{metricsLoading}
+					model={product?.model}
 					{updateStatus}
 					{activeTab}
 					healthTab={TABS.HEALTH}

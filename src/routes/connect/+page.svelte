@@ -198,11 +198,7 @@
 					<Spinner class="mx-auto size-8" />
 				{/if}
 			{:else}
-				<img
-					alt="preview"
-					class="h-full w-full object-cover"
-					src={previewImages[product.id]}
-				/>
+				<img alt="preview" class="h-full w-full object-cover" src={previewImages[product.id]} />
 			{/if}
 		</div>
 		<div class="flex grow overflow-hidden">
@@ -280,13 +276,13 @@
 					</AlertDialog.Root>
 				</span>
 				<span class="mt-0.5 mb-6 inline-flex items-center gap-2 text-nowrap">
-					<Label class="leading-4!">{product.model}</Label>
-					{#if updateStatuses[product.id]?.status && updateStatuses[product.id]?.status !== "up-to-date"}
-						<span class="inline-flex items-center gap-1 overflow-hidden bg-accent px-1 text-xs uppercase">
-							<RiDownload2Line class="size-3! shrink-0" />
-							<p class="truncate">{updateStatuses[product.id].status.replaceAll("-", " ")}</p>
-						</span>
-					{/if}
+					<span
+						class="inline-flex items-center gap-1 overflow-hidden bg-accent px-1 text-xs uppercase"
+						class:invisible={!updateStatuses[product.id]?.status || updateStatuses[product.id]?.status == "up-to-date"}
+					>
+						<RiDownload2Line class="size-3! shrink-0" />
+						<p class="truncate">{updateStatuses[product.id]?.status.replaceAll("-", " ")}</p>
+					</span>
 				</span>
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<p

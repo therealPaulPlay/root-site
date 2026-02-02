@@ -11,6 +11,7 @@
 		healthLoading,
 		metrics = [],
 		metricsLoading = false,
+		model,
 		updateStatus,
 		updateStatusLoading,
 		activeTab,
@@ -41,7 +42,7 @@
 				closestDist = dist;
 			}
 		}
-		return closestDist <= 2000 ? closest : -1;
+		return closestDist <= 30 * 1000 ? closest : -1;
 	});
 
 	// Scroll to bottom on initial load
@@ -58,7 +59,8 @@
 		const entry = logsContainer.children[highlightedLogIndex];
 		if (entry) {
 			const containerHeight = logsContainer.getBoundingClientRect().height;
-			logsContainer.scrollTop = entry.offsetTop - logsContainer.offsetTop - containerHeight / 2 + entry.offsetHeight / 2;
+			logsContainer.scrollTop =
+				entry.offsetTop - logsContainer.offsetTop - containerHeight / 2 + entry.offsetHeight / 2;
 		}
 	});
 </script>
@@ -88,6 +90,10 @@
 		<div class="space-y-4 border p-4">
 			<Label class="text-base">Firmware</Label>
 			<div class="space-y-2 text-sm">
+				<div class="flex justify-between">
+					<span class="text-muted-foreground">Model</span>
+					<span>{model || "unknown"}</span>
+				</div>
 				{#if updateStatus.currentVersion}
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">Version</span>
@@ -132,7 +138,7 @@
 			{/if}
 		</div>
 	{:else}
-		<div class="border p-8 text-center text-muted-foreground text-sm">No update status available.</div>
+		<div class="border p-8 text-center text-sm text-muted-foreground">No update status available.</div>
 	{/if}
 
 	{#if health}
@@ -142,7 +148,7 @@
 				{#if health.wifi.connected !== undefined}
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">WiFi status</span>
-						<span>{health.wifi.connected ? "Connected" : "Disconnected"}</span>
+						<span>{health.wifi.connected ? "connected" : "disconnected"}</span>
 					</div>
 				{/if}
 				{#if health.wifi.ssid}
@@ -160,11 +166,7 @@
 				{#if health.uptimeSeconds !== undefined}
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">Uptime</span>
-						<span
-							>{Math.floor(health.uptimeSeconds / 3600)}h {Math.floor(
-								(health.uptimeSeconds % 3600) / 60
-							)}m</span
-						>
+						<span>{Math.floor(health.uptimeSeconds / 3600)}h {Math.floor((health.uptimeSeconds % 3600) / 60)}m</span>
 					</div>
 				{/if}
 			</div>
@@ -189,7 +191,7 @@
 			</div>
 		{/if}
 	{:else}
-		<div class="border p-8 text-center text-muted-foreground text-sm">No health data available.</div>
+		<div class="border p-8 text-center text-sm text-muted-foreground">No health data available.</div>
 	{/if}
 
 	<div class="space-y-4 border p-4">
@@ -197,7 +199,7 @@
 		{#if metrics.length > 0}
 			<MetricsChart {metrics} bind:hoveredTimestamp />
 		{:else}
-			<div class="border p-8 text-center text-muted-foreground text-sm">No metrics available.</div>
+			<div class="border p-8 text-center text-sm text-muted-foreground">No metrics available.</div>
 		{/if}
 	</div>
 </div>
