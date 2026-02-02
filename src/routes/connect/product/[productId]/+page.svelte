@@ -43,10 +43,6 @@
 	let recordingChunks = $state({ video: [], audio: [] });
 	let recordingTotalChunks = $state({ video: 0, audio: 0 });
 
-	// Event filters
-	let dateRangeOpen = $state(false);
-	let typeFilterOpen = $state(false);
-
 	// Controls
 	let micEnabled = $state(false);
 	let recordingSoundEnabled = $state(false);
@@ -867,10 +863,6 @@
 			<Tabs.Content
 				value={TABS.EVENTS}
 				class="of-bottom overflow-y-auto p-6"
-				onscroll={() => {
-					dateRangeOpen = false;
-					typeFilterOpen = false;
-				}}
 			>
 				<CameraEvents
 					{events}
@@ -882,8 +874,6 @@
 					{loadingThumbnails}
 					{thumbnailQueue}
 					{recordingHasAudio}
-					bind:dateRangeOpen
-					bind:typeFilterOpen
 					bind:viewRecordingDialog
 					bind:recordingAudioElement
 					bind:recordingVideoElement

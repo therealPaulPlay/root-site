@@ -1,5 +1,4 @@
 <script>
-	import * as Popover from "$lib/components/ui/popover";
 	import * as RangeCalendar from "$lib/components/ui/range-calendar";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { Checkbox } from "$lib/components/ui/checkbox";
@@ -35,8 +34,6 @@
 		thumbnailQueue = new SvelteSet(),
 		observeThumbnail = () => {},
 		viewRecording = () => {},
-		dateRangeOpen = $bindable(false),
-		typeFilterOpen = $bindable(false),
 		viewRecordingDialog = $bindable(false),
 		recordingAudioElement = $bindable(),
 		recordingVideoElement = $bindable(),
@@ -46,6 +43,8 @@
 		recordingAudioUrl
 	} = $props();
 
+	let dateRangeOpen = $state(false);
+	let typeFilterOpen = $state(false);
 	let dateRangeValue = $state(undefined);
 	let selectedTypes = $state([]);
 	let selectedEvent = $state(null);
@@ -116,15 +115,18 @@
 
 <div class="flex flex-wrap items-center justify-end gap-2">
 	<!-- Date range filter -->
-	<Popover.Root bind:open={dateRangeOpen}>
-		<Popover.Trigger class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2">
+	<Dialog.Root bind:open={dateRangeOpen}>
+		<Dialog.Trigger class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2">
 			{#if !hasDateFilter}
 				<RiCalendarLine class="size-4" />
 			{:else}
 				<RiCalendarFill class="size-4" />
 			{/if}
-		</Popover.Trigger>
-		<Popover.Content class="w-auto p-4" align="start">
+		</Dialog.Trigger>
+		<Dialog.Content class="w-fit">
+			<Dialog.Header>
+				<Dialog.Title>Date range</Dialog.Title>
+			</Dialog.Header>
 			<div class="space-y-4">
 				<RangeCalendar.RangeCalendar bind:value={dateRangeValue} class="border" />
 				<Button
@@ -137,19 +139,22 @@
 					Clear
 				</Button>
 			</div>
-		</Popover.Content>
-	</Popover.Root>
+		</Dialog.Content>
+	</Dialog.Root>
 
 	<!-- Type filter -->
-	<Popover.Root bind:open={typeFilterOpen}>
-		<Popover.Trigger class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2">
+	<Dialog.Root bind:open={typeFilterOpen}>
+		<Dialog.Trigger class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2">
 			{#if !hasTypeFilter}
 				<RiFilterLine class="size-4" />
 			{:else}
 				<RiFilterFill class="size-4" />
 			{/if}
-		</Popover.Trigger>
-		<Popover.Content class="w-56 p-4" align="start">
+		</Dialog.Trigger>
+		<Dialog.Content class="w-fit min-w-xs">
+			<Dialog.Header>
+				<Dialog.Title>Type</Dialog.Title>
+			</Dialog.Header>
 			<div class="space-y-3">
 				{#each availableTypes as type}
 					<Label class="text-nowrap">
@@ -167,8 +172,8 @@
 					<p class="text-sm text-muted-foreground">No types available.</p>
 				{/if}
 			</div>
-		</Popover.Content>
-	</Popover.Root>
+		</Dialog.Content>
+	</Dialog.Root>
 
 	<Button onclick={loadEvents} variant="outline" size="sm" disabled={eventsLoading}>
 		Refresh
