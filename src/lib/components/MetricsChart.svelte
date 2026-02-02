@@ -90,7 +90,7 @@
 				<span class="inline-block size-2" style="background: {s.color}"></span>
 				<Label>{s.label}</Label>
 				{#if hoveredPoint && enabledKeys.has(s.key)}
-					<Label class="text-muted-foreground tabular-nums">{(hoveredPoint[s.key] || 0).toFixed(1)}{s.unit}</Label>
+					<Label class="text-muted-foreground tabular-nums">{(hoveredPoint[s.key] || 0).toFixed(1).padStart(4, '\u00A0')}{s.unit}</Label>
 				{/if}
 			</button>
 		{/each}
