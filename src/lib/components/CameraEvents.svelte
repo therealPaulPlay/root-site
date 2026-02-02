@@ -253,7 +253,12 @@
 							<!-- Stacked events visualization -->
 							<div class="pb-2" in:slide={{ duration: 150 }}>
 								{#each { length: Math.min(cluster.events.length - 1, 3) } as _, i}
-									<div class="mx-{(i + 1) * 2} h-1.5 border-x border-b bg-muted/50"></div>
+									<div
+										class="h-1.5 border-x border-b bg-muted/50"
+										class:mx-2={i == 0}
+										class:mx-4={i == 1}
+										class:mx-6={i == 2}
+									></div>
 								{/each}
 							</div>
 						{:else}

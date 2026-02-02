@@ -5,6 +5,7 @@
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import { RiCheckLine, RiCloseLine, RiFileShredLine, RiRefreshLine, RiRestartLine } from "svelte-remixicon";
+	import Switch from "./ui/switch/switch.svelte";
 
 	let {
 		buttonsLoading = $bindable({}),
@@ -34,26 +35,14 @@
 			<Label class="text-base">Microphone</Label>
 			<p class="text-sm text-muted-foreground">Record audio together with video.</p>
 		</div>
-		<Button onclick={toggleMicrophone} variant="outline" disabled={buttonsLoading.mic}>
-			{#if buttonsLoading.mic}
-				<Spinner class="size-4" />
-			{:else}
-				{micEnabled ? "Enabled" : "Disabled"}
-			{/if}
-		</Button>
+		<Switch onCheckedChange={toggleMicrophone} disabled={buttonsLoading.mic} checked={micEnabled} />
 	</div>
 	<div class="flex items-center justify-between gap-4 border p-4">
 		<div>
 			<Label class="text-base">Recording sound</Label>
 			<p class="text-sm text-muted-foreground">Play sound when recording or streaming.</p>
 		</div>
-		<Button onclick={toggleRecordingSound} variant="outline" disabled={buttonsLoading.sound}>
-			{#if buttonsLoading.sound}
-				<Spinner class="size-4" />
-			{:else}
-				{recordingSoundEnabled ? "Enabled" : "Disabled"}
-			{/if}
-		</Button>
+		<Switch onCheckedChange={toggleRecordingSound} disabled={buttonsLoading.sound} checked={recordingSoundEnabled} />
 	</div>
 
 	<div class="space-y-4 border p-4">
@@ -62,13 +51,11 @@
 				<Label class="text-base">Event detection</Label>
 				<p class="text-sm text-muted-foreground">Detect and record events automatically.</p>
 			</div>
-			<Button onclick={toggleEventDetection} variant="outline" disabled={buttonsLoading.eventDetection}>
-				{#if buttonsLoading.eventDetection}
-					<Spinner class="size-4" />
-				{:else}
-					{eventDetectionEnabled ? "Enabled" : "Disabled"}
-				{/if}
-			</Button>
+			<Switch
+				onCheckedChange={toggleEventDetection}
+				disabled={buttonsLoading.eventDetection}
+				checked={eventDetectionEnabled}
+			/>
 		</div>
 		<div class:opacity-50={!eventDetectionEnabled} class:pointer-events-none={!eventDetectionEnabled}>
 			<ToggleGroup.Root
@@ -78,7 +65,7 @@
 				variant="outline"
 				spacing={2}
 				size="sm"
-				class="overflow-x-auto max-w-full of-left of-right no-scrollbar"
+				class="of-left of-right no-scrollbar max-w-full overflow-x-auto"
 			>
 				<ToggleGroup.Item value="person" class="gap-1">
 					Person
@@ -148,8 +135,8 @@
 									<AlertDialog.Header>
 										<AlertDialog.Title>Remove device?</AlertDialog.Title>
 										<AlertDialog.Description>
-											This will unpair "{device.name || "N/A"}" from this product. The device will no longer
-											be able to access this product.
+											This will unpair "{device.name || "N/A"}" from this product. The device will no longer be able to
+											access this product.
 										</AlertDialog.Description>
 									</AlertDialog.Header>
 									<AlertDialog.Footer>
