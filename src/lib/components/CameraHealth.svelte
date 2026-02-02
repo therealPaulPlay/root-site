@@ -5,6 +5,7 @@
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import * as AlertDialog from "./ui/alert-dialog";
 	import MetricsChart from "./MetricsChart.svelte";
+	import { vibrate } from "$lib/utils/haptics";
 
 	let {
 		health,
@@ -62,6 +63,11 @@
 			logsContainer.scrollTop =
 				entry.offsetTop - logsContainer.offsetTop - containerHeight / 2 + entry.offsetHeight / 2;
 		}
+	});
+
+	// Haptic feedback whenever the highlighted log changes
+	$effect(() => {
+		if (highlightedLogIndex !== -1) vibrate.light();
 	});
 </script>
 
