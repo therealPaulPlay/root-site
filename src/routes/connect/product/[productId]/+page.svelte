@@ -87,6 +87,10 @@
 				{ rootMargin: "100px" }
 			);
 			observer.observe(element);
+			requestAnimationFrame(() => {
+				// Immediate check since the observer misbehaves during svelte transitions (e.g. slide)
+				if (element.getBoundingClientRect().top < window.innerHeight + 100) queueThumbnail(eventId);
+			});
 			return () => observer.disconnect();
 		};
 	}
