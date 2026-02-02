@@ -4,8 +4,16 @@
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { RiCheckLine, RiCloseLine, RiFileShredLine, RiRefreshLine, RiRestartLine } from "svelte-remixicon";
+	import {
+		RiCheckLine,
+		RiCloseLine,
+		RiFileShredLine,
+		RiInformationLine,
+		RiRefreshLine,
+		RiRestartLine
+	} from "svelte-remixicon";
 	import Switch from "./ui/switch/switch.svelte";
+	import { toast } from "svelte-sonner";
 
 	let {
 		buttonsLoading = $bindable({}),
@@ -105,13 +113,22 @@
 			<div class="space-y-4">
 				{#each devices as device}
 					<div
-						class="flex items-center justify-between gap-4 border p-4 {device.id === localStorage.getItem('deviceId')
+						class="flex items-center justify-between gap-2 border p-3 py-2 {device.id ===
+						localStorage.getItem('deviceId')
 							? 'bg-muted'
 							: ''}"
 					>
-						<div class="flex-1 truncate">
+						<div class="flex flex-1 gap-1 truncate">
 							<p class="text-sm font-medium">{device.name || "N/A"}</p>
-							<p class="truncate text-xs text-muted-foreground">ID: {device.id}</p>
+							<Button
+								onclick={() =>
+									toast.info(
+										"Device ID: " + device.id + ", paired on " + new Date(device.pairedAt)?.toLocaleDateString()
+									)}
+								size="xs"
+								variant="ghost"
+								class="text-muted-foreground"><RiInformationLine class="size-4" /></Button
+							>
 						</div>
 						<!-- Removing the user's currently used device is done via the /connect page -->
 						{#if device.id !== localStorage.getItem("deviceId")}
@@ -122,7 +139,7 @@
 								}}
 							>
 								<AlertDialog.Trigger
-									class={buttonVariants({ variant: "outline", size: "sm" })}
+									class={buttonVariants({ variant: "ghost", size: "xs" })}
 									disabled={buttonsLoading[`remove-${device.id}`]}
 								>
 									{#if buttonsLoading[`remove-${device.id}`]}
