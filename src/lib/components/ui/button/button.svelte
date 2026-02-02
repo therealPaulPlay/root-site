@@ -11,7 +11,7 @@
 				destructive:
 					"bg-destructive hover:bg-destructive/90 active:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 text-foreground border-transparent",
 				outline: "bg-background hover:bg-accent active:bg-accent hover:text-accent-foreground active:text-accent-foreground",
-				secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 accent:bg-secondary/80 border-transparent",
+				secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/80 border-transparent",
 				ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 active:bg-accent active:text-accent-foreground dark:active:bg-accent/50 border-transparent",
 				link: "text-primary underline-offset-4 hover:underline active:underline border-0"
 			},

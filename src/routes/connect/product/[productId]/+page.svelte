@@ -830,14 +830,14 @@
 	}
 </script>
 
-<div class="flex h-svh w-full flex-col divide-y overflow-hidden">
-	<div class="flex text-xl">
+<div class="flex h-svh w-full flex-col overflow-hidden">
+	<div class="flex text-xl border-b">
 		<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" href="/connect">
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
 		</Button>
 	</div>
 	<StreamPlayer bind:audioMuted bind:videoElement {streamLoading} {streamEnded} showMuteButton={audioStarted} />
-	<div class="w-full basis-full overflow-hidden">
+	<div class="w-full basis-full overflow-hidden border-t">
 		<Tabs.Root
 			bind:value={activeTab}
 			onValueChange={(v) => {

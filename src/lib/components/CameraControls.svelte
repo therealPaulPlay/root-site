@@ -39,14 +39,14 @@
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between gap-4 border p-4">
-		<div>
+		<div class="pr-6">
 			<Label class="text-base">Microphone</Label>
 			<p class="text-sm text-muted-foreground">Record audio together with video.</p>
 		</div>
 		<Switch onCheckedChange={toggleMicrophone} disabled={buttonsLoading.mic} checked={micEnabled} />
 	</div>
 	<div class="flex items-center justify-between gap-4 border p-4">
-		<div>
+		<div class="pr-6">
 			<Label class="text-base">Recording sound</Label>
 			<p class="text-sm text-muted-foreground">Play sound when recording or streaming.</p>
 		</div>
@@ -55,7 +55,7 @@
 
 	<div class="space-y-4 border p-4">
 		<div class="flex items-center justify-between gap-4">
-			<div>
+			<div class="pr-6">
 				<Label class="text-base">Event detection</Label>
 				<p class="text-sm text-muted-foreground">Detect and record events automatically.</p>
 			</div>
@@ -108,7 +108,7 @@
 			</Button>
 		</div>
 		{#if devices.length === 0}
-			<p class="text-sm text-muted-foreground">No devices paired.</p>
+			<p class="text-sm text-muted-foreground">No paired devices available.</p>
 		{:else}
 			<div class="space-y-4">
 				{#each devices as device}

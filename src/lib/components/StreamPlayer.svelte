@@ -40,10 +40,10 @@
 			{/if}
 		</div>
 	{/if}
-	<video bind:this={videoElement} class="h-full w-full absolute inset-0 object-cover" playsinline muted></video>
+	<video bind:this={videoElement} class="h-full w-full absolute inset-0" playsinline muted></video>
 	<div class="absolute right-4 bottom-4 flex gap-2">
 		{#if showMuteButton}
-			<Button onclick={() => (audioMuted = !audioMuted)} class="px-3 opacity-50 hover:opacity-100">
+			<Button onclick={() => (audioMuted = !audioMuted)} class="px-3 opacity-50 hover:opacity-100 active:opacity-100">
 				{#if audioMuted}
 					<RiVolumeMuteLine class="size-4" />
 				{:else}
@@ -51,7 +51,7 @@
 				{/if}
 			</Button>
 		{/if}
-		<Button onclick={toggleFullscreen} class="px-3 opacity-50 hover:opacity-100">
+		<Button onclick={toggleFullscreen} class="px-3 opacity-50 hover:opacity-100 active:opacity-100">
 			{#if isFullscreen}
 				<RiFullscreenExitLine class="size-4" />
 			{:else}
