@@ -184,7 +184,7 @@
 				<div class="relative h-60 overflow-hidden border bg-muted text-xs">
 					<div
 						bind:this={logsContainer}
-						class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto p-4 break-all"
+						class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto p-4 wrap-break-word"
 					>
 						{#each health.logs as log, i}
 							<div class:bg-border={i === highlightedLogIndex}>
