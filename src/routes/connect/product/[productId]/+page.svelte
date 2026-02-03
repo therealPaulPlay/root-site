@@ -502,7 +502,6 @@
 		}
 	}
 
-	// Controls handlers
 	function loadMicrophone() {
 		buttonsLoading.mic = true;
 		relayCommInstance.send(productId, "getMicrophone").catch((error) => {
@@ -523,8 +522,8 @@
 
 	function toggleMicrophone() {
 		buttonsLoading.mic = true;
-		const newValue = !micEnabled;
-		relayCommInstance.send(productId, "setMicrophone", { enabled: newValue }).catch((error) => {
+		relayCommInstance.send(productId, "setMicrophone", { enabled: micEnabled }).catch((error) => {
+			micEnabled = !micEnabled;
 			toast.error("Failed to set microphone: " + error.message);
 			console.error("Failed to set microphone:", error);
 			buttonsLoading.mic = false;
@@ -534,11 +533,12 @@
 	function handleSetMicrophoneResult(msg) {
 		buttonsLoading.mic = false;
 		if (!msg.payload.success) {
+			micEnabled = !micEnabled;
 			toast.error("Failed to set microphone: " + msg.payload.error || "Unknown error");
 			return;
 		}
 		micEnabled = msg.payload.enabled;
-		
+
 		// Restart stream to apply microphone changes
 		endStream();
 		startStream();
@@ -564,8 +564,8 @@
 
 	function toggleRecordingSound() {
 		buttonsLoading.sound = true;
-		const newValue = !recordingSoundEnabled;
-		relayCommInstance.send(productId, "setRecordingSound", { enabled: newValue }).catch((error) => {
+		relayCommInstance.send(productId, "setRecordingSound", { enabled: recordingSoundEnabled }).catch((error) => {
+			recordingSoundEnabled = !recordingSoundEnabled;
 			toast.error("Failed to toggle recording sound: " + error.message);
 			console.error("Failed to toggle recording sound:", error);
 			buttonsLoading.sound = false;
@@ -575,6 +575,7 @@
 	function handleSetRecordingSoundResult(msg) {
 		buttonsLoading.sound = false;
 		if (!msg.payload.success) {
+			recordingSoundEnabled = !recordingSoundEnabled;
 			toast.error("Failed to set recording sound: " + msg.payload.error || "Unknown error");
 			return;
 		}
@@ -603,8 +604,8 @@
 
 	function toggleEventDetection() {
 		buttonsLoading.eventDetection = true;
-		const newValue = !eventDetectionEnabled;
-		relayCommInstance.send(productId, "setEventDetectionEnabled", { enabled: newValue }).catch((error) => {
+		relayCommInstance.send(productId, "setEventDetectionEnabled", { enabled: eventDetectionEnabled }).catch((error) => {
+			eventDetectionEnabled = !eventDetectionEnabled;
 			toast.error("Failed to toggle event detection: " + error.message);
 			console.error("Failed to toggle event detection:", error);
 			buttonsLoading.eventDetection = false;
@@ -614,6 +615,7 @@
 	function handleSetEventDetectionEnabledResult(msg) {
 		buttonsLoading.eventDetection = false;
 		if (!msg.payload.success) {
+			eventDetectionEnabled = !eventDetectionEnabled;
 			toast.error("Failed to set event detection: " + msg.payload.error || "Unknown error");
 			return;
 		}
@@ -827,7 +829,7 @@
 </script>
 
 <div class="flex h-svh w-full flex-col overflow-hidden">
-	<div class="flex text-xl border-b">
+	<div class="flex border-b text-xl">
 		<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" href="/connect">
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
 		</Button>
@@ -860,10 +862,7 @@
 					<Tabs.Trigger value={TABS.HEALTH}>Health</Tabs.Trigger>
 				</Tabs.List>
 			</div>
-			<Tabs.Content
-				value={TABS.EVENTS}
-				class="of-bottom overflow-y-auto p-6"
-			>
+			<Tabs.Content value={TABS.EVENTS} class="of-bottom overflow-y-auto p-6">
 				<CameraEvents
 					{events}
 					{loadEvents}
@@ -894,9 +893,9 @@
 					{removeDevice}
 					{restartProduct}
 					{resetProduct}
-					{micEnabled}
-					{recordingSoundEnabled}
-					{eventDetectionEnabled}
+					bind:micEnabled
+					bind:recordingSoundEnabled
+					bind:eventDetectionEnabled
 					bind:eventDetectionTypes
 					{devices}
 				/>

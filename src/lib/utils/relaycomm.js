@@ -252,7 +252,6 @@ export class RelayComm {
 
 		const encryption = await this.#getEncryption(productId);
 		const encrypted = await encryption.encrypt(JSON.stringify(data));
-
 		const requestId = crypto.randomUUID();
 
 		return new Promise((resolve, reject) => {

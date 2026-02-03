@@ -25,9 +25,9 @@
 		removeDevice = () => {},
 		restartProduct = () => {},
 		resetProduct = () => {},
-		micEnabled,
-		recordingSoundEnabled,
-		eventDetectionEnabled,
+		micEnabled = $bindable(),
+		recordingSoundEnabled = $bindable(),
+		eventDetectionEnabled = $bindable(),
 		eventDetectionTypes = $bindable([]),
 		devices = []
 	} = $props();
@@ -43,14 +43,18 @@
 			<Label class="text-base">Microphone</Label>
 			<p class="text-sm text-muted-foreground">Record audio together with video.</p>
 		</div>
-		<Switch onCheckedChange={toggleMicrophone} disabled={buttonsLoading.mic} checked={micEnabled} />
+		<Switch onCheckedChange={toggleMicrophone} disabled={buttonsLoading.mic} bind:checked={micEnabled} />
 	</div>
 	<div class="flex items-center justify-between gap-4 border p-4">
 		<div class="pr-6">
 			<Label class="text-base">Recording sound</Label>
 			<p class="text-sm text-muted-foreground">Play sound when recording or streaming.</p>
 		</div>
-		<Switch onCheckedChange={toggleRecordingSound} disabled={buttonsLoading.sound} checked={recordingSoundEnabled} />
+		<Switch
+			onCheckedChange={toggleRecordingSound}
+			disabled={buttonsLoading.sound}
+			bind:checked={recordingSoundEnabled}
+		/>
 	</div>
 
 	<div class="space-y-4 border p-4">
@@ -62,7 +66,7 @@
 			<Switch
 				onCheckedChange={toggleEventDetection}
 				disabled={buttonsLoading.eventDetection}
-				checked={eventDetectionEnabled}
+				bind:checked={eventDetectionEnabled}
 			/>
 		</div>
 		<div class:opacity-50={!eventDetectionEnabled} class:pointer-events-none={!eventDetectionEnabled}>
@@ -118,7 +122,7 @@
 							? 'bg-muted'
 							: ''}"
 					>
-						<div class="flex flex-1 gap-1 truncate items-center">
+						<div class="flex flex-1 items-center gap-1 truncate">
 							<p class="text-sm font-medium">{device.name || "N/A"}</p>
 							<Button
 								onclick={() =>
@@ -139,7 +143,7 @@
 								}}
 							>
 								<AlertDialog.Trigger
-									class="{buttonVariants({ variant: "ghost", size: "xs" })} -mr-1"
+									class="{buttonVariants({ variant: 'ghost', size: 'xs' })} -mr-1"
 									disabled={buttonsLoading[`remove-${device.id}`]}
 								>
 									{#if buttonsLoading[`remove-${device.id}`]}
