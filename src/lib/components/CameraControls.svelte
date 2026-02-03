@@ -118,7 +118,7 @@
 							? 'bg-muted'
 							: ''}"
 					>
-						<div class="flex flex-1 gap-1 truncate">
+						<div class="flex flex-1 gap-1 truncate items-center">
 							<p class="text-sm font-medium">{device.name || "N/A"}</p>
 							<Button
 								onclick={() =>
@@ -139,7 +139,7 @@
 								}}
 							>
 								<AlertDialog.Trigger
-									class={buttonVariants({ variant: "ghost", size: "xs" })}
+									class="{buttonVariants({ variant: "ghost", size: "xs" })} -mr-1"
 									disabled={buttonsLoading[`remove-${device.id}`]}
 								>
 									{#if buttonsLoading[`remove-${device.id}`]}

@@ -17,8 +17,9 @@
 			},
 			size: {
 				default: "h-9 px-4 py-2",
-				sm: "h-8 gap-1.5 rounded-sm px-3",
-				lg: "h-10 rounded-md px-6",
+				xs: "p-1 gap-1",
+				sm: "h-8 gap-1.5 px-3",
+				lg: "h-10 px-6",
 				icon: "size-9"
 			}
 		},
