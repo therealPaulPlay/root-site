@@ -320,7 +320,7 @@
 					src={recordingVideoUrl}
 					bind:this={recordingVideoElement}
 					controls
-					class="h-full w-full"
+					class="h-full w-full object-cover"
 					onloadeddata={tryPlayRecording}
 					onplay={() => {
 						if (recordingAudioElement) {

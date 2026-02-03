@@ -36,11 +36,9 @@ export class Encryption {
 		);
 
 		const sharedSecretBits = await crypto.subtle.deriveBits({ name: "ECDH", public: publicKey }, privateKey, 256);
-
 		const sharedSecret = new Uint8Array(sharedSecretBits);
 
 		const hkdfKey = await crypto.subtle.importKey("raw", sharedSecret, "HKDF", false, ["deriveKey"]);
-
 		const derivedKey = await crypto.subtle.deriveKey(
 			{
 				name: "HKDF",

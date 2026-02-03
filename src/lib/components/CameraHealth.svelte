@@ -10,8 +10,6 @@
 	let {
 		health,
 		healthLoading,
-		metrics = [],
-		metricsLoading = false,
 		model,
 		updateStatus,
 		updateStatusLoading,
@@ -19,7 +17,6 @@
 		healthTab = "",
 		buttonsLoading = $bindable(),
 		loadHealth = () => {},
-		loadMetrics = () => {},
 		loadUpdateStatus = () => {},
 		startUpdate = () => {},
 		setVersionDev = () => {}
@@ -75,12 +72,11 @@
 	<Button
 		onclick={() => {
 			loadHealth();
-			loadMetrics();
 			loadUpdateStatus();
 		}}
 		variant="outline"
 		size="sm"
-		disabled={healthLoading || metricsLoading || updateStatusLoading}
+		disabled={healthLoading || updateStatusLoading}
 	>
 		Refresh
 		{#if !healthLoading && !updateStatusLoading}
@@ -196,18 +192,16 @@
 				</div>
 			</div>
 		{/if}
+
+		{#if health.metrics?.length > 0}
+			<div class="space-y-4 border p-4">
+				<Label class="text-base">Performance</Label>
+				<MetricsChart metrics={health.metrics} bind:hoveredTimestamp />
+			</div>
+		{/if}
 	{:else}
 		<div class="border p-8 text-center text-sm text-muted-foreground">No health data available.</div>
 	{/if}
-
-	<div class="space-y-4 border p-4">
-		<Label class="text-base">Performance</Label>
-		{#if metrics.length > 0}
-			<MetricsChart {metrics} bind:hoveredTimestamp />
-		{:else}
-			<div class="border p-8 text-center text-sm text-muted-foreground">No metrics available.</div>
-		{/if}
-	</div>
 </div>
 
 <AlertDialog.Root bind:open={devDialogOpen}>
