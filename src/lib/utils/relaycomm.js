@@ -187,7 +187,7 @@ export class RelayComm {
 							return;
 						}
 
-						console.log(`RelayComm: Key renewed for product ${productId}`);
+						console.log(`Key renewed for product ${productId}`);
 						resolve();
 					};
 
@@ -211,7 +211,15 @@ export class RelayComm {
 
 		// Route to handlers
 		const handlers = this.#handlers.get(msg.type);
-		if (handlers) handlers.forEach((handler) => handler(msg));
+		if (handlers) {
+			handlers.forEach((handler) => {
+				try {
+					handler(msg);
+				} catch (err) {
+					console.error(`Error in handler for '${msg.type}':`, err);
+				}
+			});
+		}
 
 		// Clear pending request timeout and resolve promise
 		if (msg.requestId && this.#pendingRequestTimeouts.has(msg.requestId)) {

@@ -39,9 +39,9 @@
 		recordingAudioElement = $bindable(),
 		recordingVideoElement = $bindable(),
 		recordingLoading = false,
-		recordingLoadingPercent = 0,
 		recordingVideoUrl,
-		recordingAudioUrl
+		recordingAudioUrl,
+		onVideoError = () => {}
 	} = $props();
 
 	let dateRangeOpen = $state(false);
@@ -53,6 +53,7 @@
 	let expandedStacks = new SvelteSet();
 	let detectionEvent = $state(null);
 	let detectionDialogOpen = $state(false);
+	let recordingStarted = false;
 
 	const hasDateFilter = $derived(dateRangeValue?.start && dateRangeValue?.end);
 	const hasTypeFilter = $derived(selectedTypes.length > 0);
@@ -109,8 +110,10 @@
 	}
 
 	function tryPlayRecording() {
+		if (recordingStarted) return;
 		if (!recordingVideoElement || recordingVideoElement.readyState < 2) return;
 		if (recordingHasAudio && (!recordingAudioElement || recordingAudioElement.readyState < 2)) return;
+		recordingStarted = true;
 		if (recordingAudioElement) recordingAudioElement.currentTime = 0;
 		recordingVideoElement.play().catch(console.error);
 	}
@@ -300,7 +303,7 @@
 {/if}
 
 <!-- Recording Viewer Dialog -->
-<Dialog.Root bind:open={viewRecordingDialog}>
+<Dialog.Root bind:open={viewRecordingDialog} onOpenChange={(open) => !open && (recordingStarted = false)}>
 	<Dialog.Content class="max-w-4xl">
 		<Dialog.Header>
 			<Dialog.Title
@@ -312,9 +315,6 @@
 		<div class="relative flex aspect-video w-full items-center justify-center border bg-foreground">
 			{#if recordingLoading}
 				<Spinner class="size-8 text-background" />
-				<p class="absolute mt-22 w-full -translate-y-1/2 text-center text-sm text-background">
-					{recordingLoadingPercent}%
-				</p>
 			{:else if recordingVideoUrl || !viewRecordingDialog}
 				<video
 					src={recordingVideoUrl}
@@ -336,6 +336,9 @@
 							recordingAudioElement.currentTime = recordingVideoElement.currentTime;
 							if (!recordingVideoElement.paused) recordingAudioElement.play().catch(console.error);
 						}
+					}}
+					onerror={() => {
+						if (recordingVideoElement.error?.code === 3) onVideoError();
 					}}
 				>
 					<track kind="captions" />

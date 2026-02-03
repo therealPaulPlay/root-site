@@ -1,24 +1,20 @@
 <script>
 	import { page } from "$app/state";
-	import { onMount, onDestroy } from "svelte";
-	import Button, { buttonVariants } from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
-	import Separator from "$lib/components/ui/separator/separator.svelte";
+	import { onMount, onDestroy, tick } from "svelte";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { getProduct, removeProduct } from "$lib/utils/pairedProductsStorage";
-	import { RelayComm, RELAY_REQUEST_TIMEOUT } from "$lib/utils/relaycomm";
+	import { RelayComm } from "$lib/utils/relaycomm";
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
 	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
-	import { base64ToBlob } from "$lib/utils/base64ToBlob";
 	import StreamPlayer from "$lib/components/StreamPlayer.svelte";
 	import CameraControls from "$lib/components/CameraControls.svelte";
 	import CameraHealth from "$lib/components/CameraHealth.svelte";
 	import CameraEvents from "$lib/components/CameraEvents.svelte";
 	import { RiArrowLeftLine } from "svelte-remixicon";
 	import { SvelteSet } from "svelte/reactivity";
+	import { MediaSourceManager } from "$lib/utils/mediaSourceManager";
 
 	const productId = page.params.productId;
 
@@ -36,12 +32,12 @@
 	let recordingAudioElement = $state();
 	let recordingVideoElement = $state();
 	let recordingLoading = $state(false);
-	let recordingLoadingPercent = $state(0);
 	let recordingVideoUrl = $state(null);
 	let recordingAudioUrl = $state(null);
 	let recordingHasAudio = $state(false);
 	let recordingChunks = $state({ video: [], audio: [] });
 	let recordingTotalChunks = $state({ video: 0, audio: 0 });
+	let recordingManager = null;
 
 	// Controls
 	let micEnabled = $state(false);
@@ -89,8 +85,7 @@
 
 	// Video streaming
 	let videoElement = $state();
-	let mediaSource;
-	let sourceBuffer;
+	let streamManager = null;
 	let videoStarted = false;
 
 	// Audio streaming
@@ -162,14 +157,28 @@
 
 	onDestroy(() => {
 		endStream();
+		cleanupRecording();
 		if (typeof window !== "undefined") document.removeEventListener("visibilitychange", handleVisibilityChange);
 		if (relayCommInstance) relayCommInstance.disconnect();
-
-		// Revoke object URLs to free memory
-		if (recordingVideoUrl) URL.revokeObjectURL(recordingVideoUrl);
-		if (recordingAudioUrl) URL.revokeObjectURL(recordingAudioUrl);
 		for (const url of Object.values(eventThumbnails)) URL.revokeObjectURL(url);
 	});
+
+	// Cleanup recording when dialog closes - set eventId to null to ignore remaining chunks
+	$effect(() => {
+		if (!viewRecordingDialog && currentRecordingEventId) {
+			currentRecordingEventId = null;
+			cleanupRecording();
+		}
+	});
+
+	function cleanupRecording() {
+		recordingManager?.cleanup();
+		recordingManager = null;
+		if (recordingVideoUrl) URL.revokeObjectURL(recordingVideoUrl);
+		if (recordingAudioUrl) URL.revokeObjectURL(recordingAudioUrl);
+		recordingVideoUrl = null;
+		recordingAudioUrl = null;
+	}
 
 	// Events handlers
 	function loadEvents() {
@@ -226,14 +235,13 @@
 		loadingThumbnails.delete(msg.payload.eventId);
 	}
 
+	let recordingDuration = 0;
+
 	function viewRecording(event) {
 		viewRecordingDialog = true;
 		recordingLoading = true;
-		recordingLoadingPercent = 0;
-		if (recordingVideoUrl) URL.revokeObjectURL(recordingVideoUrl);
-		if (recordingAudioUrl) URL.revokeObjectURL(recordingAudioUrl);
-		recordingVideoUrl = null;
-		recordingAudioUrl = null;
+		recordingDuration = event.duration || 0;
+		cleanupRecording();
 		recordingHasAudio = false;
 		recordingChunks = { video: [], audio: [] };
 		recordingTotalChunks = { video: 0, audio: 0 };
@@ -258,68 +266,70 @@
 		const eventId = msg.payload.eventId || msg.payload.metadata?.eventId;
 		if (eventId && eventId !== currentRecordingEventId) return;
 
+		// Set audio state from initial response (before any chunks arrive)
 		if (msg.payload.hasAudio !== undefined) recordingHasAudio = msg.payload.hasAudio;
-		if (!msg.binData) return;
+		if (!msg.binData) return; // Initial response lacks binData, only contains metadata
 
 		const { fileType, chunkIndex, totalChunks } = msg.payload;
-		const buffer = msg.binData;
-
-		recordingChunks[fileType][chunkIndex] = buffer;
+		recordingChunks[fileType][chunkIndex] = msg.binData;
 		recordingTotalChunks[fileType] = totalChunks;
 
-		// Update progress
-		const total = recordingTotalChunks.video + (recordingHasAudio ? recordingTotalChunks.audio : 0);
-		const received = recordingChunks.video.filter(Boolean).length + recordingChunks.audio.filter(Boolean).length;
-		recordingLoadingPercent = total > 0 ? Math.round((received / total) * 100) : 0;
-
-		if (chunkIndex === totalChunks - 1) {
-			const receivedChunks = recordingChunks[fileType].filter(Boolean);
-			if (receivedChunks.length !== totalChunks) {
+		if (fileType === "audio") {
+			// Audio: wait for all chunks, then create blob URL
+			if (chunkIndex === totalChunks - 1) {
+				const chunks = recordingChunks.audio.filter(Boolean);
+				if (chunks.length === totalChunks) recordingAudioUrl = createBlobUrl(chunks, "audio/mp4");
+			}
+		} else {
+			// Video: use MediaSource for progressive playback
+			if (chunkIndex === 0) {
 				recordingLoading = false;
-				return toast.error(`Recording incomplete: received ${receivedChunks.length}/${totalChunks} chunks`);
-			}
-			const totalLength = receivedChunks.reduce((sum, chunk) => sum + chunk.length, 0);
-			const combined = new Uint8Array(totalLength);
-			let offset = 0;
-
-			for (const chunk of receivedChunks) {
-				combined.set(chunk, offset);
-				offset += chunk.length;
-			}
-
-			const mimeType = fileType === "video" ? "video/mp4" : "audio/mp4";
-			const blobUrl = URL.createObjectURL(new Blob([combined], { type: mimeType }));
-
-			if (fileType === "video") {
-				recordingVideoUrl = blobUrl;
-				if (!recordingHasAudio) recordingLoading = false;
-			} else {
-				recordingAudioUrl = blobUrl;
-				recordingLoading = false;
-			}
+				tick().then(() => {
+					recordingManager = new MediaSourceManager({ isLive: false, duration: recordingDuration });
+					recordingVideoUrl = recordingManager.setup();
+					recordingManager.appendChunk(msg.binData);
+				});
+			} else recordingManager?.appendChunk(msg.binData);
+			if (chunkIndex === totalChunks - 1) recordingManager?.finalize();
 		}
+	}
+
+	function createBlobUrl(chunks, mimeType) {
+		const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+		const combined = new Uint8Array(totalLength);
+		let offset = 0;
+		for (const chunk of chunks) {
+			combined.set(chunk, offset);
+			offset += chunk.length;
+		}
+		return URL.createObjectURL(new Blob([combined], { type: mimeType }));
+	}
+
+	function switchRecordingToBlobUrl() {
+		if (!recordingManager || !recordingChunks.video.length) return;
+		const savedTime = recordingVideoElement?.currentTime || 0;
+		recordingManager.cleanup();
+		recordingManager = null;
+		const chunks = recordingChunks.video.filter(Boolean);
+		recordingVideoUrl = createBlobUrl(chunks, "video/mp4");
+		tick().then(() => {
+			if (recordingVideoElement && savedTime > 0) recordingVideoElement.currentTime = savedTime;
+		});
 	}
 
 	// Streaming handlers
 	function setupMediaSource() {
-		mediaSource = new MediaSource();
-		videoElement.src = URL.createObjectURL(mediaSource);
-
-		mediaSource.addEventListener("sourceopen", () => {
-			sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001f"');
-			sourceBuffer.mode = "sequence";
-			processPendingChunks();
-			sourceBuffer.addEventListener("updateend", () => {
-				processPendingChunks();
-
-				// Start playback once we at least one chunk in the buffer
+		streamManager = new MediaSourceManager({
+			isLive: true,
+			onChunkAppended: () => {
+				// Start playback once we have at least one chunk in the buffer
 				if (!videoStarted && videoElement && videoElement.buffered.length > 0) {
 					videoStarted = true;
 					videoElement.play().catch(console.error);
 				}
-			});
+			}
 		});
-
+		videoElement.src = streamManager.setup();
 		videoElement.addEventListener("error", () => {
 			// Ignore empty src errors (code 4)
 			if (videoElement?.error && videoElement.error.code !== 4) {
@@ -337,18 +347,16 @@
 	}
 
 	function endStream() {
-		pendingChunks = [];
 		if (streamHeartbeatInterval) {
 			clearInterval(streamHeartbeatInterval);
 			streamHeartbeatInterval = null;
 		}
-		if (mediaSource) {
-			mediaSource = null;
-			sourceBuffer = null;
+		if (streamManager) {
+			streamManager.cleanup();
+			streamManager = null;
 			videoStarted = false;
 		}
 		if (videoElement) {
-			if (videoElement.src) URL.revokeObjectURL(videoElement.src);
 			videoElement.src = "";
 			videoElement.load();
 		}
@@ -383,12 +391,10 @@
 			return;
 		}
 
-		if (!mediaSource) setupMediaSource();
+		if (!streamManager) setupMediaSource();
 		if (!audioContext) setupAudioContext();
 		if (!streamHeartbeatInterval) startStreamHeartbeat();
 	}
-
-	let pendingChunks = $state([]);
 
 	function handleStreamVideoChunk(msg) {
 		if (!msg.payload.success) {
@@ -401,17 +407,9 @@
 
 		if (videoElement?.error) return;
 
-		// Queue chunks if MediaSource isn't ready yet
-		if (!mediaSource || mediaSource.readyState !== "open" || !sourceBuffer) {
-			pendingChunks.push(msg.binData);
-			return;
-		}
-
-		// Always queue chunks and let processPendingChunks handle them sequentially
-		streamLoading = false; // Hide loading spinner, now that chunks are coming in and displaying
-		pendingChunks.push(msg.binData);
-		processPendingChunks();
-		correctVideoDrift(); // Check for video drift and seek forward if too far behind
+		streamLoading = false; // Hide loading spinner
+		streamManager?.appendChunk(msg.binData);
+		correctVideoDrift();
 	}
 
 	function correctVideoDrift() {
@@ -423,17 +421,6 @@
 
 		// If video is more than 500ms behind the buffer end, seek forward to catch up (100ms behind to avoid edge issues)
 		if (drift > 0.5) videoElement.currentTime = bufferEnd - 0.1;
-	}
-
-	function processPendingChunks() {
-		if (pendingChunks.length > 0 && sourceBuffer && !sourceBuffer.updating) {
-			const next = pendingChunks.shift();
-			try {
-				sourceBuffer.appendBuffer(next);
-			} catch (err) {
-				console.error("Failed to append queued buffer:", err);
-			}
-		}
 	}
 
 	function handleVisibilityChange() {
@@ -854,9 +841,9 @@
 					bind:recordingAudioElement
 					bind:recordingVideoElement
 					{recordingLoading}
-					{recordingLoadingPercent}
 					{recordingVideoUrl}
 					{recordingAudioUrl}
+					onVideoError={switchRecordingToBlobUrl}
 				/>
 			</Tabs.Content>
 			<Tabs.Content value={TABS.CONTROLS} class="of-top of-bottom space-y-6 overflow-y-auto p-6">
