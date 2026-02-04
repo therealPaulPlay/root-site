@@ -9,11 +9,11 @@
 		<Dialog.Header>
 			<Dialog.Title>Browser unsupported</Dialog.Title>
 		</Dialog.Header>
-		<div class="space-y-4">
-			<p>This browser does not support the Web Bluetooth API. Bluetooth is necessary for pairing ROOT products.</p>
+		<Dialog.Description>
+			<p class="mb-4">This browser does not support the Web Bluetooth API. Bluetooth is necessary for pairing ROOT products.</p>
 			<div>
 				<p>Solutions:</p>
-				<ul class="list-disc ml-4 mt-2 space-y-2">
+				<ul class="mt-2 ml-4 list-disc space-y-2">
 					<li>Use Google Chrome on a desktop computer</li>
 					<li>Use Chrome for Android and add the website to your home screen</li>
 					<li>
@@ -32,6 +32,6 @@
 					</li>
 				</ul>
 			</div>
-		</div>
+		</Dialog.Description>
 	</Dialog.Content>
 </Dialog.Root>
