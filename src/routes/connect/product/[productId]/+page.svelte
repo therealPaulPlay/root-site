@@ -330,12 +330,6 @@
 			}
 		});
 		videoElement.src = streamManager.setup();
-		videoElement.addEventListener("error", () => {
-			// Ignore empty src errors (code 4)
-			if (videoElement?.error && videoElement.error.code !== 4) {
-				console.error("Video playback error:", videoElement.error);
-			}
-		});
 	}
 
 	function startStream() {

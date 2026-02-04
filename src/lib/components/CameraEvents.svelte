@@ -337,8 +337,8 @@
 							if (!recordingVideoElement.paused) recordingAudioElement.play().catch(console.error);
 						}
 					}}
-					onerror={() => {
-						if (recordingVideoElement.error?.code === 3) onVideoError();
+					onerror={(e) => {
+						if (e.currentTarget.error?.code === 3) onVideoError();
 					}}
 				>
 					<track kind="captions" />

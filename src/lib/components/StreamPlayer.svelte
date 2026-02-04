@@ -32,7 +32,7 @@
 
 <div class="relative aspect-video max-h-[45svh] w-full bg-black" class:border-0!={isFullscreen}>
 	{#if streamLoading || streamEnded}
-		<div class="flex h-full w-full items-center justify-center text-background absolute inset-0">
+		<div class="absolute inset-0 flex h-full w-full items-center justify-center text-background">
 			{#if streamLoading}
 				<Spinner class="size-8" />
 			{:else if streamEnded}
@@ -40,7 +40,17 @@
 			{/if}
 		</div>
 	{/if}
-	<video bind:this={videoElement} class="h-full w-full absolute inset-0" playsinline muted></video>
+	<video
+		bind:this={videoElement}
+		class="absolute inset-0 h-full w-full"
+		playsinline
+		muted
+		onerror={(e) => {
+			const error = e.currentTarget.error;
+			// Ignore empty src errors (code 4)
+			if (error && error.code !== 4) console.error("Video playback error:", error.code, error.message);
+		}}
+	></video>
 	<div class="absolute right-4 bottom-4 flex gap-2">
 		{#if showMuteButton}
 			<Button onclick={() => (audioMuted = !audioMuted)} class="px-3 opacity-50 hover:opacity-100 active:opacity-100">
