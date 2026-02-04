@@ -339,7 +339,7 @@
 			>.
 		</p>
 		<p class="max-w-150">
-			As political landscapes shift, the question isn't who can access this data today, <span class="bg-accent"
+			As political landscapes shift, the question isn't just who can access this data today, <span class="bg-accent"
 				>but who might access it tomorrow</span
 			>. Privacy is about preparation.
 		</p>
