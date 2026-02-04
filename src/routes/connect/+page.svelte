@@ -19,7 +19,6 @@
 	import { toast } from "svelte-sonner";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import WebBluetoothUnsupportedDialog from "$lib/components/WebBluetoothUnsupportedDialog.svelte";
 
 	let products = $state([]);
 	let relayCommInstance;
@@ -317,5 +316,3 @@
 		{/if}
 	</div>
 </div>
-
-<WebBluetoothUnsupportedDialog />
