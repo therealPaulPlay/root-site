@@ -1,5 +1,5 @@
 <script>
-	import { RiBlueskyLine, RiTwitterXLine, RiYoutubeFill } from "svelte-remixicon";
+	import { RiBlueskyLine, RiTwitterXLine, RiYoutubeLine } from "svelte-remixicon";
 	import Button from "./ui/button/button.svelte";
 	import { Capacitor } from "@capacitor/core";
 	import { page } from "$app/state";
@@ -12,7 +12,7 @@
 	<section class="relative mt-auto w-full overflow-hidden border-t bg-foreground">
 		<div class="flex flex-wrap gap-4 p-8 px-2 lg:px-8 xl:px-12 2xl:px-16">
 			<Button class="text-background" href="https://www.youtube.com/@PaulPlay" target="_blank" variant="link"
-				>YouTube <RiYoutubeFill /></Button
+				>YouTube <RiYoutubeLine /></Button
 			>
 			<Button
 				class="text-background"
@@ -30,9 +30,7 @@
 			<Button variant="link" class="text-background" href="https://paulplay.studio/imprint" target="_blank"
 				>Imprint</Button
 			>
-			<p class="h-9 px-4 leading-9 text-muted-foreground uppercase">
-				© Root {new Date().getFullYear()}
-			</p>
+			<Button variant="link" class="text-muted-foreground" href="/">© ROOT {new Date().getFullYear()}</Button>
 		</div>
 		<div class="relative h-30 w-full md:h-38 lg:h-55 xl:h-72 2xl:h-90">
 			<div class="logo-layer"></div>

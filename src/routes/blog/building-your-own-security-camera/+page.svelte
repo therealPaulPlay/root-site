@@ -59,7 +59,7 @@
 
 	<p>
 		<Dialog.Root>
-			<Dialog.Trigger class="text-start text-muted-foreground hover:underline"
+			<Dialog.Trigger class="text-start text-muted-foreground hover:underline active:underline"
 				>&gt; Why should I care about privacy?</Dialog.Trigger
 			>
 			<Dialog.Content class="w-full max-w-250!">

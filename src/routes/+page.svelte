@@ -317,7 +317,7 @@
 		>
 			{#each exampleTrackingInfo as info, i}
 				<div
-					class="flex h-18 items-center gap-3 text-4xl transition duration-700 2xl:text-5xl"
+					class="flex h-18 items-center gap-3 text-4xl max-2xl:font-[425] transition duration-700 2xl:text-5xl"
 					class:opacity-100={i === trackingExampleIndex}
 					class:opacity-30={i !== trackingExampleIndex}
 					class:scale-100={i === trackingExampleIndex}
@@ -360,7 +360,7 @@
 							<p class="text-foreground/65">
 								<span class="text-foreground">{item.text?.split(" ")?.[0]}</span>
 								{item.text?.split(" ")?.slice(1)?.join(" ")} -
-								<a target="_blank" class="hover:underline" href={item.source}>{item.sourceName}</a>
+								<a target="_blank" class="hover:underline active:underline" href={item.source}>{item.sourceName}</a>
 							</p>
 						</div>
 					</Carousel.Item>
