@@ -75,53 +75,53 @@
 
 				relayCommInstance.on("getPreviewResult", (msg) => {
 					if (!msg.payload.success) {
-						previewFailed[msg.productId] = true;
+						previewFailed[msg.originId] = true;
 						toast.error(
-							`Failed to get preview for product ${msg.productId}: ` + (msg.payload.error || "Unknown error")
+							`Failed to get preview for product ${msg.originId}: ` + (msg.payload.error || "Unknown error")
 						);
 						return;
 					}
-					previewImages[msg.productId] = URL.createObjectURL(new Blob([msg.binData], { type: "image/jpeg" }));
+					previewImages[msg.originId] = URL.createObjectURL(new Blob([msg.payload.data], { type: "image/jpeg" }));
 				});
 
 				relayCommInstance.on("getUpdateStatusResult", (msg) => {
 					if (!msg.payload.success) {
 						toast.error(
-							`Failed to get update status for product ${msg.productId}: ` + (msg.payload.error || "Unknown error")
+							`Failed to get update status for product ${msg.originId}: ` + (msg.payload.error || "Unknown error")
 						);
 						return;
 					}
-					updateStatuses[msg.productId] = msg.payload;
+					updateStatuses[msg.originId] = msg.payload;
 				});
 
 				relayCommInstance.on("removeDeviceResult", (msg) => {
 					if (!msg.payload.success) {
 						toast.error(
-							`Failed to inform product ${msg.productId} about device removal: ` +
+							`Failed to inform product ${msg.originId} about device removal: ` +
 								(msg.payload.error || "Unknown error")
 						);
 						// Don't return, just acknowledge the error
 					}
 					// Close dialog & stop loading
-					delete removeDialogOpen[msg.productId];
-					delete removeDialogLoading[msg.productId];
-					removeProduct(msg.productId); // Remove product locally
+					delete removeDialogOpen[msg.originId];
+					delete removeDialogLoading[msg.originId];
+					removeProduct(msg.originId); // Remove product locally
 					loadProducts(); // Refresh products
 				});
 
 				relayCommInstance.on("setProductAliasResult", (msg) => {
-					delete renameDialogLoading[msg.productId];
+					delete renameDialogLoading[msg.originId];
 					if (!msg.payload.success) {
-						toast.error(`Failed to rename product ${msg.productId}: ` + (msg.payload.error || "Unknown error"));
+						toast.error(`Failed to rename product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
 						return;
 					}
 					// Update locally only on success
-					const product = products.find((p) => p.id === msg.productId);
+					const product = products.find((p) => p.id === msg.originId);
 					if (product) {
 						product.name = msg.payload.alias;
 						saveProduct(product);
 					}
-					delete renameDialogOpen[msg.productId];
+					delete renameDialogOpen[msg.originId];
 				});
 			} catch (error) {
 				console.error("Error connecting to relay and getting data from products:", error);

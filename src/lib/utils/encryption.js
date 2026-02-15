@@ -1,8 +1,24 @@
+import { getProduct } from "./pairedProductsStorage.js";
+
 /**
  * Encryption utility using P-256 (secp256r1) and AES-256-GCM
  */
 
 export class Encryption {
+	#key;
+
+	static async initForProduct(productId) {
+		const product = getProduct(productId);
+		if (!product) throw new Error("Product not found!");
+
+		const encryption = new Encryption();
+		encryption.#key = await Encryption.#deriveKey(
+			decodeKey(product.devicePrivateKey),
+			decodeKey(product.productPublicKey)
+		);
+		return encryption;
+	}
+
 	static async generateKeypair() {
 		const keyPair = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
 			"deriveKey",
@@ -18,7 +34,7 @@ export class Encryption {
 		};
 	}
 
-	static async deriveSharedSecret(yourPrivateKey, theirPublicKey) {
+	static async #deriveKey(yourPrivateKey, theirPublicKey) {
 		const privateKey = await crypto.subtle.importKey(
 			"pkcs8",
 			yourPrivateKey,
@@ -36,10 +52,11 @@ export class Encryption {
 		);
 
 		const sharedSecretBits = await crypto.subtle.deriveBits({ name: "ECDH", public: publicKey }, privateKey, 256);
-		const sharedSecret = new Uint8Array(sharedSecretBits);
+		const hkdfKey = await crypto.subtle.importKey("raw", new Uint8Array(sharedSecretBits), "HKDF", false, [
+			"deriveKey"
+		]);
 
-		const hkdfKey = await crypto.subtle.importKey("raw", sharedSecret, "HKDF", false, ["deriveKey"]);
-		const derivedKey = await crypto.subtle.deriveKey(
+		return crypto.subtle.deriveKey(
 			{
 				name: "HKDF",
 				hash: "SHA-256",
@@ -48,41 +65,37 @@ export class Encryption {
 			},
 			hkdfKey,
 			{ name: "AES-GCM", length: 256 },
-			true,
+			false,
 			["encrypt", "decrypt"]
 		);
-
-		const keyBytes = await crypto.subtle.exportKey("raw", derivedKey);
-		return new Uint8Array(keyBytes);
 	}
 
-	constructor(sharedSecret) {
-		this.ready = crypto.subtle
-			.importKey("raw", sharedSecret, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"])
-			.then((key) => (this.key = key));
-	}
-
-	async encrypt(data) {
-		await this.ready;
-		const plaintext = typeof data === "string" ? new TextEncoder().encode(data) : data;
+	async encrypt(data, aad) {
 		const nonce = crypto.getRandomValues(new Uint8Array(12));
 
-		const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, this.key, plaintext);
+		const params = { name: "AES-GCM", iv: nonce };
+		if (aad) params.additionalData = aad; // If AAD is provided, add it to params
+
+		const ciphertext = await crypto.subtle.encrypt(
+			params,
+			this.#key,
+			data
+		);
 
 		const result = new Uint8Array(nonce.length + ciphertext.byteLength);
 		result.set(nonce);
 		result.set(new Uint8Array(ciphertext), nonce.length);
 
-		return bytesToBase64(result);
+		return result;
 	}
 
-	async decrypt(ciphertextB64) {
-		await this.ready;
-		const ciphertext = base64ToBytes(ciphertextB64);
+	async decrypt(ciphertext, aad) {
+		const params = { name: "AES-GCM", iv: ciphertext.slice(0, 12) };
+		if (aad) params.additionalData = aad; // If AAD is provided, add it to params
 
 		const plaintext = await crypto.subtle.decrypt(
-			{ name: "AES-GCM", iv: ciphertext.slice(0, 12) },
-			this.key,
+			params,
+			this.#key,
 			ciphertext.slice(12)
 		);
 
@@ -90,14 +103,18 @@ export class Encryption {
 	}
 }
 
-function base64ToBytes(base64) {
+function decodeKey(base64) {
 	const binString = atob(base64);
 	return Uint8Array.from(binString, (m) => m.charCodeAt(0));
 }
 
-function bytesToBase64(bytes) {
+export function encodeKey(bytes) {
 	return btoa(String.fromCharCode(...bytes));
 }
 
-export const encodeKey = (key) => bytesToBase64(key);
-export const decodeKey = (str) => base64ToBytes(str);
+// Compute AAD (Additional Authenticated Data) as SHA256 hash of type|originId|targetId
+export async function computeAAD(msgType, originId, targetId) {
+	const data = new TextEncoder().encode(`${msgType}|${originId}|${targetId}`);
+	const hash = await crypto.subtle.digest("SHA-256", data);
+	return new Uint8Array(hash);
+}

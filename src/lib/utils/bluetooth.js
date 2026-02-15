@@ -6,6 +6,7 @@
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "svelte-sonner";
+import { encode, decode } from "cbor-x";
 
 const SERVICE_UUID = "a07498ca-ad5b-474e-940d-16f1fbe7e8cd";
 const CHAR_UUIDS = {
@@ -92,14 +93,13 @@ export class Bluetooth {
 		if (!uuid) throw new Error(`Unknown characteristic: ${charName}`);
 
 		const value = await BleClient.read(this.#deviceId, SERVICE_UUID, uuid);
-		const text = new TextDecoder().decode(value);
 
 		let response;
 		try {
-			response = JSON.parse(text);
+			response = decode(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
 		} catch (e) {
-			console.error("Failed to parse BLE response (read):", text);
-			throw new Error(`Invalid JSON response from device: ${text.substring(0, 100)}`);
+			console.error("Failed to decode BLE response (read):", e);
+			throw new Error("Invalid CBOR response from device!");
 		}
 
 		if (!response.success) throw new Error(response.error || "No error provided!");
@@ -113,8 +113,7 @@ export class Bluetooth {
 		const uuid = CHAR_UUIDS[charName];
 		if (!uuid) throw new Error(`Unknown characteristic: ${charName}`);
 
-		const json = JSON.stringify(data);
-		const bytes = new TextEncoder().encode(json);
+		const bytes = encode(data);
 		const dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
 		await BleClient.write(this.#deviceId, SERVICE_UUID, uuid, dataView);

@@ -1,10 +1,4 @@
-export function decodeBitmap(base64Data, width, height) {
-	const binary = atob(base64Data);
-	const bytes = new Uint8Array(binary.length);
-	for (let i = 0; i < binary.length; i++) {
-		bytes[i] = binary.charCodeAt(i);
-	}
-
+export function decodeBitmap(bytes, width, height) {
 	const imageData = new ImageData(width, height);
 	const data = imageData.data;
 

@@ -1,5 +1,6 @@
 import { toast } from "svelte-sonner";
-import { Encryption, encodeKey, decodeKey } from "./encryption.js";
+import { encode, decode } from "cbor-x";
+import { Encryption, encodeKey, computeAAD } from "./encryption.js";
 import { getProduct, saveProduct } from "./pairedProductsStorage.js";
 
 export const RELAY_REQUEST_TIMEOUT = 10_000;
@@ -34,7 +35,7 @@ export class RelayComm {
 		this.#intentionalDisconnect = false;
 
 		return new Promise((resolve, reject) => {
-			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?device-id=${this.deviceId}`);
+			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?client-id=${this.deviceId}`);
 			this.#ws.onopen = () => {
 				this.#connected = true;
 				if (this.#muteConnectionErrors) toast.info("Reconnected!"); // If errors are muted (indicating that relay connection is in bad state), toast on reconnect
@@ -47,9 +48,10 @@ export class RelayComm {
 				this.#muteConnectionErrors = true;
 				console.error("WebSocket relay connection error:", e);
 			}
+			this.#ws.binaryType = "arraybuffer";
 			this.#ws.onmessage = async (e) => {
 				try {
-					const msg = JSON.parse(e.data);
+					const msg = decode(new Uint8Array(e.data));
 					await this.#handleMessage(msg);
 				} catch (err) {
 					console.error("Failed to handle WebSocket message:", err);
@@ -73,16 +75,7 @@ export class RelayComm {
 	async #getEncryption(productId) {
 		if (this.#encryptions.has(productId)) return this.#encryptions.get(productId);
 
-		const product = getProduct(productId);
-		if (!product) throw new Error("Product not found");
-
-		const secret = await Encryption.deriveSharedSecret(
-			decodeKey(product.devicePrivateKey),
-			decodeKey(product.productPublicKey)
-		);
-
-		const encryption = new Encryption(secret);
-		await encryption.ready;
+		const encryption = await Encryption.initForProduct(productId);
 		this.#encryptions.set(productId, encryption);
 		return encryption;
 	}
@@ -106,18 +99,18 @@ export class RelayComm {
 
 	async #renewKey(productId) {
 		const newKeypair = await Encryption.generateKeypair();
-		const renewRequestId = crypto.randomUUID();
 
 		// Step 1: Encrypt with OLD key
 		const oldEncryption = await this.#getEncryption(productId);
-		const encrypted = await oldEncryption.encrypt(JSON.stringify({ newPublicKey: encodeKey(newKeypair.publicKey) }));
+		const aad = await computeAAD("renewKey", this.deviceId, productId);
+		const encrypted = await oldEncryption.encrypt(encode({ newPublicKey: encodeKey(newKeypair.publicKey) }), aad);
+		const renewRequestId = crypto.randomUUID();
 
 		// Send renewal request (encrypted with OLD key)
-		this.#ws.send(JSON.stringify({
+		this.#ws.send(encode({
 			type: "renewKey",
-			target: "product",
-			productId,
-			deviceId: this.deviceId,
+			originId: this.deviceId,
+			targetId: productId,
 			requestId: renewRequestId,
 			payload: encrypted
 		}));
@@ -153,20 +146,20 @@ export class RelayComm {
 				const product = getProduct(productId);
 				product.devicePrivateKey = encodeKey(newKeypair.privateKey);
 				product.keyCreatedAt = Date.now();
-				saveProduct(product);
+				saveProduct(product); // Save product with new keys
 				this.#encryptions.delete(productId); // Clear cache so next call uses new key
 
 				// Step 5: Send ACK to camera (encrypted with NEW key) and wait for confirmation
 				try {
 					const newEncryption = await this.#getEncryption(productId); // Will use new key
-					const ackEncrypted = await newEncryption.encrypt(JSON.stringify({ ack: true }));
+					const ackAad = await computeAAD("renewKeyAck", this.deviceId, productId);
+					const ackEncrypted = await newEncryption.encrypt(encode({ ack: true }), ackAad);
 					const ackRequestId = crypto.randomUUID();
 
-					this.#ws.send(JSON.stringify({
+					this.#ws.send(encode({
 						type: "renewKeyAck",
-						target: "product",
-						productId,
-						deviceId: this.deviceId,
+						originId: this.deviceId,
+						targetId: productId,
 						requestId: ackRequestId,
 						payload: ackEncrypted
 					}));
@@ -202,12 +195,9 @@ export class RelayComm {
 	}
 
 	async #handleMessage(msg) {
-		// Unencrypted error payloads are raw JSON (start with "{"), encrypted payloads are base64
-		if (msg.payload.startsWith("{")) msg.payload = JSON.parse(msg.payload);
-		else await this.#decryptField(msg, "payload", true);
-
-		// Decrypt binary data field if present
-		if (msg.binData) await this.#decryptField(msg, "binData", false);
+		// Decrypt and decode payload (encrypted CBOR -> decrypted bytes -> CBOR decode)
+		// Unencrypted error payloads are already CBOR objects, encrypted ones are Uint8Array
+		if (msg.payload instanceof Uint8Array) msg.payload = await this.#decryptPayload(msg);
 
 		// Route to handlers
 		const handlers = this.#handlers.get(msg.type);
@@ -230,19 +220,19 @@ export class RelayComm {
 		}
 	}
 
-	async #decryptField(msg, field, parseJson) {
-		if (typeof msg[field] !== "string") throw new Error(`'${field}' field must be an encrypted base64 string`);
-		const encryption = await this.#getEncryption(msg.productId);
+	async #decryptPayload(msg) {
+		const encryption = await this.#getEncryption(msg.originId);
+		const aad = await computeAAD(msg.type, msg.originId, msg.targetId);
 		try {
-			const decrypted = await encryption.decrypt(msg[field]);
-			msg[field] = parseJson ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
+			const decrypted = await encryption.decrypt(msg.payload, aad);
+			return decode(decrypted);
 		} catch (decryptError) {
 			// Retry with old key if available (for in-flight chunks during key renewal)
-			const prevEncryption = this.#prevEncryptions.get(msg.productId);
+			const prevEncryption = this.#prevEncryptions.get(msg.originId);
 			if (prevEncryption) {
 				try {
-					const decrypted = await prevEncryption.decrypt(msg[field]);
-					msg[field] = parseJson ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
+					const decrypted = await prevEncryption.decrypt(msg.payload, aad);
+					return decode(decrypted);
 				} catch {
 					throw decryptError; // Both keys failed, re-throw original error
 				}
@@ -259,7 +249,8 @@ export class RelayComm {
 		await this.#ensureKeyFresh(productId);
 
 		const encryption = await this.#getEncryption(productId);
-		const encrypted = await encryption.encrypt(JSON.stringify(data));
+		const aad = await computeAAD(type, this.deviceId, productId);
+		const encrypted = await encryption.encrypt(encode(data), aad);
 		const requestId = crypto.randomUUID();
 
 		return new Promise((resolve, reject) => {
@@ -270,16 +261,13 @@ export class RelayComm {
 
 			this.#pendingRequestTimeouts.set(requestId, { timeout, resolve, reject });
 
-			this.#ws.send(
-				JSON.stringify({
-					type,
-					target: "product",
-					productId,
-					deviceId: this.deviceId,
-					requestId,
-					payload: encrypted
-				})
-			);
+			this.#ws.send(encode({
+				type,
+				originId: this.deviceId,
+				targetId: productId,
+				requestId,
+				payload: encrypted
+			}));
 		});
 	}
 

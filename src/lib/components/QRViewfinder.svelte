@@ -20,22 +20,25 @@
 		if (!bluetoothInstance?.isConnected() || isDestroyed) return;
 
 		try {
-			const chunkMap = {};
+			const chunks = [];
 			let hasMore = true;
 
 			while (hasMore && !isDestroyed) {
 				const response = await bluetoothInstance.read("viewfinder");
 				if (!response.success) throw new Error(response.error || "Unknown error");
 
-				chunkMap[response.index] = response.data;
+				chunks[response.index] = response.data;
 				hasMore = response.hasMore;
 			}
 
-			// Sort by index and join
-			const indices = Object.keys(chunkMap)
-				.map(Number)
-				.sort((a, b) => a - b);
-			const fullData = indices.map((i) => chunkMap[i]).join("");
+			// Concatenate Uint8Array chunks
+			const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+			const fullData = new Uint8Array(totalLength);
+			let offset = 0;
+			for (const chunk of chunks) {
+				fullData.set(chunk, offset);
+				offset += chunk.length;
+			}
 
 			if (fullData.length > 0 && !isDestroyed) {
 				const imageData = decodeBitmap(fullData, resX, resY);

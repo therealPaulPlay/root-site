@@ -43,6 +43,7 @@
 		"@capacitor/app": "^8.0.0",
 		"@capacitor/core": "^8.0.0",
 		"@capacitor/haptics": "^8.0.0",
+		"cbor-x": "^1.6.0",
 		"overfade": "^0.0.10",
 		"svelte-qrcode": "^1.0.1"
 	}

@@ -4,9 +4,9 @@
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { Bluetooth } from "$lib/utils/bluetooth";
+	import { encode } from "cbor-x";
 	import { encodeKey, Encryption } from "$lib/utils/encryption";
 	import { getProduct, saveProduct } from "$lib/utils/pairedProductsStorage";
-	import { encryptPayload } from "$lib/utils/payloadEncryptionBle";
 	import {
 		RiAlertLine,
 		RiArrowLeftLine,
@@ -146,11 +146,11 @@
 		try {
 			currentlyConnectingWifi = true;
 
-			const payload = await encryptPayload(currentProductId, {
-				ssid: pendingWifiNetwork.ssid,
-				password: wifiPasswordInput,
-				countryCode: wifiCountryCode
-			});
+			const encryption = await Encryption.initForProduct(currentProductId);
+			const payload = await encryption.encrypt(
+				encode({ ssid: pendingWifiNetwork.ssid, password: wifiPasswordInput, countryCode: wifiCountryCode }),
+				null
+			);
 
 			const response = await bluetoothInstance.writeAndPoll("wifiConnect", {
 				deviceId: localStorage.getItem("deviceId"),
@@ -460,7 +460,8 @@
 							try {
 								currentlySettingRelay = true;
 								const relayDomain = relayDomainInput.trim();
-								const payload = await encryptPayload(currentProductId, { relayDomain });
+								const encryption = await Encryption.initForProduct(currentProductId);
+								const payload = await encryption.encrypt(encode({ relayDomain }), null);
 								const response = await bluetoothInstance.writeAndRead("relaySet", {
 									deviceId: localStorage.getItem("deviceId"),
 									payload

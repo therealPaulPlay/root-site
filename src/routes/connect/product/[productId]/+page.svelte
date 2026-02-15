@@ -231,7 +231,7 @@
 
 	function handleThumbnailResult(msg) {
 		if (!msg.payload.success) return toast.error("Failed to get thumbnail: " + msg.payload.error || "Unknown error");
-		eventThumbnails[msg.payload.eventId] = URL.createObjectURL(new Blob([msg.binData], { type: "image/jpeg" }));
+		eventThumbnails[msg.payload.eventId] = URL.createObjectURL(new Blob([msg.payload.data], { type: "image/jpeg" }));
 		loadingThumbnails.delete(msg.payload.eventId);
 	}
 
@@ -268,10 +268,10 @@
 
 		// Set audio state from initial response (before any chunks arrive)
 		if (msg.payload.hasAudio !== undefined) recordingHasAudio = msg.payload.hasAudio;
-		if (!msg.binData) return; // Initial response lacks binData, only contains metadata
+		if (!msg.payload.chunk) return; // Initial response lacks chunk, only contains metadata
 
-		const { fileType, chunkIndex, totalChunks } = msg.payload;
-		recordingChunks[fileType][chunkIndex] = msg.binData;
+		const { fileType, chunkIndex, totalChunks, chunk } = msg.payload;
+		recordingChunks[fileType][chunkIndex] = chunk;
 		recordingTotalChunks[fileType] = totalChunks;
 
 		if (fileType === "audio") {
@@ -287,9 +287,9 @@
 				tick().then(() => {
 					recordingManager = new MediaSourceManager({ isLive: false, duration: recordingDuration });
 					recordingVideoUrl = recordingManager.setup();
-					recordingManager.appendChunk(msg.binData);
+					recordingManager.appendChunk(chunk);
 				});
-			} else recordingManager?.appendChunk(msg.binData);
+			} else recordingManager?.appendChunk(chunk);
 			if (chunkIndex === totalChunks - 1) recordingManager?.finalize();
 		}
 	}
@@ -402,7 +402,7 @@
 		if (videoElement?.error) return;
 
 		streamLoading = false; // Hide loading spinner
-		streamManager?.appendChunk(msg.binData);
+		streamManager?.appendChunk(msg.payload.chunk);
 		correctVideoDrift();
 	}
 
@@ -438,9 +438,8 @@
 		if (!msg.payload.success) return console.error("Audio stream error:", msg.payload.error);
 		if (!audioContext) return;
 
-		// Decode PCM data from binary data field
-		const raw = msg.binData;
-		const pcmData = new Int16Array(raw.buffer, raw.byteOffset, raw.byteLength / 2);
+		// Decode PCM data from chunk field (slice creates aligned copy for Int16Array)
+		const pcmData = new Int16Array(msg.payload.chunk.slice().buffer);
 
 		// Convert Int16 PCM to Float32
 		const float32Data = new Float32Array(pcmData.length);
@@ -695,7 +694,7 @@
 			return;
 		}
 		toast.success("Reset initiated!");
-		removeProduct(msg.productId); // Remove product, since factory resetting will remove all paired devices
+		removeProduct(msg.originId); // Remove product, since factory resetting will remove all paired devices
 		setTimeout(() => {
 			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
 		}, 1000);
