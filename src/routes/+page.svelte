@@ -214,9 +214,9 @@
 		<div class="z-2 max-w-xl space-y-4">
 			<h3
 				class="text-5xl leading-12.5 text-background lg:text-nowrap"
-				{@attach decryptTextEffect("Privacy, redefined.")}
+				{@attach decryptTextEffect("Privacy, redefined")}
 			>
-				Privacy, redefined.
+				Privacy, redefined
 			</h3>
 			<p class="max-w-lg text-pretty text-background">
 				The ROOT Observer rethinks security cameras with cryptographically guaranteed privacy.
