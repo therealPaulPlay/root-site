@@ -241,7 +241,7 @@
 				>threatened the moment monitoring becomes possible</span
 			>.
 		</p>
-		<p class="max-w-150">
+		<p class="max-w-130">
 			Unlike most smart home cameras, <span class="bg-accent">ROOT products ensure only you can access</span> video, audio
 			and sensor data.
 		</p>
