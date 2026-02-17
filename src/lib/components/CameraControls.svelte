@@ -121,7 +121,7 @@
 			</Button>
 		</div>
 		{#if devices.length === 0}
-			<p class="text-sm text-muted-foreground">No paired devices available.</p>
+			<div class="border p-4 text-center text-sm text-muted-foreground">No paired devices available.</div>
 		{:else}
 			<div class="space-y-4">
 				{#each devices as device}
@@ -195,10 +195,7 @@
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
 				<AlertDialog.Cancel disabled={buttonsLoading.restart}>Cancel</AlertDialog.Cancel>
-				<AlertDialog.Action
-					disabled={buttonsLoading.restart}
-					onclick={restartProduct}
-				>
+				<AlertDialog.Action disabled={buttonsLoading.restart} onclick={restartProduct}>
 					{#if buttonsLoading.restart}<Spinner />{/if}
 					Restart
 				</AlertDialog.Action>
@@ -220,10 +217,7 @@
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
 				<AlertDialog.Cancel disabled={buttonsLoading.reset}>Cancel</AlertDialog.Cancel>
-				<AlertDialog.Action
-					disabled={buttonsLoading.reset}
-					onclick={resetProduct}
-				>
+				<AlertDialog.Action disabled={buttonsLoading.reset} onclick={resetProduct}>
 					{#if buttonsLoading.reset}<Spinner />{/if}
 					Reset
 				</AlertDialog.Action>
