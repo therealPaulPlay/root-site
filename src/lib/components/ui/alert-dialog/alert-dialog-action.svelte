@@ -11,9 +11,9 @@
 	bind:ref
 	data-slot="alert-dialog-action"
 	class={cn(buttonVariants(), className)}
-	onclick={() => {
+	onclick={(e) => {
 		vibrate.light();
-		execFunc?.();
+		execFunc?.(e);
 	}}
 	{...restProps}
 />

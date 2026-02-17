@@ -66,6 +66,12 @@
 	$effect(() => {
 		if (highlightedLogIndex !== -1) vibrate.light();
 	});
+
+	// Close dialogs when loading finishes
+	$effect(() => {
+		if (!buttonsLoading.update) updateDialogOpen = false;
+		if (!buttonsLoading.setVersionDev) devDialogOpen = false;
+	});
 </script>
 
 <div class="flex items-center justify-end">
@@ -126,15 +132,11 @@
 				<div class="flex w-full items-center justify-end">
 					<Button
 						onclick={() => (updateDialogOpen = true)}
-						disabled={buttonsLoading.update || ["downloading", "installing"].includes(updateStatus.status)}
+						disabled={["downloading", "installing"].includes(updateStatus.status)}
 						variant="outline"
 					>
-						{#if buttonsLoading.update}
-							<Spinner class="size-4" />
-						{:else}
-							Install update
-							<RiDownload2Line class="size-4" />
-						{/if}
+						Install update
+						<RiDownload2Line class="size-4" />
 					</Button>
 				</div>
 			{/if}
@@ -214,13 +216,14 @@
 			>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={buttonsLoading.setVersionDev}>Cancel</AlertDialog.Cancel>
 			<AlertDialog.Action
-				onclick={() => {
-					devDialogOpen = false;
-					setVersionDev();
-				}}>Yes, switch</AlertDialog.Action
+				disabled={buttonsLoading.setVersionDev}
+				onclick={setVersionDev}
 			>
+				{#if buttonsLoading.setVersionDev}<Spinner />{/if}
+				Yes, switch
+			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>
@@ -234,13 +237,14 @@
 			>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={buttonsLoading.update}>Cancel</AlertDialog.Cancel>
 			<AlertDialog.Action
-				onclick={() => {
-					updateDialogOpen = false;
-					startUpdate();
-				}}>Update</AlertDialog.Action
+				disabled={buttonsLoading.update}
+				onclick={startUpdate}
 			>
+				{#if buttonsLoading.update}<Spinner />{/if}
+				Update
+			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

@@ -35,6 +35,15 @@
 	let restartDialogOpen = $state(false);
 	let resetDialogOpen = $state(false);
 	let removeDeviceDialogOpen = $state({});
+
+	// Close dialogs when loading finishes
+	$effect(() => {
+		if (!buttonsLoading.restart) restartDialogOpen = false;
+		if (!buttonsLoading.reset) resetDialogOpen = false;
+		for (const id of Object.keys(removeDeviceDialogOpen)) {
+			if (!buttonsLoading[`remove-${id}`]) delete removeDeviceDialogOpen[id];
+		}
+	});
 </script>
 
 <div class="space-y-6">
@@ -142,15 +151,8 @@
 									removeDeviceDialogOpen[device.id] = open;
 								}}
 							>
-								<AlertDialog.Trigger
-									class="{buttonVariants({ variant: 'ghost', size: 'xs' })} -mr-1"
-									disabled={buttonsLoading[`remove-${device.id}`]}
-								>
-									{#if buttonsLoading[`remove-${device.id}`]}
-										<Spinner class="size-4" />
-									{:else}
-										<RiCloseLine class="size-4" />
-									{/if}
+								<AlertDialog.Trigger class="{buttonVariants({ variant: 'ghost', size: 'xs' })} -mr-1">
+									<RiCloseLine class="size-4" />
 								</AlertDialog.Trigger>
 								<AlertDialog.Content>
 									<AlertDialog.Header>
@@ -161,13 +163,14 @@
 										</AlertDialog.Description>
 									</AlertDialog.Header>
 									<AlertDialog.Footer>
-										<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+										<AlertDialog.Cancel disabled={buttonsLoading[`remove-${device.id}`]}>Cancel</AlertDialog.Cancel>
 										<AlertDialog.Action
-											onclick={() => {
-												delete removeDeviceDialogOpen[device.id];
-												removeDevice(device.id);
-											}}>Remove</AlertDialog.Action
+											disabled={buttonsLoading[`remove-${device.id}`]}
+											onclick={() => removeDevice(device.id)}
 										>
+											{#if buttonsLoading[`remove-${device.id}`]}<Spinner />{/if}
+											Remove
+										</AlertDialog.Action>
 									</AlertDialog.Footer>
 								</AlertDialog.Content>
 							</AlertDialog.Root>
@@ -179,15 +182,8 @@
 	</div>
 
 	<AlertDialog.Root bind:open={restartDialogOpen}>
-		<AlertDialog.Trigger
-			class="{buttonVariants({ variant: 'outline' })} w-full gap-2"
-			disabled={buttonsLoading.restart}
-		>
-			{#if buttonsLoading.restart}
-				<Spinner class="size-4" />
-			{:else}
-				<RiRestartLine class="size-4" />
-			{/if}
+		<AlertDialog.Trigger class="{buttonVariants({ variant: 'outline' })} w-full gap-2">
+			<RiRestartLine class="size-4" />
 			Restart
 		</AlertDialog.Trigger>
 		<AlertDialog.Content>
@@ -198,24 +194,21 @@
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
-				<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+				<AlertDialog.Cancel disabled={buttonsLoading.restart}>Cancel</AlertDialog.Cancel>
 				<AlertDialog.Action
-					onclick={() => {
-						restartDialogOpen = false;
-						restartProduct();
-					}}>Restart</AlertDialog.Action
+					disabled={buttonsLoading.restart}
+					onclick={restartProduct}
 				>
+					{#if buttonsLoading.restart}<Spinner />{/if}
+					Restart
+				</AlertDialog.Action>
 			</AlertDialog.Footer>
 		</AlertDialog.Content>
 	</AlertDialog.Root>
 
 	<AlertDialog.Root bind:open={resetDialogOpen}>
-		<AlertDialog.Trigger class="{buttonVariants({ variant: 'outline' })} w-full gap-2" disabled={buttonsLoading.reset}>
-			{#if buttonsLoading.reset}
-				<Spinner class="size-4" />
-			{:else}
-				<RiFileShredLine class="size-4" />
-			{/if}
+		<AlertDialog.Trigger class="{buttonVariants({ variant: 'outline' })} w-full gap-2">
+			<RiFileShredLine class="size-4" />
 			Factory reset
 		</AlertDialog.Trigger>
 		<AlertDialog.Content>
@@ -226,13 +219,14 @@
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
-				<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+				<AlertDialog.Cancel disabled={buttonsLoading.reset}>Cancel</AlertDialog.Cancel>
 				<AlertDialog.Action
-					onclick={() => {
-						resetDialogOpen = false;
-						resetProduct();
-					}}>Reset</AlertDialog.Action
+					disabled={buttonsLoading.reset}
+					onclick={resetProduct}
 				>
+					{#if buttonsLoading.reset}<Spinner />{/if}
+					Reset
+				</AlertDialog.Action>
 			</AlertDialog.Footer>
 		</AlertDialog.Content>
 	</AlertDialog.Root>

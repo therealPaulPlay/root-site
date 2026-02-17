@@ -770,13 +770,16 @@
 	}
 
 	function setVersionDev() {
+		buttonsLoading.setVersionDev = true;
 		relayCommInstance.send(productId, "setVersionDev").catch((error) => {
 			toast.error("Failed to set version to dev: " + error.message);
 			console.error("Failed to set version to dev:", error);
+			buttonsLoading.setVersionDev = false;
 		});
 	}
 
 	function handleSetVersionDevResult(msg) {
+		buttonsLoading.setVersionDev = false;
 		if (!msg.payload.success) {
 			toast.error("Failed to set version to dev: " + msg.payload.error || "Unknown error");
 			return;

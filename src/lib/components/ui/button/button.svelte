@@ -65,9 +65,9 @@
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
 		{disabled}
-		onclick={() => {
+		onclick={(e) => {
 			if (variant == "default" || variant == "destructive") vibrate.light();
-			execFunc?.();
+			execFunc?.(e);
 		}}
 		{...restProps}
 	>
