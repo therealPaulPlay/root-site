@@ -157,7 +157,7 @@
 
 	const privacyIssueArticleSnippets = [
 		{
-			text: "Eufy failed to encrypt a portion of video streams and made private home footage accessible to unauthenticated users.",
+			text: "Eufy failed to encrypt a portion of video streams and made private home footage accessible to other unauthenticated users.",
 			source:
 				"https://ag.ny.gov/press-release/2025/attorney-general-james-secures-450000-companies-selling-home-security-cameras?utm_source=chatgpt.com",
 			sourceName: "NY AG"
@@ -193,7 +193,7 @@
 	onscroll={() => updateEyePupils(lastMousePosition.x, lastMousePosition.y)}
 />
 
-<section class="relative mb-20 flex h-125 w-full items-center justify-center border-b xl:h-155">
+<section class="relative mb-20 flex h-135 w-full items-center justify-center border-b xl:h-155">
 	<!-- svelte-ignore a11y_media_has_caption -->
 	<video
 		loop
@@ -221,11 +221,11 @@
 				Privacy, redefined
 			</h3>
 			<p class="max-w-lg text-pretty text-background">
-				The ROOT Observer rethinks security cameras with cryptographically guaranteed privacy.
+				Rethinking security cameras with cryptographically guaranteed privacy. That's ROOT.
 			</p>
 			<Button
 				size="lg"
-				class="mt-2 bg-background text-foreground hover:bg-background/80 hover:text-foreground"
+				class="mt-2 bg-background text-foreground hover:bg-background/80 hover:text-foreground active:bg-background/80"
 				href="https://tally.so/r/NpXY1N"
 				target="_blank">Email waitlist</Button
 			>
@@ -234,7 +234,7 @@
 </section>
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
-	<div class="min-w-2/3 space-y-4 p-6 lg:border-r lg:p-8">
+	<div class="min-w-2/3 space-y-4 p-6 max-lg:border-b max-lg:border-dashed lg:border-r lg:p-8">
 		<h3 class="text-3xl">Keeping you safe.</h3>
 		<p class="max-w-150">
 			Privacy protects everyone. It’s a basic human right, <span class="bg-accent"
@@ -243,10 +243,10 @@
 		</p>
 		<p class="max-w-150">
 			Unlike most smart home cameras, <span class="bg-accent">ROOT products ensure only you can access</span> video, audio
-			and sensor data using end-to-end encryption and a local-first architecture.
+			and sensor data.
 		</p>
 	</div>
-	<div class="relative m-6 min-h-35 flex-1 overflow-hidden max-lg:h-30 lg:m-8">
+	<div class="relative m-6 min-h-33 flex-1 overflow-hidden max-lg:h-30 lg:m-8">
 		{#snippet eyeSnippet(id)}
 			{@const pupilId = `pupil-${id}`}
 			{@const innerPupilId = `inner-pupil-${id}`}
@@ -311,7 +311,7 @@
 
 <section class="mb-20 flex border-y max-lg:flex-wrap-reverse">
 	<div
-		class="relative flex min-h-60 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
+		class="relative flex min-h-50 w-full min-w-1/3 flex-col justify-center overflow-hidden mask-y-from-75% mask-y-to-100%"
 	>
 		<div
 			class="absolute inset-0 ml-10 transition-transform duration-700 ease-in-out xl:ml-15"
@@ -333,7 +333,7 @@
 			{/each}
 		</div>
 	</div>
-	<div class="min-w-2/3 space-y-4 p-6 lg:border-l lg:p-8">
+	<div class="min-w-2/3 space-y-4 p-6 max-lg:border-b max-lg:border-dashed lg:border-l lg:p-8">
 		<h3 class="text-3xl">Why it matters.</h3>
 		<p class="max-w-150">
 			Large tech corporations collect huge amounts of user information <span class="bg-accent"
@@ -343,7 +343,7 @@
 		<p class="max-w-150">
 			As political landscapes shift, the question isn't just who can access this data today, <span class="bg-accent"
 				>but who might access it tomorrow</span
-			>. Privacy is about preparation.
+			>.
 		</p>
 	</div>
 </section>
@@ -353,7 +353,7 @@
 		<h3 class="text-3xl">Others can't be trusted.</h3>
 	</div>
 	<!-- Articles about data breaches affecting security cameras -->
-	<div class="px-10">
+	<div class="sm:px-10">
 		<Carousel.Root>
 			<Carousel.Content class="gap-6">
 				{#each privacyIssueArticleSnippets as item}
@@ -433,7 +433,7 @@
 	</div>
 
 	<!-- Text content (right side) -->
-	<div class="min-w-1/2 space-y-4 p-6 lg:p-8 xl:border-l">
+	<div class="min-w-1/2 space-y-4 p-6 max-xl:border-b max-xl:border-dashed lg:p-8 xl:border-l">
 		<h3 class="text-3xl">A secure architecture.</h3>
 		<p class="max-w-130">
 			All data is end-to-end encrypted with forward secrecy to ensure <span class="bg-accent"

@@ -15,9 +15,9 @@
 	{size}
 	aria-disabled={!emblaCtx.canScrollPrev}
 	class={cn(
-		"absolute flex size-8 justify-center",
+		"absolute flex size-8 justify-center max-sm:hidden",
 		emblaCtx.orientation === "horizontal"
-			? "top-1/2 -left-12 -translate-y-1/2"
+			? "top-1/2 -left-10 -translate-y-1/2"
 			: "-top-12 left-1/2 -translate-x-1/2 rotate-90",
 		className
 	)}
