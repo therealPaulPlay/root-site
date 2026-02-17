@@ -63,6 +63,7 @@
 
 		// Delay to ensure DOM is ready
 		requestAnimationFrame(() => {
+			lastMousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 }; // Initialize last mouse position as center point
 			updateMarqueeText();
 			updateEyeGrid();
 		});
@@ -185,6 +186,7 @@
 		updateEyeGrid();
 	}}
 	onpointermove={(e) => {
+		if (e.pointerType !== "mouse") return;
 		lastMousePosition = { x: e.clientX, y: e.clientY };
 		updateEyePupils(e.clientX, e.clientY);
 	}}
@@ -317,7 +319,7 @@
 		>
 			{#each exampleTrackingInfo as info, i}
 				<div
-					class="flex h-18 items-center gap-3 text-4xl max-2xl:font-[425] transition duration-700 2xl:text-5xl"
+					class="flex h-18 items-center gap-3 text-4xl transition duration-700 max-2xl:font-[425] 2xl:text-5xl"
 					class:opacity-100={i === trackingExampleIndex}
 					class:opacity-30={i !== trackingExampleIndex}
 					class:scale-100={i === trackingExampleIndex}
