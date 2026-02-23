@@ -30,11 +30,12 @@
 	import QRViewfinder from "$lib/components/QRViewfinder.svelte";
 	import WebBluetoothUnsupportedDialog from "$lib/components/WebBluetoothUnsupportedDialog.svelte";
 	import AdjustConnectRelayDialog from "$lib/components/AdjustConnectRelayDialog.svelte";
+	import { vibrate } from "$lib/utils/haptics";
 
 	let step = $state(1);
 	let stepAmount = $state(6);
 	let stepConditionMet = $derived.by(() => {
-		if (step == 2 && (!connectedBleDevice || !pairingCode)) return false;
+		if (step == 2 && !successfulConnect) return false;
 		if (step == 3 && !successfulScan) return false;
 		if (step == 4 && !successfulPair) return false;
 		if (step == 5 && !wifiConfigured) return false;
@@ -62,14 +63,9 @@
 	// Instances
 	let bluetoothInstance = new Bluetooth();
 
-	// State
-	let connectedBleDevice = $state();
+	// Input state
 	let pairingCode = $state();
-	let successfulScan = $state(false);
 	let deviceNameInput = $state("My phone");
-	let successfulPair = $state(false);
-	let relayConfigured = $state(false);
-	let wifiConfigured = $state(false);
 	let wifiNetworks = $state([]);
 	let selectedWiFiSSID = $state("");
 	let showWifiPassword = $state(false);
@@ -90,6 +86,13 @@
 	let currentlyConnectingWifi = $state(false);
 	let currentlyLoadingWifi = $state(false);
 	let currentlySettingRelay = $state(false);
+
+	// Success state
+	let successfulConnect = $state(false);
+	let successfulScan = $state(false);
+	let successfulPair = $state(false);
+	let relayConfigured = $state(false);
+	let wifiConfigured = $state(false);
 
 	// Data
 	let countryCodes = $state({});
@@ -152,17 +155,15 @@
 				null
 			);
 
-			const response = await bluetoothInstance.writeAndPoll("wifiConnect", {
+			await bluetoothInstance.writeAndPoll("wifiConnect", {
 				deviceId: localStorage.getItem("deviceId"),
 				payload
 			});
 
-			if (response.success) {
-				wifiConfigured = true;
-				selectedWiFiSSID = pendingWifiNetwork.ssid;
-				wifiConnectDialogOpen = false;
-				toast.success("Connected to " + pendingWifiNetwork.ssid + "!");
-			}
+			wifiConfigured = true;
+			selectedWiFiSSID = pendingWifiNetwork.ssid;
+			wifiConnectDialogOpen = false;
+			toast.success("Connected to " + pendingWifiNetwork.ssid + "!");
 		} catch (error) {
 			toast.error("Error connecting to WiFi: " + error.message);
 		} finally {
@@ -215,59 +216,64 @@
 			</p>
 			<Button
 				class="mt-4 w-fit"
-				disabled={currentlyConnectingViaBle || connectedBleDevice}
+				disabled={currentlyConnectingViaBle || successfulConnect}
 				onclick={async () => {
 					// Scan for and select a device (opens system prompt)
 					try {
-						connectedBleDevice = await bluetoothInstance.scan();
+						await bluetoothInstance.scan();
 					} catch (error) {
 						if (!error.message?.includes("User cancelled"))
 							toast.error("Error selecting bluetooth device: " + error.message);
 						return;
 					}
 
-					currentlyConnectingViaBle = true;
-
-					// Connect to the selected device
 					try {
-						await bluetoothInstance.connect();
+						// Enter connecting state
+						currentlyConnectingViaBle = true;
+
+						// Connect to the selected device
+						try {
+							await bluetoothInstance.connect();
+						} catch (error) {
+							throw new Error("Error connecting to bluetooth device: " + error.message);
+						}
+
+						// Get pairing code
+						try {
+							const result = await bluetoothInstance.read("getCode");
+							pairingCode = result.code;
+						} catch (error) {
+							throw new Error("Error getting pairing code: " + error.message);
+						}
+
+						// Get product ID to check if already paired
+						try {
+							const productIdResult = await bluetoothInstance.read("productId");
+							currentProductId = productIdResult.productId;
+
+							// Check if this product is already paired
+							const existingProduct = getProduct(currentProductId);
+							if (existingProduct) alreadyPairedDialogOpen = true;
+						} catch (error) {
+							throw new Error("Error getting product ID: " + error.message);
+						}
+
+						// Set success
+						successfulConnect = true;
+						vibrate.success();
 					} catch (error) {
+						bluetoothInstance.disconnect(); // Async, but don't await
+						toast.error(error.message);
+					} finally {
 						currentlyConnectingViaBle = false;
-						connectedBleDevice = null;
-						toast.error("Error connecting to bluetooth device: " + error.message);
-						return;
 					}
-
-					// Get pairing code
-					try {
-						const result = await bluetoothInstance.read("getCode");
-						pairingCode = result.code;
-					} catch (error) {
-						currentlyConnectingViaBle = false;
-						toast.error("Error getting pairing code: " + error.message);
-						return;
-					}
-
-					// Get product ID to check if already paired
-					try {
-						const productIdResult = await bluetoothInstance.read("productId");
-						currentProductId = productIdResult.productId;
-
-						// Check if this product is already paired
-						const existingProduct = getProduct(currentProductId);
-						if (existingProduct) alreadyPairedDialogOpen = true;
-					} catch (error) {
-						toast.error("Error getting product ID: " + error.message);
-					}
-
-					currentlyConnectingViaBle = false;
 				}}
 			>
 				{#if currentlyConnectingViaBle}
 					<Spinner />
 				{/if}
 				Open Bluetooth
-				{#if connectedBleDevice && !currentlyConnectingViaBle}
+				{#if successfulConnect && !currentlyConnectingViaBle}
 					<RiCheckLine class="h-4! w-4!" />
 				{/if}
 			</Button>
@@ -283,7 +289,10 @@
 						try {
 							currentlyScanning = true;
 							await bluetoothInstance.read("scanQR");
+
+							// Set success
 							successfulScan = true;
+							vibrate.success();
 						} catch (error) {
 							toast.error("Error scanning code: " + error.message);
 						} finally {
@@ -326,14 +335,11 @@
 							// Generate keypair for this device
 							const keypair = await Encryption.generateKeypair();
 
-							const pairingResponse = await bluetoothInstance.writeAndRead("pair", {
+							await bluetoothInstance.writeAndRead("pair", {
 								deviceId,
 								deviceName: deviceNameInput.trim(),
 								devicePublicKey: encodeKey(keypair.publicKey)
 							});
-
-							// Set for lookups
-							currentProductId = pairingResponse.productId;
 
 							// Get model name
 							const modelResponse = await bluetoothInstance.read("productModel");
@@ -343,7 +349,7 @@
 
 							// Save product after successful pairing
 							saveProduct({
-								id: pairingResponse.productId,
+								id: currentProductId,
 								name: "My ROOT " + modelResponse.model?.[0]?.toUpperCase() + modelResponse.model?.slice(1), // Don't change this prefix! It needs to match the firmware ProductAlias
 								productPublicKey: publicKeyResponse.publicKey,
 								devicePublicKey: encodeKey(keypair.publicKey),
@@ -355,7 +361,9 @@
 							// Get WiFi and relay status
 							await getWifiAndRelayStatus();
 
+							// Set success
 							successfulPair = true;
+							vibrate.success();
 
 							// Load wifi networks for next step
 							getWifiNetworks();
@@ -443,7 +451,7 @@
 					Please set a relay domain. Custom relay servers give extra flexibility for advanced users.
 				</p>
 			{:else}
-				<p class="max-w-3xl">The relay domain is configured. It can be edited below.</p>
+				<p class="max-w-3xl">The relay domain is configured. It can be adjusted below.</p>
 			{/if}
 
 			<div class="mt-4 space-y-4">
@@ -462,14 +470,12 @@
 								const relayDomain = relayDomainInput.trim();
 								const encryption = await Encryption.initForProduct(currentProductId);
 								const payload = await encryption.encrypt(encode({ relayDomain }), null);
-								const response = await bluetoothInstance.writeAndRead("relaySet", {
+								await bluetoothInstance.writeAndRead("relaySet", {
 									deviceId: localStorage.getItem("deviceId"),
 									payload
 								});
-								if (response.success) {
-									relayConfigured = true;
-									newRelayDomain = relayDomain; // Passed to adjust connect relay dialog
-								}
+								relayConfigured = true;
+								newRelayDomain = relayDomain; // Passed to adjust connect relay dialog
 							} catch (error) {
 								toast.error("Error setting relay domain: " + error.message);
 							} finally {
@@ -483,7 +489,7 @@
 						{#if !relayConfigured}
 							Set domain
 						{:else}
-							Edit domain
+							Update domain
 						{/if}
 					</Button>
 					{#if relayDomainInput !== DEFAULT_RELAY_DOMAIN}

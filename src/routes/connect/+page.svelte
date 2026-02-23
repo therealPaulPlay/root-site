@@ -160,7 +160,7 @@
 			.catch((error) => {
 				toast.error(`Failed to inform product ${productId} about device removal: ` + error.message);
 				console.error(`Failed to inform product ${productId} about device removal:`, error);
-				delete removeDialogOpen[productId]; // Close dialog
+				delete removeDialogOpen[productId]; // Close dialog since we remove the product anyway
 				delete removeDialogLoading[productId]; // Stop loading
 				removeProduct(productId); // Remove prodcut locally anyway
 				loadProducts(); // Refresh products

@@ -16,6 +16,8 @@
 		activeTab,
 		healthTab = "",
 		buttonsLoading = $bindable(),
+		devDialogOpen = $bindable(false),
+		updateDialogOpen = $bindable(false),
 		loadHealth = () => {},
 		loadUpdateStatus = () => {},
 		startUpdate = () => {},
@@ -23,8 +25,6 @@
 	} = $props();
 
 	let logsContainer = $state();
-	let devDialogOpen = $state(false);
-	let updateDialogOpen = $state(false);
 	let hoveredTimestamp = $state(null);
 	let initialScrollDone = $state(false);
 
@@ -67,11 +67,6 @@
 		if (highlightedLogIndex !== -1) vibrate.light();
 	});
 
-	// Close dialogs when loading finishes
-	$effect(() => {
-		if (!buttonsLoading.update) updateDialogOpen = false;
-		if (!buttonsLoading.setVersionDev) devDialogOpen = false;
-	});
 </script>
 
 <div class="flex items-center justify-end">

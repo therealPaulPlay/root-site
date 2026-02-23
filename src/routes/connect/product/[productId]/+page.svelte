@@ -48,6 +48,13 @@
 	// Universal button / controls loading state
 	let buttonsLoading = $state({});
 
+	// Dialog open states (closed on success)
+	let restartDialogOpen = $state(false);
+	let resetDialogOpen = $state(false);
+	let removeDeviceDialogOpen = $state({});
+	let updateDialogOpen = $state(false);
+	let devDialogOpen = $state(false);
+
 	// Devices
 	let devices = $state([]);
 
@@ -654,6 +661,7 @@
 		}
 		const removedId = msg.payload.removedDeviceId;
 		devices = devices.filter((d) => d.id !== removedId);
+		delete removeDeviceDialogOpen[removedId];
 		buttonsLoading[`remove-${removedId}`] = false;
 	}
 
@@ -672,6 +680,7 @@
 			toast.error("Failed to restart product: " + msg.payload.error || "Unknown error");
 			return;
 		}
+		restartDialogOpen = false;
 		toast.success("Restarting!");
 		setTimeout(() => {
 			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
@@ -693,6 +702,7 @@
 			toast.error("Failed to reset device: " + msg.payload.error || "Unknown error");
 			return;
 		}
+		resetDialogOpen = false;
 		toast.success("Reset initiated!");
 		removeProduct(msg.originId); // Remove product, since factory resetting will remove all paired devices
 		setTimeout(() => {
@@ -765,6 +775,7 @@
 			toast.error("Failed to start update: " + msg.payload.error || "Unknown error");
 			return;
 		}
+		updateDialogOpen = false;
 		toast.success("Update started!");
 		loadUpdateStatus();
 	}
@@ -784,6 +795,7 @@
 			toast.error("Failed to set version to dev: " + msg.payload.error || "Unknown error");
 			return;
 		}
+		devDialogOpen = false;
 		toast.success("Version set to dev!");
 		loadUpdateStatus();
 	}
@@ -845,6 +857,9 @@
 			<Tabs.Content value={TABS.CONTROLS} class="of-top of-bottom space-y-6 overflow-y-auto p-6">
 				<CameraControls
 					bind:buttonsLoading
+					bind:restartDialogOpen
+					bind:resetDialogOpen
+					bind:removeDeviceDialogOpen
 					{toggleMicrophone}
 					{toggleRecordingSound}
 					{toggleEventDetection}
@@ -863,6 +878,8 @@
 			<Tabs.Content value={TABS.HEALTH} class="of-top of-bottom space-y-6 overflow-y-auto p-6">
 				<CameraHealth
 					bind:buttonsLoading
+					bind:devDialogOpen
+					bind:updateDialogOpen
 					{loadHealth}
 					{loadUpdateStatus}
 					{health}

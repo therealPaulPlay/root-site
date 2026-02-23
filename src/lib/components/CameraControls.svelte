@@ -17,6 +17,9 @@
 
 	let {
 		buttonsLoading = $bindable({}),
+		restartDialogOpen = $bindable(false),
+		resetDialogOpen = $bindable(false),
+		removeDeviceDialogOpen = $bindable({}),
 		toggleMicrophone = () => {},
 		toggleRecordingSound = () => {},
 		toggleEventDetection = () => {},
@@ -31,19 +34,6 @@
 		eventDetectionTypes = $bindable([]),
 		devices = []
 	} = $props();
-
-	let restartDialogOpen = $state(false);
-	let resetDialogOpen = $state(false);
-	let removeDeviceDialogOpen = $state({});
-
-	// Close dialogs when loading finishes
-	$effect(() => {
-		if (!buttonsLoading.restart) restartDialogOpen = false;
-		if (!buttonsLoading.reset) resetDialogOpen = false;
-		for (const id of Object.keys(removeDeviceDialogOpen)) {
-			if (!buttonsLoading[`remove-${id}`]) delete removeDeviceDialogOpen[id];
-		}
-	});
 </script>
 
 <div class="space-y-6">

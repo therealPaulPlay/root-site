@@ -36,6 +36,7 @@
 
 	<!-- Scroll area -->
 	<div class="of-top of-bottom of-length-2 max-h-full w-full overflow-y-auto">
+		<!-- Relay domain -->
 		<section class="mt-10 w-full space-y-8 border-y p-6 lg:p-8">
 			<div class="flex max-w-lg flex-col gap-4">
 				<div class="space-y-1">
@@ -48,6 +49,7 @@
 				</p>
 			</div>
 
+			<!-- Button text here should match the relay update button text in /add for consistency -->
 			<Button
 				disabled={relayDomainInput === relayDomain}
 				onclick={() => {
@@ -56,7 +58,7 @@
 						localStorage.setItem("relayDomain", domain);
 						relayDomain = domain;
 					}
-				}}>Save</Button
+				}}>Update domain</Button
 			>
 		</section>
 
