@@ -24,6 +24,26 @@
 		</p>
 		<br /><br />
 
+		<h2 class="mb-4 font-mono">Safety warnings</h2>
+		<p>
+			Cables included with our products should be kept out of reach of children due to strangulation risk. Do not use
+			products with damaged, frayed, or exposed cables — these pose a fire and electric shock hazard and should be
+			replaced immediately. Damage caused by power surges or lightning strikes is not covered under warranty, and the
+			use of surge protectors is recommended.
+		</p>
+		<br />
+		<p>
+			Improper installation may result in the device falling, potentially causing injury or property damage — follow
+			all installation guidelines and ensure secure mounting.
+		</p>
+		<br />
+		<p>
+			Our products use infrared LEDs for night vision which may cause interference with other infrared-sensitive
+			devices or equipment in the vicinity. Some of our products may contain small parts — keep packaging and
+			components away from young children to avoid choking hazards.
+		</p>
+		<br /><br />
+
 		<h2 class="mb-4 font-mono">Data security and transmission</h2>
 		<p>
 			While we implement end-to-end encryption and security measures to protect your data, no method of electronic
@@ -46,7 +66,9 @@
 		<p>
 			Our warranty covers defects in materials and workmanship under normal use for the period specified with your
 			product. The warranty does not cover damage from misuse, abuse, accidents, drops, liquid exposure, unauthorized
-			modifications, or use outside specified operating conditions. Warranty claims require proof of purchase and are
+			modifications, use in environments exceeding 60°C, or use outside specified operating conditions. For products not
+			explicitly labeled as outdoor-rated,
+			water and moisture damage is not covered under warranty. Warranty claims require proof of purchase and are
 			subject to our inspection and approval.
 		</p>
 		<br /><br />
@@ -91,7 +113,7 @@
 				class="underline">this page</a
 			>.
 			<br /><br />
-			Last updated: January 8, 2026
+			Last updated: February 25, 2026
 		</p>
 	</div>
 </section>
