@@ -11,7 +11,7 @@
 	<h3 class="text-2xl">A truly private security camera.</h3>
 	<p class="max-w-lg text-left!">The ROOT Observer redefines home security with privacy at the cryptographic level.</p>
 	<Button
-		class="mt-2 bg-background text-foreground hover:bg-background/80 hover:text-foreground"
+		class="mt-2 bg-background text-foreground hover:bg-background/80 hover:text-foreground active:text-foreground active:bg-background/80"
 		href="https://tally.so/r/NpXY1N"
 		target="_blank">Email waitlist</Button
 	>
