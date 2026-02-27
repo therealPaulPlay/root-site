@@ -34,7 +34,7 @@ async function ensureInitialized() {
 	if (initialized) return;
 
 	// Check for Bluetooth support on web
-	if (!bluetoothSupported) throw new Error("Bluetooth is not supported in this environment!");
+	if (!bluetoothSupported) throw new Error("Bluetooth is not supported in this environment");
 
 	await BleClient.initialize({ androidNeverForLocation: true });
 	initialized = true;
@@ -63,7 +63,7 @@ export class Bluetooth {
 
 	async connect() {
 		await ensureInitialized();
-		if (!this.isConnected()) throw new Error("No device selected. Call scan() first!");
+		if (!this.isConnected()) throw new Error("No device selected. Call scan() first");
 
 		await BleClient.connect(this.#deviceId, (deviceId) => {
 			// On disconnect...
@@ -87,7 +87,7 @@ export class Bluetooth {
 
 	async read(charName) {
 		await ensureInitialized();
-		if (!this.isConnected()) throw new Error("No BLE device connected!");
+		if (!this.isConnected()) throw new Error("No BLE device connected");
 
 		const uuid = CHAR_UUIDS[charName];
 		if (!uuid) throw new Error(`Unknown characteristic: ${charName}`);
@@ -99,16 +99,16 @@ export class Bluetooth {
 			response = decode(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
 		} catch (e) {
 			console.error("Failed to decode BLE response (read):", e);
-			throw new Error("Invalid CBOR response from device!");
+			throw new Error("Invalid CBOR response from device");
 		}
 
-		if (!response.success) throw new Error(response.error || "No error provided!");
+		if (!response.success) throw new Error(response.error || "No error provided");
 		return response;
 	}
 
 	async write(charName, data) {
 		await ensureInitialized();
-		if (!this.isConnected()) throw new Error("No BLE device connected!");
+		if (!this.isConnected()) throw new Error("No BLE device connected");
 
 		const uuid = CHAR_UUIDS[charName];
 		if (!uuid) throw new Error(`Unknown characteristic: ${charName}`);
@@ -131,7 +131,7 @@ export class Bluetooth {
 		while (Date.now() - startTime < timeoutMs) {
 			await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
 
-			if (!this.isConnected()) throw new Error("Polling aborted as no BLE device is connected!");
+			if (!this.isConnected()) throw new Error("Polling aborted as no BLE device is connected");
 
 			const response = await this.read(charName);
 			if (response.status === "pending") continue;

@@ -9,7 +9,7 @@ export class Encryption {
 
 	static async initForProduct(productId) {
 		const product = getProduct(productId);
-		if (!product) throw new Error("Product not found!");
+		if (!product) throw new Error("Product not found");
 
 		const encryption = new Encryption();
 		encryption.#key = await Encryption.#deriveKey(

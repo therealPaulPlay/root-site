@@ -200,8 +200,7 @@
 
 		{#if step == 1}
 			<p class="max-w-3xl">
-				Use the USB charger to plug your ROOT camera into a wall outlet. Wait until a startup sound plays. Rarely, this
-				can take up to 5 minutes.
+				Connect your ROOT camera to power and wait until a startup sound plays. This may take up to 3 minutes in rare cases.
 			</p>
 			<p class="text-muted-foreground">
 				By continuing setup, you agree to our <IframeDialog src="/terms" variant={null}

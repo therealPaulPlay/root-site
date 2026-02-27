@@ -19,6 +19,7 @@
 	import { toast } from "svelte-sonner";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
+	import PullToRefresh from "$lib/components/PullToRefresh.svelte";
 
 	let products = $state([]);
 	let relayCommInstance;
@@ -39,10 +40,11 @@
 	}
 
 	let loadAbort;
+	let loadGeneration = 0;
 
-	function loadProductData(productId) {
+	function loadProductData(productId, gen) {
 		relayCommInstance.send(productId, "getPreview").catch((error) => {
-			previewFailed[productId] = true;
+			if (gen === loadGeneration) previewFailed[productId] = true;
 			console.error(`Failed to get preview for product ${productId}:`, error);
 		});
 		relayCommInstance.send(productId, "getUpdateStatus").catch((error) => {
@@ -51,18 +53,26 @@
 	}
 
 	async function startLoadQueue() {
+		// Abort previous queue and reset preview/status state
+		if (loadAbort) loadAbort.abort();
+		for (const url of Object.values(previewImages)) URL.revokeObjectURL(url);
+		previewImages = {};
+		previewFailed = {};
+		updateStatuses = {};
+		++loadGeneration; // Increment generation
+
 		const abort = new AbortController();
 		loadAbort = abort;
 		for (let i = 0; i < products.length; i++) {
 			if (abort.signal.aborted) return;
-			loadProductData(products[i].id);
+			loadProductData(products[i].id, loadGeneration);
 			if ((i + 1) % 5 === 0) await new Promise((r) => setTimeout(r, 1000)); // Rate limit: 5/s (10 requests/s)
 		}
 	}
 
 	onMount(async () => {
 		const relayDomain = localStorage.getItem("relayDomain") || DEFAULT_RELAY_DOMAIN;
-		loadProducts();
+		loadProducts(); // Load paired products from storage
 
 		// If the user has products, connect to relay
 		if (products.length) {
@@ -71,20 +81,21 @@
 				if (!deviceId) throw new Error("No device ID set! Cannot connect to relay.");
 				relayCommInstance = new RelayComm(relayDomain, localStorage.getItem("deviceId"));
 				await relayCommInstance.connect();
-				startLoadQueue();
+				startLoadQueue(); // Start loading products with rate limit
 
 				relayCommInstance.on("getPreviewResult", (msg) => {
+					if (previewImages[msg.originId]) return; // Already loaded
 					if (!msg.payload.success) {
 						previewFailed[msg.originId] = true;
-						toast.error(
-							`Failed to get preview for product ${msg.originId}: ` + (msg.payload.error || "Unknown error")
-						);
+						toast.error(`Failed to get preview for product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
 						return;
 					}
+					delete previewFailed[msg.originId]; // Clear any stale failure
 					previewImages[msg.originId] = URL.createObjectURL(new Blob([msg.payload.data], { type: "image/jpeg" }));
 				});
 
 				relayCommInstance.on("getUpdateStatusResult", (msg) => {
+					if (updateStatuses[msg.originId]) return; // Already loaded
 					if (!msg.payload.success) {
 						toast.error(
 							`Failed to get update status for product ${msg.originId}: ` + (msg.payload.error || "Unknown error")
@@ -97,8 +108,7 @@
 				relayCommInstance.on("removeDeviceResult", (msg) => {
 					if (!msg.payload.success) {
 						toast.error(
-							`Failed to inform product ${msg.originId} about device removal: ` +
-								(msg.payload.error || "Unknown error")
+							`Failed to inform product ${msg.originId} about device removal: ` + (msg.payload.error || "Unknown error")
 						);
 						// Don't return, just acknowledge the error
 					}
@@ -304,7 +314,13 @@
 
 <!-- Scrollable product view -->
 <div class="mt-[7.5rem] h-[calc(100svh-7.5rem)]" class:border-t={products.length}>
-	<div class="of-top of-bottom flex h-full w-full flex-col items-center justify-start gap-8 overflow-y-auto pb-30">
+	<PullToRefresh
+		disabled={!products.length}
+		onRefresh={() => {
+			if (relayCommInstance && products.length) startLoadQueue();
+		}}
+		class="of-top of-bottom flex flex-col items-center justify-start gap-8 pb-30"
+	>
 		{#if products.length}
 			{#each products as product, index}
 				{@render productItem(product, index === 0)}
@@ -314,5 +330,5 @@
 				>Click "<RiVideoAddLine class="-mx-1.25 size-4!" />" to connect a camera.</Label
 			>
 		{/if}
-	</div>
+	</PullToRefresh>
 </div>
