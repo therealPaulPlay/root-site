@@ -82,8 +82,6 @@
 
 	<h2 class="text-3xl">Required hardware</h2>
 
-	<ContentNote text="No startup sound will play without the buzzer. Raspberry Pi 3, 4 and 5 may work too." />
-
 	<ul class="ml-4 list-disc space-y-2">
 		<li>Raspberry Pi Zero 2w</li>
 		<li>Camera module (Official Pi camera modules, ZeroCam, etc.)</li>

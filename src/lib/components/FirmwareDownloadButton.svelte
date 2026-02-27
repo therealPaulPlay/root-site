@@ -5,10 +5,11 @@
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { RiDownloadLine } from "svelte-remixicon";
 	import { onMount } from "svelte";
+	import ContentNote from "./ContentNote.svelte";
+	import Label from "./ui/label/label.svelte";
 
 	let loading = $state(true);
-	let filename = $state("");
-	let downloadUrl = $state("");
+	let images = $state([]);
 	let hasError = $state(false);
 
 	onMount(async () => {
@@ -17,8 +18,7 @@
 			if (!response.ok) throw new Error(`Failed to fetch firmware info: ${response.status}`);
 
 			const data = await response.json();
-			filename = data.filename;
-			downloadUrl = data.url;
+			images = data.images;
 		} catch (error) {
 			console.error("Error fetching firmware image info:", error.message);
 			toast.error("Failed to load firmware download info: " + error.message);
@@ -29,20 +29,31 @@
 	});
 </script>
 
-<Button
-	href={downloadUrl}
-	target="_blank"
-	variant="outline"
-	disabled={loading || hasError}
-	class="justify-center max-w-full"
->
+<ContentNote
+	text="The custom variant is configured for the Sony IMX290. Use auto-detect for official camera modules."
+	class="mb-4"
+/>
+<div class="max-w-lg space-y-4 border p-4">
 	{#if loading}
-		<Spinner />
-		Loading firmware...
+		<div class="flex items-center gap-4">
+			<Spinner />
+			<p class="text-sm text-muted-foreground">Loading...</p>
+		</div>
 	{:else if hasError}
-		Failed to load firmware
+		<p class="text-sm text-muted-foreground">Failed to load.</p>
+	{:else if images.length === 0}
+		<p class="text-sm text-muted-foreground">No images available.</p>
 	{:else}
-		<p class="flex-1 truncate">{filename}</p>
-		<RiDownloadLine class="size-4" />
+		<div class="space-y-4">
+			{#each images as image}
+				<Button href={image.url} target="_blank" variant="outline" class="w-full">
+					<span class="min-w-0 truncate">{image.filename}</span>
+					{#if image.filename.includes("auto")}
+						<Label class="bg-accent py-0.5 px-1">Recommended</Label>
+					{/if}
+					<RiDownloadLine class="size-4 ml-auto" />
+				</Button>
+			{/each}
+		</div>
 	{/if}
-</Button>
+</div>
