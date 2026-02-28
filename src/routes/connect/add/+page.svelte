@@ -163,7 +163,6 @@
 			wifiConfigured = true;
 			selectedWiFiSSID = pendingWifiNetwork.ssid;
 			wifiConnectDialogOpen = false;
-			toast.success("Connected to " + pendingWifiNetwork.ssid + "!");
 		} catch (error) {
 			toast.error("Error connecting to WiFi: " + error.message);
 		} finally {
