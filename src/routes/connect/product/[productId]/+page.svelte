@@ -111,7 +111,7 @@
 	onMount(async () => {
 		product = getProduct(productId);
 		if (!product) {
-			toast.error("Product not found");
+			toast.error("Product not found!");
 			goto("/connect");
 			return;
 		}
@@ -355,7 +355,6 @@
 		if (streamManager) {
 			streamManager.cleanup();
 			streamManager = null;
-			videoStarted = false;
 		}
 		if (videoElement) {
 			videoElement.src = "";
@@ -368,12 +367,13 @@
 		bufferedChunks = [];
 		nextAudioTime = 0;
 		audioStarted = false;
+		videoStarted = false;
 		streamEnded = true;
 		streamLoading = false;
 	}
 
 	function onStreamEnded(reason) {
-		toast.error("Stream ended: " + reason);
+		if (!streamLoading) toast.error("Stream ended: " + reason); // Only toast if the stream was previously running, and not in the loading state
 		console.error("Stream ended: ", reason);
 		endStream();
 	}

@@ -32,7 +32,7 @@
 			>
 			<Button variant="link" class="text-muted-foreground" href="/">© ROOT {new Date().getFullYear()}</Button>
 		</div>
-		<div class="relative h-30 w-full md:h-38 lg:h-55 xl:h-72 2xl:h-90">
+		<div class="relative h-30 w-full md:h-38 lg:h-55 xl:h-72 2xl:h-90 dark:invert">
 			<div class="logo-layer"></div>
 			<div class="logo-layer logo-fill"></div>
 		</div>

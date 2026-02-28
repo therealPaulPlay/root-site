@@ -178,7 +178,7 @@
 <div class="flex h-svh w-full flex-col justify-center">
 	{#if stepImage[step - 1] && step !== 3}
 		<div class="h-[50svh] max-h-[60svw] w-full shrink-0 overflow-hidden border-b">
-			<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover" />
+			<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover dark:contrast-200 dark:brightness-70" />
 		</div>
 	{:else if step === 3}
 		<div
@@ -199,7 +199,7 @@
 
 		{#if step == 1}
 			<p class="max-w-3xl">
-				Connect your ROOT camera to power and wait until a startup sound plays. This may take up to 3 minutes in rare cases.
+				Connect your ROOT camera to power and wait until a startup sound plays. Rarely, this can take up to 3 minutes.
 			</p>
 			<p class="text-muted-foreground">
 				By continuing setup, you agree to our <IframeDialog src="/terms" variant={null}
@@ -210,7 +210,7 @@
 
 		{#if step == 2}
 			<p class="max-w-3xl">
-				Ensure Bluetooth is enabled on your device. Then, click "OPEN BLUETOOTH" and pick the new ROOT product.
+				Ensure Bluetooth is enabled on your device. Then, click "OPEN BLUETOOTH" and select the new ROOT product.
 			</p>
 			<Button
 				class="mt-4 w-fit"

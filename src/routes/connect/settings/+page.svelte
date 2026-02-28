@@ -7,6 +7,8 @@
 	import { RiArrowLeftLine, RiExternalLinkLine } from "svelte-remixicon";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
+	import { setMode, userPrefersMode } from "mode-watcher";
+	import * as NativeSelect from "$lib/components/ui/native-select";
 
 	let relayDomain = $state("");
 	let relayDomainInput = $state("");
@@ -36,6 +38,20 @@
 
 	<!-- Scroll area -->
 	<div class="of-top of-bottom of-length-2 max-h-full w-full overflow-y-auto">
+		<!-- Theme -->
+		<section class="mt-10 w-full border-y p-6 lg:p-8">
+			<div class="flex max-w-lg flex-col gap-4">
+				<div class="space-y-1">
+					<Label class="text-sm font-medium">Theme</Label>
+					<NativeSelect.Root value={userPrefersMode.current} onchange={(e) => setMode(e.currentTarget.value)}>
+						<NativeSelect.Option value="system">System</NativeSelect.Option>
+						<NativeSelect.Option value="light">Light</NativeSelect.Option>
+						<NativeSelect.Option value="dark">Dark</NativeSelect.Option>
+					</NativeSelect.Root>
+				</div>
+			</div>
+		</section>
+
 		<!-- Relay domain -->
 		<section class="mt-10 w-full space-y-8 border-y p-6 lg:p-8">
 			<div class="flex max-w-lg flex-col gap-4">
@@ -44,7 +60,7 @@
 					<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={DEFAULT_RELAY_DOMAIN} />
 				</div>
 				<p class="text-xs text-muted-foreground">
-					The relay server domain that the connect panel will use. Connected products must be configured to use the same
+					The relay server domain. Connected products must be configured to use the same
 					domain.
 				</p>
 			</div>

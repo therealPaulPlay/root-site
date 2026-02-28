@@ -8,14 +8,29 @@
 	let { onRefresh, disabled = false, class: className = "", children } = $props();
 
 	const THRESHOLD = 80;
-	
+	const DAMPEN = 0.6;
+	const MOMENTUM_GAP = 100;
+
 	let pull = $state(0);
 	let refreshing = $state(false);
 	let scrollEl = $state();
-	let pulling = false;
+	let pulling = $state(false);
+	let blockTopOverscroll = $state(false);
+
+	// Input tracking
 	let touchStartY = 0;
+	let touchScrollSnapshot = 0;
+	let touchReachedTopAt = 0;
+	let prevWheelEventAt = 0;
 	let releaseTimer;
-	let lastWheelTime = 0;
+
+	const progress = $derived(pull / THRESHOLD);
+
+	function updateOverscrollBlock() {
+		if (!scrollEl) return;
+		const overflows = scrollEl.scrollHeight > scrollEl.clientHeight;
+		blockTopOverscroll = overflows && scrollEl.scrollTop <= 0 && window.scrollY <= 0;
+	}
 
 	function release() {
 		clearTimeout(releaseTimer);
@@ -23,51 +38,83 @@
 			refreshing = true;
 			vibrate.medium();
 			onRefresh?.();
-			setTimeout(() => { refreshing = false; pull = 0; }, 500);
+			setTimeout(() => {
+				refreshing = false;
+				pull = 0;
+			}, 500);
 		} else if (!refreshing) pull = 0;
 		pulling = false;
 	}
 
+	// Returns true if pulling should be skipped (shared guard for touch + wheel)
+	function shouldSkip(isMomentum) {
+		if (disabled || refreshing) return true;
+		if (scrollEl.scrollTop > 0 || window.scrollY > 0) {
+			pulling = false;
+			return true;
+		}
+		return !pulling && isMomentum;
+	}
+
+	// Touch handling — needs non-passive listener for preventDefault
 	$effect(() => {
 		if (!scrollEl) return;
-		return on(scrollEl, "touchmove", (e) => {
-			if (disabled || refreshing) return;
-			if (pulling) e.preventDefault();
-			if (scrollEl.scrollTop > 0 || window.scrollY > 0) { pull = 0; pulling = false; return; }
-			const delta = e.touches[0].clientY - touchStartY;
-			if (delta <= 0) { pull = 0; return; }
-			e.preventDefault();
-			pulling = true;
-			pull = Math.min(THRESHOLD, delta * 0.4);
-		}, { passive: false });
+		return on(
+			scrollEl,
+			"touchmove",
+			(e) => {
+				const touchY = e.touches[0].clientY;
+
+				if (pulling && e.cancelable) e.preventDefault();
+
+				// Shrink pull indicator gradually while scrolled
+				if (pull > 0 && (scrollEl.scrollTop > 0 || window.scrollY > 0)) {
+					const scrollDelta = scrollEl.scrollTop - touchScrollSnapshot;
+					pull = Math.max(0, pull - Math.max(0, scrollDelta) * DAMPEN);
+				}
+
+				const wasScrolled = scrollEl.scrollTop > 0 || window.scrollY > 0;
+				if (wasScrolled) touchReachedTopAt = Date.now();
+				touchScrollSnapshot = scrollEl.scrollTop;
+				if (shouldSkip(Date.now() - touchReachedTopAt < MOMENTUM_GAP)) {
+					touchStartY = touchY;
+					return;
+				}
+
+				const delta = touchY - touchStartY;
+				if (delta <= 0) {
+					pull = 0;
+					touchStartY = touchY;
+					return;
+				}
+				if (e.cancelable) e.preventDefault();
+				pulling = true;
+				pull = Math.min(THRESHOLD, delta * DAMPEN);
+			},
+			{ passive: false }
+		);
 	});
 
-	const progress = $derived(pull / THRESHOLD);
-</script>
-
-<div class="flex h-full w-full flex-col overflow-hidden"
-	ontouchstart={(e) => {
+	function onTouchStart(e) {
 		if (disabled || refreshing || scrollEl?.scrollTop > 0 || window.scrollY > 0) return;
 		touchStartY = e.touches[0].clientY;
-	}}
-	ontouchend={release}
-	ontouchcancel={() => { pulling = false; pull = 0; }}
-	onwheel={(e) => {
-		const now = Date.now();
-		const gap = now - lastWheelTime;
-		lastWheelTime = now;
+		updateOverscrollBlock();
+	}
 
-		if (disabled || refreshing) return;
-		if (scrollEl?.scrollTop > 0 || window.scrollY > 0) { pull = 0; pulling = false; return; }
-
-		// Only start pulling after a 100ms gap in wheel events (filters out momentum)
-		if (!pulling && gap < 100) return;
+	// Wheel/trackpad handling — incremental deltas
+	function onWheel(e) {
+		const gap = Date.now() - prevWheelEventAt;
+		prevWheelEventAt = Date.now();
+		if (shouldSkip(gap < MOMENTUM_GAP)) return;
 
 		if (e.deltaY < 0) {
 			e.preventDefault();
 			pulling = true;
 			pull = Math.min(THRESHOLD, pull + Math.abs(e.deltaY) * 0.15);
-			if (pull >= THRESHOLD) { release(); return; }
+			if (pull >= THRESHOLD) {
+				release();
+				return;
+			}
 		} else if (pull > 0) {
 			e.preventDefault();
 			pull = Math.max(0, pull - Math.abs(e.deltaY) * 0.15);
@@ -76,20 +123,50 @@
 
 		clearTimeout(releaseTimer);
 		releaseTimer = setTimeout(release, 150);
+	}
+
+	// Re-evaluate overscroll block when element or content resizes
+	$effect(() => {
+		if (!scrollEl) return;
+		const observer = new ResizeObserver(() => updateOverscrollBlock());
+		observer.observe(scrollEl);
+		for (const child of scrollEl.children) observer.observe(child);
+		return () => observer.disconnect();
+	});
+</script>
+
+<div
+	class="flex h-full w-full flex-col overflow-hidden"
+	ontouchstart={onTouchStart}
+	ontouchend={release}
+	ontouchcancel={() => {
+		pulling = false;
+		pull = 0;
 	}}
+	onwheel={onWheel}
 >
 	{#if pull > 0}
-		<div class="flex w-full shrink-0 items-center justify-center border-b pb-px bg-accent overflow-hidden"
-			style="height: {pull}px" out:slide={{ duration: 300 }}>
+		<div
+			class="flex w-full shrink-0 items-center justify-center overflow-hidden border-b pb-px"
+			style="height: {pull}px"
+			out:slide={{ duration: 300 }}
+		>
 			{#if refreshing}
 				<Spinner class="size-5" />
 			{:else}
-				<RiRefreshLine class="size-5 text-accent-foreground"
-					style="opacity: {progress}; transform: rotate({progress * 180}deg);" />
+				<RiRefreshLine
+					class="size-5 text-accent-foreground"
+					style="opacity: {progress}; transform: rotate({progress * 180}deg);"
+				/>
 			{/if}
 		</div>
 	{/if}
-	<div class="min-h-0 flex-1 overflow-y-auto {className}" bind:this={scrollEl}>
+	<div
+		class="min-h-0 flex-1 overflow-y-auto {className}"
+		bind:this={scrollEl}
+		style="overscroll-behavior-y: {blockTopOverscroll ? 'none' : 'auto'}"
+		onscroll={updateOverscrollBlock}
+	>
 		{@render children?.()}
 	</div>
 </div>

@@ -52,7 +52,7 @@
 		class:z-99={showMobileNavbar}
 	>
 		<div class="relative flex min-h-20 justify-center border-b">
-			<img src="/images/logo.svg" class="h-auto w-30" alt="logo" />
+			<img src="/images/logo.svg" class="h-auto w-30 dark:invert" alt="logo" />
 			{#if showMobileNavbar}
 				<Button
 					class="absolute top-0 right-0 ml-auto h-20! border-t-0! border-r-0! p-6! sm:hidden"
@@ -111,7 +111,7 @@
 		</div>
 		<div class="relative min-h-160 border-y">
 			<div class="absolute inset-0 overflow-hidden">
-				<div class="absolute -inset-50 flex -rotate-25 flex-col gap-2 bg-background text-neutral-300 select-none">
+				<div class="absolute -inset-50 flex -rotate-25 flex-col gap-2 bg-background text-neutral-300 dark:text-neutral-700 select-none">
 					{#each Array(30) as _, i}
 						{@const words = ["REPAIRABILITY", "OPEN SOURCE", "SECURITY", "PRIVACY", "ROOT ACCESS", "FULL OWNERSHIP"]}
 						{@const word = words[i % words.length]}
@@ -160,7 +160,7 @@
 		background: var(--background);
 		opacity: 1;
 		pointer-events: none;
-		transition: all 250ms ease;
+		transition: mask 250ms ease;
 		z-index: 1;
 	}
 

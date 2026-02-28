@@ -58,7 +58,7 @@
 		filter: grayscale();
 		opacity: 1;
 		pointer-events: none;
-		transition: all 0.3s ease;
+		transition: mask 250ms ease;
 		z-index: 1;
 	}
 

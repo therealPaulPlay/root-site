@@ -31,8 +31,11 @@
 	<img alt="code" class="h-full w-full object-cover" src="/images/source-code/code-falling.jpg" />
 </section>
 
-<section class="relative mb-20 w-full space-y-4 border-y p-6 lg:p-8">
+<section class="relative mb-10 w-full space-y-4 border-y p-6 lg:p-8">
 	<h1 class="text-4xl">Source code</h1>
+</section>
+
+<section class="relative mb-20 w-full space-y-4 border-y p-6 lg:p-8">
 	<div class="space-y-2">
 		<p>
 			<Button href={REPOSITORY_URLS.site} target="_blank" variant="link" class="px-0!"

@@ -198,7 +198,7 @@
 	<div class="relative flex h-fit min-h-32 w-full shrink-0 {isFirst ? 'border-b' : 'border-y'} max-md:flex-wrap">
 		<!-- Preview image -->
 		<div
-			class="aspect-video w-full content-center bg-foreground text-center text-background max-md:border-b md:w-1/3 md:border-r"
+			class="aspect-video w-full content-center bg-muted text-muted-foreground text-center max-md:border-b md:w-1/3 md:border-r"
 		>
 			{#if !previewImages[product.id]}
 				{#if previewFailed[product.id]}
@@ -286,8 +286,8 @@
 				</span>
 				<span class="mt-0.5 mb-6 inline-flex items-center gap-2 text-nowrap">
 					<span
-						class="inline-flex items-center gap-1 overflow-hidden bg-accent px-1 text-xs uppercase"
-						class:invisible={!updateStatuses[product.id]?.status || updateStatuses[product.id]?.status == "up-to-date"}
+						class="inline-flex items-center gap-1 overflow-hidden bg-accent px-1 text-xs uppercase transition"
+						class:opacity-0={!updateStatuses[product.id]?.status || updateStatuses[product.id]?.status == "up-to-date"}
 					>
 						<RiDownload2Line class="size-3! shrink-0" />
 						<p class="truncate">{updateStatuses[product.id]?.status.replaceAll("-", " ") || "N/A"}</p>
