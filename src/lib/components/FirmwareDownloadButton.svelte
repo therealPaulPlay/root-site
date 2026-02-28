@@ -30,7 +30,7 @@
 </script>
 
 <ContentNote
-	text="The custom variant is configured for the Sony IMX290. Use auto-detect for official camera modules."
+	text="The custom variant is configured for the Sony IMX290. Use the auto-detect variant for official camera modules."
 	class="mb-4"
 />
 <div class="max-w-lg space-y-4 border p-4">
