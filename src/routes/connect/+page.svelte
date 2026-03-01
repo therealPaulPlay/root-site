@@ -40,14 +40,18 @@
 	}
 
 	let loadAbort;
-	let loadGeneration = 0;
+	let activeRequestIds = new Set();
 
-	function loadProductData(productId, gen) {
-		relayCommInstance.send(productId, "getPreview").catch((error) => {
-			if (gen === loadGeneration) previewFailed[productId] = true;
+	function loadProductData(productId) {
+		const preview = relayCommInstance.send(productId, "getPreview");
+		const status = relayCommInstance.send(productId, "getUpdateStatus");
+		activeRequestIds.add(preview.requestId);
+		activeRequestIds.add(status.requestId);
+		preview.catch((error) => {
+			if (activeRequestIds.has(preview.requestId)) previewFailed[productId] = true;
 			console.error(`Failed to get preview for product ${productId}:`, error);
 		});
-		relayCommInstance.send(productId, "getUpdateStatus").catch((error) => {
+		status.catch((error) => {
 			console.error(`Failed to get update status for product ${productId}:`, error);
 		});
 	}
@@ -59,13 +63,13 @@
 		previewImages = {};
 		previewFailed = {};
 		updateStatuses = {};
-		++loadGeneration; // Increment generation
+		activeRequestIds.clear();
 
 		const abort = new AbortController();
 		loadAbort = abort;
 		for (let i = 0; i < products.length; i++) {
 			if (abort.signal.aborted) return;
-			loadProductData(products[i].id, loadGeneration);
+			loadProductData(products[i].id);
 			if ((i + 1) % 5 === 0) await new Promise((r) => setTimeout(r, 1000)); // Rate limit: 5/s (10 requests/s)
 		}
 	}
@@ -84,7 +88,7 @@
 				startLoadQueue(); // Start loading products with rate limit
 
 				relayCommInstance.on("getPreviewResult", (msg) => {
-					if (previewImages[msg.originId]) return; // Already loaded
+					if (!activeRequestIds.has(msg.requestId)) return; // Stale response
 					if (!msg.payload.success) {
 						previewFailed[msg.originId] = true;
 						toast.error(`Failed to get preview for product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
@@ -95,7 +99,7 @@
 				});
 
 				relayCommInstance.on("getUpdateStatusResult", (msg) => {
-					if (updateStatuses[msg.originId]) return; // Already loaded
+					if (!activeRequestIds.has(msg.requestId)) return; // Stale response
 					if (!msg.payload.success) {
 						toast.error(
 							`Failed to get update status for product ${msg.originId}: ` + (msg.payload.error || "Unknown error")

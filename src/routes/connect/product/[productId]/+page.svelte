@@ -372,9 +372,9 @@
 		streamLoading = false;
 	}
 
-	function onStreamEnded(reason) {
-		if (!streamLoading) toast.error("Stream ended: " + reason); // Only toast if the stream was previously running, and not in the loading state
-		console.error("Stream ended: ", reason);
+	function onStreamEnded(error) {
+		if (!streamLoading) toast.error("Stream ended: " + error?.message); // Only toast if the stream was previously running, and not in the loading state
+		console.error("Stream ended: ", error);
 		endStream();
 	}
 
@@ -399,7 +399,7 @@
 
 	function handleStreamVideoChunk(msg) {
 		if (!msg.payload.success) {
-			onStreamEnded(msg.payload.error);
+			onStreamEnded(new Error(msg.payload.error));
 			return;
 		}
 

@@ -4,6 +4,8 @@ import { Encryption, encodeKey, computeAAD } from "./encryption.js";
 import { getProduct, saveProduct } from "./pairedProductsStorage.js";
 
 export const RELAY_REQUEST_TIMEOUT = 10_000;
+const KEY_RENEWAL_MSG_TYPES = ["renewKey", "renewKeyAck"];
+const ERR_INTENTIONAL_DISCONNECT = "Intentional disconnect";
 
 export class RelayComm {
 	#ws = null;
@@ -40,7 +42,7 @@ export class RelayComm {
 				this.#connected = true;
 				if (this.#muteConnectionErrors) toast.info("Reconnected!"); // If errors are muted (indicating that relay connection is in bad state), toast on reconnect
 				this.#muteConnectionErrors = false;
-				console.info("Relay connection opened");
+				console.info("Relay connection opened.");
 				resolve();
 			}
 			this.#ws.onerror = (e) => {
@@ -59,7 +61,7 @@ export class RelayComm {
 			};
 			this.#ws.onclose = () => {
 				this.#connected = false;
-				console.warn("Relay connection closed");
+				console.warn("Relay connection closed.");
 
 				// Only attempt reconnect if this was not an intentional disconnect
 				if (!this.#intentionalDisconnect) {
@@ -76,7 +78,7 @@ export class RelayComm {
 		if (this.#encryptions.has(productId)) return this.#encryptions.get(productId);
 
 		const encryption = await Encryption.initForProduct(productId);
-		this.#encryptions.set(productId, encryption);
+		this.#encryptions.set(productId, encryption); // Cache
 		return encryption;
 	}
 
@@ -98,100 +100,42 @@ export class RelayComm {
 	}
 
 	async #renewKey(productId) {
-		const newKeypair = await Encryption.generateKeypair();
+		try {
+			const newKeypair = await Encryption.generateKeypair();
 
-		// Step 1: Encrypt with OLD key
-		const oldEncryption = await this.#getEncryption(productId);
-		const aad = await computeAAD("renewKey", this.deviceId, productId);
-		const encrypted = await oldEncryption.encrypt(encode({ newPublicKey: encodeKey(newKeypair.publicKey) }), aad);
-		const renewRequestId = crypto.randomUUID();
+			// Step 1: Send renewal request (encrypted with OLD key), wait for camera to confirm
+			const renewResult = await this.#send(productId, "renewKey", { newPublicKey: encodeKey(newKeypair.publicKey) });
 
-		// Send renewal request (encrypted with OLD key)
-		this.#ws.send(encode({
-			type: "renewKey",
-			originId: this.deviceId,
-			targetId: productId,
-			requestId: renewRequestId,
-			payload: encrypted
-		}));
+			if (!renewResult.payload.success) {
+				throw new Error(`Key renewal for product ${productId} failed: ` + (renewResult.payload.error || "Unknown error"));
+			}
 
-		// Step 2: Wait for camera to confirm it's ready
-		return new Promise((resolve, reject) => {
-			const timeout = setTimeout(() => {
-				this.off("renewKeyResult", onRenewHandler);
-				reject(new Error(`Key renewal for product ${productId} timed out`));
-			}, RELAY_REQUEST_TIMEOUT);
+			// Step 2: Store old encryption temporarily for in-flight chunks
+			const oldEncryption = this.#encryptions.get(productId);
+			if (oldEncryption) {
+				this.#prevEncryptions.set(productId, oldEncryption);
+				setTimeout(() => this.#prevEncryptions.delete(productId), 30_000);
+			}
 
-			const onRenewHandler = async (msg) => {
-				if (msg.requestId !== renewRequestId) return;
-				clearTimeout(timeout);
-				this.off("renewKeyResult", onRenewHandler);
+			// Step 3: Switch to NEW key locally
+			const product = getProduct(productId);
+			product.devicePrivateKey = encodeKey(newKeypair.privateKey);
+			product.keyCreatedAt = Date.now();
+			saveProduct(product);
+			this.#encryptions.delete(productId); // Clear cache so next call uses new key
 
-				if (!msg.payload.success) {
-					reject(new Error(`Key renewal for product ${productId} failed: ` + (msg.payload.error || "Unknown error")));
-					return;
-				}
+			// Step 4: Send ACK (encrypted with NEW key), wait for confirmation
+			const ackResult = await this.#send(productId, "renewKeyAck", { ack: true });
 
-				// Step 3: Store old encryption temporarily for in-flight chunks
-				const oldEncryption = this.#encryptions.get(productId);
-				if (oldEncryption) {
-					this.#prevEncryptions.set(productId, oldEncryption);
-					// Clear after 30 second grace period for in-flight chunks
-					setTimeout(() => {
-						this.#prevEncryptions.delete(productId);
-					}, 30_000);
-				}
+			if (!ackResult.payload.success) {
+				throw new Error(`Key renewal ACK for product ${productId} failed: ` + (ackResult.payload.error || "Unknown error"));
+			}
 
-				// Step 4: Switch to NEW key locally
-				const product = getProduct(productId);
-				product.devicePrivateKey = encodeKey(newKeypair.privateKey);
-				product.keyCreatedAt = Date.now();
-				saveProduct(product); // Save product with new keys
-				this.#encryptions.delete(productId); // Clear cache so next call uses new key
-
-				// Step 5: Send ACK to camera (encrypted with NEW key) and wait for confirmation
-				try {
-					const newEncryption = await this.#getEncryption(productId); // Will use new key
-					const ackAad = await computeAAD("renewKeyAck", this.deviceId, productId);
-					const ackEncrypted = await newEncryption.encrypt(encode({ ack: true }), ackAad);
-					const ackRequestId = crypto.randomUUID();
-
-					this.#ws.send(encode({
-						type: "renewKeyAck",
-						originId: this.deviceId,
-						targetId: productId,
-						requestId: ackRequestId,
-						payload: ackEncrypted
-					}));
-
-					// Wait for ACK confirmation before resolving
-					const ackTimeout = setTimeout(() => {
-						this.off("renewKeyAckResult", onAckHandler);
-						reject(new Error(`Key renewal ACK for product ${productId} timed out`));
-					}, RELAY_REQUEST_TIMEOUT);
-
-					const onAckHandler = (ackMsg) => {
-						if (ackMsg.requestId !== ackRequestId) return;
-						clearTimeout(ackTimeout);
-						this.off("renewKeyAckResult", onAckHandler);
-
-						if (!ackMsg.payload.success) {
-							reject(new Error(`Key renewal ACK for product ${productId} failed: ` + (ackMsg.payload.error || "Unknown error")));
-							return;
-						}
-
-						console.log(`Key renewed for product ${productId}`);
-						resolve();
-					};
-
-					this.on("renewKeyAckResult", onAckHandler);
-				} catch (error) {
-					reject(new Error(`Failed to send renewal ACK: ${error.message}`));
-				}
-			};
-
-			this.on("renewKeyResult", onRenewHandler);
-		});
+			console.log(`Key renewed for product: ${productId}`);
+		} catch (e) {
+			if (e.message !== ERR_INTENTIONAL_DISCONNECT) throw e;
+			else console.warn("Key renewal aborted due to intentional disconnect.");
+		}
 	}
 
 	async #handleMessage(msg) {
@@ -211,12 +155,12 @@ export class RelayComm {
 			});
 		}
 
-		// Clear pending request timeout and resolve promise
+		// Clear pending request timeout and resolve promise with the message
 		if (msg.requestId && this.#pendingRequestTimeouts.has(msg.requestId)) {
 			const { timeout, resolve } = this.#pendingRequestTimeouts.get(msg.requestId);
 			clearTimeout(timeout);
 			this.#pendingRequestTimeouts.delete(msg.requestId);
-			resolve();
+			resolve(msg);
 		}
 	}
 
@@ -242,33 +186,51 @@ export class RelayComm {
 		}
 	}
 
-	async send(productId, type, data = {}) {
-		if (this.#ws?.readyState !== WebSocket.OPEN) throw new Error("Not connected");
-		if (type === "renewKey") throw new Error("Use #renewKey() internally - do not call send() with renewKey type");
+	send(...args) {
+		if (KEY_RENEWAL_MSG_TYPES.includes(args[1])) throw new Error("Reserved message type");
+		const inner = this.#send(...args);
+		const promise = inner.then(() => { }).catch((e) => { if (e.message !== ERR_INTENTIONAL_DISCONNECT) throw e; }); // Discard resolve value + intentional errors
+		promise.requestId = inner.requestId;
+		return promise;
+	}
 
-		await this.#ensureKeyFresh(productId);
-
-		const encryption = await this.#getEncryption(productId);
-		const aad = await computeAAD(type, this.deviceId, productId);
-		const encrypted = await encryption.encrypt(encode(data), aad);
+	#send(productId, type, data = {}) {
 		const requestId = crypto.randomUUID();
 
-		return new Promise((resolve, reject) => {
-			const timeout = setTimeout(() => {
-				this.#pendingRequestTimeouts.delete(requestId);
-				reject(new Error(`Request ${type} to product ${productId} timed out`));
-			}, RELAY_REQUEST_TIMEOUT);
+		const promise = (async () => {
+			if (this.#ws?.readyState !== WebSocket.OPEN) throw new Error("Not connected");
+			if (!KEY_RENEWAL_MSG_TYPES.includes(type)) await this.#ensureKeyFresh(productId);
 
-			this.#pendingRequestTimeouts.set(requestId, { timeout, resolve, reject });
+			// After the await, we may have been disconnected
+			if (this.#intentionalDisconnect) throw new Error(ERR_INTENTIONAL_DISCONNECT);
 
-			this.#ws.send(encode({
-				type,
-				originId: this.deviceId,
-				targetId: productId,
-				requestId,
-				payload: encrypted
-			}));
-		});
+			const encryption = await this.#getEncryption(productId);
+			const aad = await computeAAD(type, this.deviceId, productId);
+			const encrypted = await encryption.encrypt(encode(data), aad);
+
+			// Check again after encryption awaits — disconnect() may have been called
+			if (this.#intentionalDisconnect) throw new Error(ERR_INTENTIONAL_DISCONNECT);
+
+			return new Promise((resolve, reject) => {
+				const timeout = setTimeout(() => {
+					this.#pendingRequestTimeouts.delete(requestId);
+					reject(new Error(`Request ${type} to product ${productId} timed out`));
+				}, RELAY_REQUEST_TIMEOUT);
+
+				this.#pendingRequestTimeouts.set(requestId, { timeout, resolve, reject });
+
+				this.#ws.send(encode({
+					type,
+					originId: this.deviceId,
+					targetId: productId,
+					requestId,
+					payload: encrypted
+				}));
+			});
+		})();
+
+		promise.requestId = requestId;
+		return promise;
 	}
 
 	on(messageType, handler) {
@@ -296,14 +258,13 @@ export class RelayComm {
 		this.#ws?.close();
 		this.#ws = null;
 		this.#encryptions.clear();
-		this.#prevEncryptions.clear();
 		this.#renewalPromises.clear();
 		this.#handlers.clear();
 
-		// Clear all pending request timeouts and reject their promises
+		// Clear all pending request timeouts
 		this.#pendingRequestTimeouts.forEach(({ timeout, reject }) => {
 			clearTimeout(timeout);
-			reject(new Error("Disconnected"));
+			reject(new Error(ERR_INTENTIONAL_DISCONNECT));
 		});
 		this.#pendingRequestTimeouts.clear();
 	}
