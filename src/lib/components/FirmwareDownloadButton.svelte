@@ -49,7 +49,7 @@
 				<Button href={image.url} target="_blank" variant="outline" class="w-full">
 					<span class="min-w-0 truncate">{image.filename}</span>
 					{#if image.filename.includes("auto")}
-						<Label class="bg-accent py-0.5 px-1">Recommended</Label>
+						<Label class="bg-accent px-1">Recommended</Label>
 					{/if}
 					<RiDownloadLine class="size-4 ml-auto" />
 				</Button>

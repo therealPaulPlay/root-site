@@ -12,7 +12,8 @@
 	import CameraControls from "$lib/components/CameraControls.svelte";
 	import CameraHealth from "$lib/components/CameraHealth.svelte";
 	import CameraEvents from "$lib/components/CameraEvents.svelte";
-	import { RiArrowLeftLine } from "svelte-remixicon";
+	import { RiArrowLeftLine, RiDownload2Line, RiErrorWarningLine } from "svelte-remixicon";
+	import { slide } from "svelte/transition";
 	import { SvelteSet } from "svelte/reactivity";
 	import { MediaSourceManager } from "$lib/utils/mediaSourceManager";
 
@@ -153,8 +154,9 @@
 			// Handle tab visibility changes
 			if (typeof window !== "undefined") document.addEventListener("visibilitychange", handleVisibilityChange);
 
-			// Load events tab immediately (default tab), start stream
+			// Load events immediately (default tab), update status (shows tab bar), start stream
 			loadEvents();
+			loadUpdateStatus();
 			startStream();
 		} catch (error) {
 			toast.error("Failed to connect to relay: " + error.message);
@@ -822,7 +824,7 @@
 				} else if (v === TABS.HEALTH && !tabsLoaded[TABS.HEALTH]) {
 					tabsLoaded[TABS.HEALTH] = true;
 					loadHealth();
-					loadUpdateStatus();
+					// Update status is loaded in onMount() already
 				}
 			}}
 			class="relative max-h-full"
@@ -831,7 +833,22 @@
 				<Tabs.List class="w-full">
 					<Tabs.Trigger value={TABS.EVENTS}>Events</Tabs.Trigger>
 					<Tabs.Trigger value={TABS.CONTROLS}>Controls</Tabs.Trigger>
-					<Tabs.Trigger value={TABS.HEALTH}>Health</Tabs.Trigger>
+					<Tabs.Trigger value={TABS.HEALTH}>
+						Health
+						{#if updateStatus?.status && updateStatus.status !== "up-to-date"}
+							<span
+								transition:slide={{ axis: "x" }}
+								class="inline-flex bg-muted-foreground/10 p-1"
+								class:animate-pulse={updateStatus.status === "downloading" || updateStatus.status === "installing"}
+							>
+								{#if updateStatus.status === "error"}
+									<RiErrorWarningLine class="size-3" />
+								{:else}
+									<RiDownload2Line class="size-3" />
+								{/if}
+							</span>
+						{/if}
+					</Tabs.Trigger>
 				</Tabs.List>
 			</div>
 			<Tabs.Content value={TABS.EVENTS} class="of-bottom overflow-y-auto p-6">

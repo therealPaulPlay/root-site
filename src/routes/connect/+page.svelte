@@ -308,7 +308,7 @@
 				</p>
 			</div>
 			<div class="flex h-full flex-col border-l">
-				<Button variant="ghost" class="grow" href={"/connect/product/" + product.id}
+				<Button variant="ghost" class="grow" href={"/connect/product/" + product.id} disabled={!updateStatuses[product.id]}
 					><RiArrowRightSLine class="size-8" /></Button
 				>
 			</div>
