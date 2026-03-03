@@ -221,7 +221,7 @@
 						await bluetoothInstance.scan();
 					} catch (error) {
 						if (!error.message?.includes("User cancelled"))
-							toast.error("Error selecting bluetooth device: " + error.message);
+							toast.error("Error scanning for bluetooth devices: " + error.message);
 						return;
 					}
 

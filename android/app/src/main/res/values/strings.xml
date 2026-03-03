@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ROOT Connect</string>
+    <string name="title_activity_main">ROOT Connect</string>
+    <string name="package_name">com.paulplay.root</string>
+    <string name="custom_url_scheme">com.paulplay.root</string>
+</resources>

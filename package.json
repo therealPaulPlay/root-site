@@ -7,7 +7,7 @@
 		"dev": "vite dev --port 3000 --host",
 		"build": "vite build && npm run generate-sitemap",
 		"build:mobile": "vite build && npx cap sync",
-		"build:mobile-assets": "npx capacitor-assets generate --ios --android --assetPath ./store-assets",
+		"build:app-icons": "npx @capacitor/assets generate --ios --android --assetPath ./app-icons",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"format": "prettier --write .",
@@ -15,6 +15,9 @@
 		"generate-sitemap": "node ./scripts/generate-sitemap.js"
 	},
 	"devDependencies": {
+		"@capacitor/assets": "^3.0.5",
+		"@capacitor/android": "^8.1.0",
+		"@capacitor/ios": "^8.1.0",
 		"@capacitor/cli": "^8.0.0",
 		"@internationalized/date": "^3.10.0",
 		"@lucide/svelte": "^0.561.0",
