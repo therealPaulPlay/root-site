@@ -34,7 +34,7 @@
 	<div class="border-b" style="height: var(--safe-area-top)"></div>
 {/if}
 
-<Toaster position="top-right" offset={{ top: "calc(var(--safe-area-top) + 0.5rem)" }} mobileOffset={{ top: "calc(var(--safe-area-top) + 0.5rem)" }} />
+<Toaster position="top-right" offset={{ top: "calc(var(--safe-area-top) + 1rem)" }} mobileOffset={{ top: "calc(var(--safe-area-top) + 1rem)" }} />
 
 <main class="items-start-safe relative container mx-auto flex">
 	<Navbar />

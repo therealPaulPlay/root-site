@@ -53,7 +53,6 @@
 	let expandedStacks = new SvelteSet();
 	let detectionEvent = $state(null);
 	let detectionDialogOpen = $state(false);
-	let recordingStarted = false;
 
 	const hasDateFilter = $derived(dateRangeValue?.start && dateRangeValue?.end);
 	const hasTypeFilter = $derived(selectedTypes.length > 0);
@@ -109,14 +108,6 @@
 		return d.toLocaleDateString();
 	}
 
-	function tryPlayRecording() {
-		if (recordingStarted) return;
-		if (!recordingVideoElement || recordingVideoElement.readyState < 2) return;
-		if (recordingHasAudio && (!recordingAudioElement || recordingAudioElement.readyState < 2)) return;
-		recordingStarted = true;
-		if (recordingAudioElement) recordingAudioElement.currentTime = 0;
-		recordingVideoElement.play().catch(console.error);
-	}
 </script>
 
 <div class="flex flex-wrap items-center justify-end gap-2">
@@ -303,7 +294,7 @@
 {/if}
 
 <!-- Recording Viewer Dialog -->
-<Dialog.Root bind:open={viewRecordingDialog} onOpenChange={(open) => !open && (recordingStarted = false)}>
+<Dialog.Root bind:open={viewRecordingDialog}>
 	<Dialog.Content class="max-w-4xl">
 		<Dialog.Header>
 			<Dialog.Title
@@ -320,9 +311,9 @@
 					src={recordingVideoUrl}
 					bind:this={recordingVideoElement}
 					disableremoteplayback
+					playsinline
 					controls
 					class="h-full w-full object-cover"
-					onloadeddata={tryPlayRecording}
 					onplay={() => {
 						if (recordingAudioElement) {
 							recordingAudioElement.currentTime = recordingVideoElement.currentTime;
@@ -349,7 +340,6 @@
 						src={recordingAudioUrl}
 						class="hidden"
 						bind:this={recordingAudioElement}
-						onloadeddata={tryPlayRecording}
 					>
 						<track kind="captions" />
 					</audio>

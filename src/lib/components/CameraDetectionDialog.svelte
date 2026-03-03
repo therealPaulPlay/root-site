@@ -30,7 +30,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="max-w-2xl">
+	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Detection</Dialog.Title>
 		</Dialog.Header>

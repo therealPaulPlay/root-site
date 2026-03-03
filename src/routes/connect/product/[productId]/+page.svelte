@@ -294,7 +294,19 @@
 			if (chunkIndex === 0) {
 				recordingLoading = false;
 				tick().then(() => {
-					recordingManager = new MediaSourceManager({ isLive: false, duration: recordingDuration });
+					let recordingPlayStarted = false;
+					recordingManager = new MediaSourceManager({
+						isLive: false,
+						duration: recordingDuration,
+						onChunkAppended: () => {
+							if (!recordingPlayStarted && recordingVideoElement?.buffered.length > 0) {
+								recordingPlayStarted = true;
+								recordingVideoElement.play().catch((e) => {
+									toast.error("Failed to start recording playback: " + e.message);
+								});
+							}
+						}
+					});
 					recordingVideoUrl = recordingManager.setup();
 					recordingManager.appendChunk(chunk);
 				});
@@ -803,7 +815,7 @@
 	}
 </script>
 
-<div class="flex safe-h-svh w-full flex-col overflow-hidden">
+<div class="safe-h-svh flex w-full flex-col overflow-hidden">
 	<div class="flex border-b text-xl">
 		<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" href="/connect">
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
