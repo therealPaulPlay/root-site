@@ -175,10 +175,14 @@
 	<title>Add product</title>
 </svelte:head>
 
-<div class="flex h-svh w-full flex-col justify-center">
+<div class="safe-h-svh flex w-full flex-col justify-center">
 	{#if stepImage[step - 1] && step !== 3}
 		<div class="h-[50svh] max-h-[60svw] w-full shrink-0 overflow-hidden border-b">
-			<img alt="Step illustration" src={stepImage[step - 1]} class="h-full w-full object-cover dark:contrast-200 dark:brightness-70" />
+			<img
+				alt="Step illustration"
+				src={stepImage[step - 1]}
+				class="h-full w-full object-cover dark:brightness-70 dark:contrast-200"
+			/>
 		</div>
 	{:else if step === 3}
 		<div
@@ -186,7 +190,7 @@
 		>
 			{#if pairingCode}
 				<div class="pt-0.5 pl-0.5">
-					<QrCode value={pairingCode} size={275} errorCorrection="H" />
+					<QrCode value={pairingCode} size={250} errorCorrection="H" />
 				</div>
 			{:else}
 				<p>No pairing code received.</p>
@@ -220,7 +224,7 @@
 					try {
 						await bluetoothInstance.scan();
 					} catch (error) {
-						if (!error.message?.includes("User cancelled"))
+						if (!error.message?.includes("cancel"))
 							toast.error("Error scanning for bluetooth devices: " + error.message);
 						return;
 					}
@@ -509,7 +513,7 @@
 					<AlertDialog.Title>Abort?</AlertDialog.Title>
 					<AlertDialog.Description>
 						{#if successfulPair}
-							WARNING: Aborting the setup with an already paired device will NOT reset the full pairing progress.
+							WARNING: Aborting the setup now will NOT reset the full pairing progress.
 							Finishing the WiFi and Relay setup is highly recommended.
 						{:else}
 							All setup progress will be lost.
@@ -604,11 +608,16 @@
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Already paired</Dialog.Title>
+			<Dialog.Description>
+				<p class="mb-4">
+					This product is already paired. You can jump ahead to WiFi and relay configuration to adjust those settings.
+				</p>
+				<p>
+					If you're experiencing issues and want to intentionally re-pair, repeating the full setup process is
+					recommended.
+				</p>
+			</Dialog.Description>
 		</Dialog.Header>
-		<p>This product is already paired. You can jump ahead to WiFi and relay configuration to adjust those settings.</p>
-		<p>
-			If you're experiencing issues and want to intentionally re-pair, repeating the full setup process is recommended.
-		</p>
 		<Dialog.Footer class="mt-4">
 			<Button
 				onclick={async () => {

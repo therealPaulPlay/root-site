@@ -803,7 +803,7 @@
 	}
 </script>
 
-<div class="flex h-svh w-full flex-col overflow-hidden">
+<div class="flex safe-h-svh w-full flex-col overflow-hidden">
 	<div class="flex border-b text-xl">
 		<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" href="/connect">
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
@@ -851,7 +851,7 @@
 					</Tabs.Trigger>
 				</Tabs.List>
 			</div>
-			<Tabs.Content value={TABS.EVENTS} class="of-bottom overflow-y-auto p-6">
+			<Tabs.Content value={TABS.EVENTS} class="of-bottom overflow-y-auto p-6 pb-12">
 				<CameraEvents
 					{events}
 					{loadEvents}
@@ -871,7 +871,7 @@
 					onVideoError={switchRecordingToBlobUrl}
 				/>
 			</Tabs.Content>
-			<Tabs.Content value={TABS.CONTROLS} class="of-top of-bottom space-y-6 overflow-y-auto p-6">
+			<Tabs.Content value={TABS.CONTROLS} class="of-top of-bottom space-y-6 overflow-y-auto p-6 pb-12">
 				<CameraControls
 					bind:buttonsLoading
 					bind:restartDialogOpen
@@ -892,7 +892,7 @@
 					{devices}
 				/>
 			</Tabs.Content>
-			<Tabs.Content value={TABS.HEALTH} class="of-top of-bottom space-y-6 overflow-y-auto p-6">
+			<Tabs.Content value={TABS.HEALTH} class="of-top of-bottom space-y-6 overflow-y-auto p-6 pb-12">
 				<CameraHealth
 					bind:buttonsLoading
 					bind:devDialogOpen

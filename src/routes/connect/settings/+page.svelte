@@ -29,7 +29,7 @@
 	</Button>
 </div>
 
-<div class="flex h-svh flex-col">
+<div class="flex safe-h-svh flex-col">
 	<section class="mt-30 w-full space-y-4 border-y p-6 lg:p-8">
 		<div>
 			<h1 class="text-4xl">Settings</h1>

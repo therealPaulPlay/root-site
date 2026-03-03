@@ -46,9 +46,9 @@ export class RelayComm {
 				resolve();
 			}
 			this.#ws.onerror = (e) => {
-				if (!this.#muteConnectionErrors) toast.error("Websocket relay connection failed!");
+				if (!this.#muteConnectionErrors) toast.error("Relay connection lost.");
 				this.#muteConnectionErrors = true;
-				console.error("WebSocket relay connection error:", e);
+				console.error("Relay connection error:", e);
 			}
 			this.#ws.binaryType = "arraybuffer";
 			this.#ws.onmessage = async (e) => {

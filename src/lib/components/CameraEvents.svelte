@@ -312,13 +312,14 @@
 					: ""}</Dialog.Title
 			>
 		</Dialog.Header>
-		<div class="relative flex aspect-video w-full items-center justify-center border bg-foreground">
+		<div class="relative flex aspect-video w-full items-center justify-center border bg-muted text-muted-foreground">
 			{#if recordingLoading}
-				<Spinner class="size-8 text-background" />
+				<Spinner class="size-8" />
 			{:else if recordingVideoUrl || !viewRecordingDialog}
 				<video
 					src={recordingVideoUrl}
 					bind:this={recordingVideoElement}
+					disableremoteplayback
 					controls
 					class="h-full w-full object-cover"
 					onloadeddata={tryPlayRecording}
@@ -354,7 +355,7 @@
 					</audio>
 				{/if}
 			{:else}
-				<RiErrorWarningLine class="size-8 text-background" />
+				<RiErrorWarningLine class="size-8" />
 			{/if}
 		</div>
 	</Dialog.Content>

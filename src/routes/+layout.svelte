@@ -1,13 +1,19 @@
 <script>
 	import "../app.css";
 	import { onDestroy, onMount } from "svelte";
+	import { Capacitor } from "@capacitor/core";
 	import init from "overfade";
 	import Navbar from "$lib/components/Navbar.svelte";
 	import Footer from "$lib/components/Footer.svelte";
 	import { Toaster } from "$lib/components/ui/sonner/index.js";
 	import { initializeBackGestureHandler, removeBackGestureHandler } from "$lib/utils/backGesture";
+	import { browser } from "$app/environment";
 
 	let { children } = $props();
+	let isNative = Capacitor.isNativePlatform();
+	let isIframed = browser && window.self !== window.top;
+	if (isIframed) document.documentElement.style.setProperty("--safe-area-top", "0px");
+	if (isNative && browser) document.documentElement.style.setProperty("user-select", "none");
 
 	onMount(init); // Overfade
 	onMount(initializeBackGestureHandler); // Back gesture support for going back
@@ -24,11 +30,15 @@
 	/>
 </svelte:head>
 
-<Toaster position="top-right" />
+{#if isNative && !isIframed}
+	<div class="border-b" style="height: var(--safe-area-top)"></div>
+{/if}
+
+<Toaster position="top-right" offset={{ top: "calc(var(--safe-area-top) + 0.5rem)" }} mobileOffset={{ top: "calc(var(--safe-area-top) + 0.5rem)" }} />
 
 <main class="items-start-safe relative container mx-auto flex">
 	<Navbar />
-	<article class="no-scrollbar relative flex min-h-svh w-full flex-col overflow-x-hidden sm:border-x">
+	<article class="no-scrollbar relative flex safe-min-h-svh w-full flex-col overflow-x-hidden sm:border-x">
 		{@render children?.()}
 		<Footer />
 	</article>

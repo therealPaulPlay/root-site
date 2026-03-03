@@ -40,9 +40,11 @@
 			{/if}
 		</div>
 	{/if}
+	<!-- disableRemotePlayback required on iOS -->
 	<video
 		bind:this={videoElement}
 		class="absolute inset-0 h-full w-full"
+		disableremoteplayback
 		playsinline
 		muted
 		onerror={(e) => {

@@ -1,5 +1,7 @@
 export const CODEC = 'video/mp4; codecs="avc1.640028"';
 
+const MSConstructor = window.ManagedMediaSource || window.MediaSource;
+
 export class MediaSourceManager {
 	mediaSource = null;
 	sourceBuffer = null;
@@ -16,7 +18,7 @@ export class MediaSourceManager {
 	}
 
 	setup() {
-		this.mediaSource = new MediaSource();
+		this.mediaSource = new MSConstructor();
 		this.blobUrl = URL.createObjectURL(this.mediaSource);
 
 		this.mediaSource.addEventListener("sourceopen", () => {

@@ -5,6 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+	--safe-area-top: env(safe-area-inset-top, 0px);
 	--radius: 0rem;
 	/* default is 0.625 rem */
 	--background: oklch(1 0 0);
@@ -142,6 +143,11 @@
 		@apply touch-none;
 	}
 
+	input,
+	textarea {
+		@apply select-text;
+	}
+
 	a,
 	img,
 	svg {
@@ -195,5 +201,13 @@
 
 	.items-start-safe {
 		align-items: safe start;
+	}
+
+	.safe-min-h-svh {
+		min-height: calc(100svh - var(--safe-area-top));
+	}
+
+	.safe-h-svh {
+		height: calc(100svh - var(--safe-area-top));
 	}
 }
