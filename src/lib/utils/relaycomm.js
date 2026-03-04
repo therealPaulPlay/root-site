@@ -68,7 +68,7 @@ export class RelayComm {
 					if (!this.#muteConnectionErrors) toast.error("Relay connection closed, attempting reconnect...");
 					this.#muteConnectionErrors = true;
 					this.#ws = null; // To prevent .disconnect() attempt on .connect() - not needed, since we are already disconnected
-					this.#reconnectTimeout = setTimeout(() => this.connect().catch((e) => { console.error("Reconnecting to the relay failed – retrying in 5s:", e) }), 5000);
+					this.#reconnectTimeout = setTimeout(() => this.connect().catch((e) => { console.error("Reconnecting to the relay failed – retrying in 3s:", e) }), 3000);
 				}
 			}
 		});
