@@ -135,6 +135,7 @@
 	});
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="flex h-full w-full flex-col overflow-hidden"
 	ontouchstart={onTouchStart}

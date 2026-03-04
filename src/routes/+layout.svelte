@@ -13,7 +13,7 @@
 	let isNative = Capacitor.isNativePlatform();
 	let isIframed = browser && window.self !== window.top;
 	if (isIframed) document.documentElement.style.setProperty("--safe-area-top", "0px");
-	if (isNative && browser) document.documentElement.style.setProperty("user-select", "none");
+	if (isNative && browser) document.documentElement.classList.add("native");
 
 	onMount(init); // Overfade
 	onMount(initializeBackGestureHandler); // Back gesture support for going back

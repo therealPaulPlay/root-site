@@ -294,9 +294,16 @@
 			if (chunkIndex === 0) {
 				recordingLoading = false;
 				tick().then(() => {
+					let recordingPlayStarted = false;
 					recordingManager = new MediaSourceManager({
 						isLive: false,
-						duration: recordingDuration
+						duration: recordingDuration,
+						onChunkAppended: () => {
+							if (!recordingPlayStarted && recordingVideoElement?.buffered.length > 0) {
+								recordingPlayStarted = true;
+								recordingVideoElement.play().catch(console.error);
+							}
+						}
 					});
 					recordingVideoUrl = recordingManager.setup();
 					recordingManager.appendChunk(chunk);
@@ -318,15 +325,15 @@
 	}
 
 	function switchRecordingToBlobUrl() {
-		if (!recordingManager || !recordingChunks.video.length) return;
-		const savedTime = recordingVideoElement?.currentTime || 0;
-		recordingManager.cleanup();
-		recordingManager = null;
+		if (!recordingChunks.video.length) return;
+		if (recordingManager) {
+			recordingManager.cleanup();
+			recordingManager = null;
+		}
+		// Revoke old blob URL if present
+		if (recordingVideoUrl?.startsWith("blob:")) URL.revokeObjectURL(recordingVideoUrl);
 		const chunks = recordingChunks.video.filter(Boolean);
 		recordingVideoUrl = createBlobUrl(chunks, "video/mp4");
-		tick().then(() => {
-			if (recordingVideoElement && savedTime > 0) recordingVideoElement.currentTime = savedTime;
-		});
 	}
 
 	// Streaming handlers

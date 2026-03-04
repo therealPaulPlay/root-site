@@ -14,6 +14,7 @@
 	} from "svelte-remixicon";
 	import Switch from "./ui/switch/switch.svelte";
 	import { toast } from "svelte-sonner";
+	import { vibrate } from "$lib/utils/haptics";
 
 	let {
 		buttonsLoading = $bindable({}),
@@ -72,7 +73,10 @@
 			<ToggleGroup.Root
 				type="multiple"
 				bind:value={eventDetectionTypes}
-				onValueChange={() => updateEventDetectionTypes()}
+				onValueChange={() => {
+					vibrate.light();
+					updateEventDetectionTypes();
+				}}
 				variant="outline"
 				spacing={2}
 				size="sm"

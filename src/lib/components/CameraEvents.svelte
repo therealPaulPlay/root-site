@@ -11,6 +11,8 @@
 		RiErrorWarningLine,
 		RiFilterFill,
 		RiFilterLine,
+		RiPauseFill,
+		RiPlayFill,
 		RiRefreshLine,
 		RiSearchAi2Line,
 		RiTimeLine
@@ -44,6 +46,7 @@
 		onVideoError = () => {}
 	} = $props();
 
+	// Events list state
 	let dateRangeOpen = $state(false);
 	let typeFilterOpen = $state(false);
 	let dateRangeValue = $state(undefined);
@@ -54,6 +57,87 @@
 	let detectionEvent = $state(null);
 	let detectionDialogOpen = $state(false);
 
+	// Recording player state
+	let videoPaused = $state(true);
+	let videoEnded = $state(false);
+	let videoCurrentTime = $state(0);
+	let videoDuration = $state(0);
+	let controlsVisible = $state(true);
+	let controlsTimeout = null;
+	let scrubBarEl = $state(null);
+	let stopScrubDrag = null;
+
+	// Reset player when video source changes (e.g. blob URL fallback)
+	$effect(() => {
+		recordingVideoUrl;
+		videoPaused = true;
+		videoCurrentTime = 0;
+		stopScrubDrag?.();
+	});
+
+	// Auto-hide controls during playback, keep visible when paused
+	$effect(() => {
+		if (videoPaused) {
+			controlsVisible = true;
+			clearTimeout(controlsTimeout);
+		} else {
+			controlsTimeout = setTimeout(() => { controlsVisible = false; }, 3000);
+		}
+	});
+
+	function showControls(e) {
+		if (e?.type === "pointerdown") controlsWereVisible = controlsVisible;
+		controlsVisible = true;
+		clearTimeout(controlsTimeout);
+		if (!videoPaused) controlsTimeout = setTimeout(() => { controlsVisible = false; }, 3000);
+	}
+
+	let controlsWereVisible = true;
+
+	function togglePlayPause() {
+		if (!recordingVideoElement || !controlsWereVisible) return;
+		if (videoEnded) {
+			recordingVideoElement.currentTime = 0;
+			videoEnded = false;
+		}
+		if (recordingVideoElement.paused) recordingVideoElement.play().catch(() => {});
+		else recordingVideoElement.pause();
+	}
+
+	function scrubTo(clientX) {
+		if (!recordingVideoElement || !videoDuration || !scrubBarEl) return;
+		const rect = scrubBarEl.getBoundingClientRect();
+		const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+		recordingVideoElement.currentTime = ratio * videoDuration;
+		videoEnded = false;
+		showControls();
+	}
+
+	function startScrubDrag(e) {
+		scrubTo(e.clientX ?? e.touches?.[0]?.clientX);
+		const onMove = (ev) => scrubTo(ev.clientX ?? ev.touches?.[0]?.clientX);
+		const onUp = () => {
+			window.removeEventListener("mousemove", onMove);
+			window.removeEventListener("mouseup", onUp);
+			window.removeEventListener("touchmove", onMove);
+			window.removeEventListener("touchend", onUp);
+			stopScrubDrag = null;
+		};
+		stopScrubDrag = onUp;
+		window.addEventListener("mousemove", onMove);
+		window.addEventListener("mouseup", onUp);
+		window.addEventListener("touchmove", onMove);
+		window.addEventListener("touchend", onUp);
+	}
+
+	function formatTime(seconds) {
+		if (!seconds || !isFinite(seconds)) return "0:00";
+		const m = Math.floor(seconds / 60);
+		const s = Math.floor(seconds % 60);
+		return `${m}:${s.toString().padStart(2, "0")}`;
+	}
+
+	// Event filtering
 	const hasDateFilter = $derived(dateRangeValue?.start && dateRangeValue?.end);
 	const hasTypeFilter = $derived(selectedTypes.length > 0);
 	const availableTypes = $derived([...new Set(events.map((e) => e.eventType).filter(Boolean))].sort());
@@ -249,7 +333,6 @@
 				{:else}
 					{@const expanded = expandedStacks.has(cluster.id)}
 					<div class="relative">
-						<!-- Thread line for expanded events from the same cluster -->
 						{#if expanded}
 							<div
 								class="absolute top-0 bottom-0 left-0 z-1 w-0.5 bg-border"
@@ -258,7 +341,6 @@
 						{/if}
 						<div class="border-b">{@render eventItem(cluster.events[0])}</div>
 						{#if !expanded}
-							<!-- Stacked events visualization -->
 							<div class="pb-2" in:slide={{ duration: 150 }}>
 								{#each { length: Math.min(cluster.events.length - 1, 3) } as _, i}
 									<div
@@ -270,7 +352,6 @@
 								{/each}
 							</div>
 						{:else}
-							<!-- Actual expanded events -->
 							<div class="divide-y" transition:slide={{ duration: 150 }}>
 								{#each cluster.events.slice(1) as event}
 									{@render eventItem(event)}
@@ -296,50 +377,83 @@
 <Dialog.Root bind:open={viewRecordingDialog}>
 	<Dialog.Content class="max-w-4xl">
 		<Dialog.Header>
-			<Dialog.Title
-				>{selectedEvent
+			<Dialog.Title>
+				{selectedEvent
 					? formatDate(selectedEvent.timestamp) + ", " + new Date(selectedEvent.timestamp).toLocaleTimeString()
-					: ""}</Dialog.Title
-			>
+					: ""}
+			</Dialog.Title>
 		</Dialog.Header>
 		<div class="relative flex aspect-video w-full items-center justify-center border bg-muted text-muted-foreground">
 			{#if recordingLoading}
 				<Spinner class="size-8" />
 			{:else if recordingVideoUrl || !viewRecordingDialog}
-				<video
-					src={recordingVideoUrl}
-					bind:this={recordingVideoElement}
-					disableremoteplayback
-					playsinline
-					muted
-					autoplay
-					controls
-					class="h-full w-full object-cover"
-					onplay={() => {
-						if (recordingAudioElement) {
-							recordingAudioElement.currentTime = recordingVideoElement.currentTime;
-							recordingAudioElement.play().catch(console.error);
-						}
-					}}
-					onpause={() => {
-						if (recordingAudioElement) recordingAudioElement.pause();
-					}}
-					onseeked={() => {
-						if (recordingAudioElement) {
-							recordingAudioElement.currentTime = recordingVideoElement.currentTime;
-							if (!recordingVideoElement.paused) recordingAudioElement.play().catch(console.error);
-						}
-					}}
-					onerror={(e) => {
-						if (e.currentTarget.error?.code === 3) onVideoError();
-					}}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<div class="relative h-full w-full" role="button" tabindex="0" onclick={togglePlayPause} onpointermove={showControls} onpointerdown={showControls}>
+					<video
+						src={recordingVideoUrl}
+						bind:this={recordingVideoElement}
+						disableremoteplayback
+						playsinline
+						muted
+						class="h-full w-full object-cover"
+						onplay={() => {
+							videoPaused = false;
+							if (recordingAudioElement) {
+								recordingAudioElement.currentTime = recordingVideoElement.currentTime;
+								recordingAudioElement.play().catch(console.error);
+							}
+						}}
+						onpause={() => {
+							videoPaused = true;
+							if (recordingAudioElement) recordingAudioElement.pause();
+						}}
+						onseeked={() => {
+							if (recordingAudioElement) {
+								recordingAudioElement.currentTime = recordingVideoElement.currentTime;
+								if (!recordingVideoElement.paused) recordingAudioElement.play().catch(console.error);
+							}
+						}}
+						ontimeupdate={() => { videoCurrentTime = recordingVideoElement?.currentTime || 0; }}
+						onloadedmetadata={() => { videoDuration = recordingVideoElement?.duration || 0; }}
+						onended={() => { videoEnded = true; }}
+						onerror={(e) => {
+							console.error("Recording video playback error:", e.currentTarget.error);
+							if (e.currentTarget.error?.code === 3) onVideoError();
+						}}
+					></video>
+				</div>
+				<!-- Custom controls (native controls break ManagedMediaSource on iOS) -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<div
+					class="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/50 to-transparent p-4 text-white transition-opacity duration-250 {controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}"
+					role="toolbar"
+					tabindex="-1"
+					onclick={(e) => e.stopPropagation()}
+					onpointerdown={showControls}
 				>
-					<track kind="captions" />
-				</video>
+					<button onclick={togglePlayPause} class="shrink-0">
+						{#if videoPaused}
+							<RiPlayFill class="size-6" />
+						{:else}
+							<RiPauseFill class="size-6" />
+						{/if}
+					</button>
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div
+						bind:this={scrubBarEl}
+						class="relative h-2 flex-1 cursor-pointer bg-white/25 select-none"
+						onmousedown={startScrubDrag}
+						ontouchstart={startScrubDrag}
+					>
+						<div
+							class="pointer-events-none absolute inset-y-0 left-0 bg-white"
+							style:width={(videoDuration ? (videoCurrentTime / videoDuration) * 100 : 0) + "%"}
+						></div>
+					</div>
+					<span class="shrink-0 text-sm tabular-nums select-none">{formatTime(videoCurrentTime)} / {formatTime(videoDuration)}</span>
+				</div>
 				{#if recordingAudioUrl}
-					<audio src={recordingAudioUrl} class="hidden" bind:this={recordingAudioElement}>
-						<track kind="captions" />
-					</audio>
+					<audio src={recordingAudioUrl} class="hidden" bind:this={recordingAudioElement}></audio>
 				{/if}
 			{:else}
 				<RiErrorWarningLine class="size-8" />

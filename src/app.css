@@ -148,7 +148,8 @@
 		@apply select-text;
 	}
 
-	button {
+	.native,
+	.native * {
 		@apply select-none;
 	}
 
