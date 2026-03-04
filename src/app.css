@@ -148,6 +148,10 @@
 		@apply select-text;
 	}
 
+	button {
+		@apply select-none;
+	}
+
 	a,
 	img,
 	svg {

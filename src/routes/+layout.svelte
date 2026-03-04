@@ -34,11 +34,15 @@
 	<div class="border-b" style="height: var(--safe-area-top)"></div>
 {/if}
 
-<Toaster position="top-right" offset={{ top: "calc(var(--safe-area-top) + 1rem)" }} mobileOffset={{ top: "calc(var(--safe-area-top) + 1rem)" }} />
+<Toaster
+	position="top-right"
+	offset={{ top: "calc(var(--safe-area-top) + 1rem)" }}
+	mobileOffset={{ top: "calc(var(--safe-area-top) + 1rem)" }}
+/>
 
 <main class="items-start-safe relative container mx-auto flex">
 	<Navbar />
-	<article class="no-scrollbar relative flex safe-min-h-svh w-full flex-col overflow-x-hidden sm:border-x">
+	<article class="no-scrollbar safe-min-h-svh relative flex w-full flex-col overflow-x-hidden sm:border-x">
 		{@render children?.()}
 		<Footer />
 	</article>

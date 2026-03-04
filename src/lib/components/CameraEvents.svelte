@@ -107,7 +107,6 @@
 		if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
 		return d.toLocaleDateString();
 	}
-
 </script>
 
 <div class="flex flex-wrap items-center justify-end gap-2">
@@ -312,6 +311,8 @@
 					bind:this={recordingVideoElement}
 					disableremoteplayback
 					playsinline
+					muted
+					autoplay
 					controls
 					class="h-full w-full object-cover"
 					onplay={() => {
@@ -336,11 +337,7 @@
 					<track kind="captions" />
 				</video>
 				{#if recordingAudioUrl}
-					<audio
-						src={recordingAudioUrl}
-						class="hidden"
-						bind:this={recordingAudioElement}
-					>
+					<audio src={recordingAudioUrl} class="hidden" bind:this={recordingAudioElement}>
 						<track kind="captions" />
 					</audio>
 				{/if}

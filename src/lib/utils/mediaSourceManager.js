@@ -1,6 +1,6 @@
 export const CODEC = 'video/mp4; codecs="avc1.640028"';
 
-const MSConstructor = window.ManagedMediaSource || window.MediaSource;
+const MSConstructor = typeof window !== "undefined" ? (window.ManagedMediaSource || window.MediaSource) : null;
 
 export class MediaSourceManager {
 	mediaSource = null;

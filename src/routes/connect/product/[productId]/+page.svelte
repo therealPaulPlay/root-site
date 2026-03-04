@@ -294,18 +294,9 @@
 			if (chunkIndex === 0) {
 				recordingLoading = false;
 				tick().then(() => {
-					let recordingPlayStarted = false;
 					recordingManager = new MediaSourceManager({
 						isLive: false,
-						duration: recordingDuration,
-						onChunkAppended: () => {
-							if (!recordingPlayStarted && recordingVideoElement?.buffered.length > 0) {
-								recordingPlayStarted = true;
-								recordingVideoElement.play().catch((e) => {
-									toast.error("Failed to start recording playback: " + e.message);
-								});
-							}
-						}
+						duration: recordingDuration
 					});
 					recordingVideoUrl = recordingManager.setup();
 					recordingManager.appendChunk(chunk);
