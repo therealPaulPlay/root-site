@@ -81,7 +81,9 @@
 			controlsVisible = true;
 			clearTimeout(controlsTimeout);
 		} else {
-			controlsTimeout = setTimeout(() => { controlsVisible = false; }, 3000);
+			controlsTimeout = setTimeout(() => {
+				controlsVisible = false;
+			}, 3000);
 		}
 	});
 
@@ -89,7 +91,10 @@
 		if (e?.type === "pointerdown") controlsWereVisible = controlsVisible;
 		controlsVisible = true;
 		clearTimeout(controlsTimeout);
-		if (!videoPaused) controlsTimeout = setTimeout(() => { controlsVisible = false; }, 3000);
+		if (!videoPaused)
+			controlsTimeout = setTimeout(() => {
+				controlsVisible = false;
+			}, 3000);
 	}
 
 	let controlsWereVisible = true;
@@ -196,7 +201,7 @@
 <div class="flex flex-wrap items-center justify-end gap-2">
 	<!-- Date range filter -->
 	<Dialog.Root bind:open={dateRangeOpen}>
-		<Dialog.Trigger class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2">
+		<Dialog.Trigger class="{buttonVariants({ variant: 'outline' })} gap-2">
 			{#if !hasDateFilter}
 				<RiCalendarLine class="size-4" />
 			{:else}
@@ -209,13 +214,7 @@
 			</Dialog.Header>
 			<div class="space-y-4">
 				<RangeCalendar.RangeCalendar bind:value={dateRangeValue} class="border" />
-				<Button
-					size="sm"
-					variant="outline"
-					disabled={!hasDateFilter}
-					class="w-full"
-					onclick={() => (dateRangeValue = undefined)}
-				>
+				<Button variant="outline" disabled={!hasDateFilter} class="w-full" onclick={() => (dateRangeValue = undefined)}>
 					Clear
 				</Button>
 			</div>
@@ -224,7 +223,7 @@
 
 	<!-- Type filter -->
 	<Dialog.Root bind:open={typeFilterOpen}>
-		<Dialog.Trigger class="{buttonVariants({ variant: 'outline', size: 'sm' })} gap-2">
+		<Dialog.Trigger class="{buttonVariants({ variant: 'outline' })} gap-2">
 			{#if !hasTypeFilter}
 				<RiFilterLine class="size-4" />
 			{:else}
@@ -255,7 +254,7 @@
 		</Dialog.Content>
 	</Dialog.Root>
 
-	<Button onclick={loadEvents} variant="outline" size="sm" disabled={eventsLoading}>
+	<Button onclick={loadEvents} variant="outline" disabled={eventsLoading}>
 		Refresh
 		{#if !eventsLoading}
 			<RiRefreshLine class="size-4" />
@@ -360,7 +359,6 @@
 						{/if}
 						<Button
 							variant="outline"
-							size="sm"
 							class="absolute top-3 right-3 z-3 text-sm"
 							onclick={() => (expanded ? expandedStacks.delete(cluster.id) : expandedStacks.add(cluster.id))}
 						>
@@ -388,7 +386,14 @@
 				<Spinner class="size-8" />
 			{:else if recordingVideoUrl || !viewRecordingDialog}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<div class="relative h-full w-full" role="button" tabindex="0" onclick={togglePlayPause} onpointermove={showControls} onpointerdown={showControls}>
+				<div
+					class="relative h-full w-full"
+					role="button"
+					tabindex="0"
+					onclick={togglePlayPause}
+					onpointermove={showControls}
+					onpointerdown={showControls}
+				>
 					<video
 						src={recordingVideoUrl}
 						bind:this={recordingVideoElement}
@@ -413,9 +418,15 @@
 								if (!recordingVideoElement.paused) recordingAudioElement.play().catch(console.error);
 							}
 						}}
-						ontimeupdate={() => { videoCurrentTime = recordingVideoElement?.currentTime || 0; }}
-						onloadedmetadata={() => { videoDuration = recordingVideoElement?.duration || 0; }}
-						onended={() => { videoEnded = true; }}
+						ontimeupdate={() => {
+							videoCurrentTime = recordingVideoElement?.currentTime || 0;
+						}}
+						onloadedmetadata={() => {
+							videoDuration = recordingVideoElement?.duration || 0;
+						}}
+						onended={() => {
+							videoEnded = true;
+						}}
 						onerror={(e) => {
 							console.error("Recording video playback error:", e.currentTarget.error);
 							if (e.currentTarget.error?.code === 3) onVideoError();
@@ -425,7 +436,9 @@
 				<!-- Custom controls (native controls break ManagedMediaSource on iOS) -->
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<div
-					class="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/50 to-transparent p-4 text-white transition-opacity duration-250 {controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}"
+					class="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/50 to-transparent p-4 text-white transition-opacity duration-250 {controlsVisible
+						? 'opacity-100'
+						: 'pointer-events-none opacity-0'}"
 					role="toolbar"
 					tabindex="-1"
 					onclick={(e) => e.stopPropagation()}
@@ -450,7 +463,9 @@
 							style:width={(videoDuration ? (videoCurrentTime / videoDuration) * 100 : 0) + "%"}
 						></div>
 					</div>
-					<span class="shrink-0 text-sm tabular-nums select-none">{formatTime(videoCurrentTime)} / {formatTime(videoDuration)}</span>
+					<span class="shrink-0 text-sm tabular-nums select-none"
+						>{formatTime(videoCurrentTime)} / {formatTime(videoDuration)}</span
+					>
 				</div>
 				{#if recordingAudioUrl}
 					<audio src={recordingAudioUrl} class="hidden" bind:this={recordingAudioElement}></audio>

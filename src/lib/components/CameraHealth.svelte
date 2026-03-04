@@ -76,7 +76,6 @@
 			loadUpdateStatus();
 		}}
 		variant="outline"
-		size="sm"
 		disabled={healthLoading || updateStatusLoading}
 	>
 		Refresh

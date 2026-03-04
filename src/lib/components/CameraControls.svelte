@@ -78,7 +78,6 @@
 				}}
 				variant="outline"
 				spacing={2}
-				size="sm"
 				class="of-left of-right no-scrollbar max-w-full overflow-x-auto"
 			>
 				<ToggleGroup.Item value="person" class="gap-1">
@@ -104,7 +103,7 @@
 	<div class="border p-4">
 		<div class="mb-4 flex items-center justify-between gap-4">
 			<Label class="text-base">Paired devices</Label>
-			<Button onclick={loadDevices} variant="outline" size="sm" disabled={buttonsLoading.devices}>
+			<Button onclick={loadDevices} variant="outline" disabled={buttonsLoading.devices}>
 				Refresh
 				{#if buttonsLoading.devices}
 					<Spinner class="size-4" />
