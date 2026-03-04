@@ -14,7 +14,8 @@
 		audioMuted = $bindable(),
 		streamLoading = true,
 		streamEnded = false,
-		showMuteButton = false
+		showMuteButton = false,
+		onAudioToggle = () => {}
 	} = $props();
 
 	let isFullscreen = $state(false);
@@ -50,7 +51,7 @@
 	<div class="absolute {isFullscreen ? 'right-6 bottom-6' : 'right-4 bottom-4'} flex gap-2">
 		{#if showMuteButton}
 			<Button
-				onclick={() => (audioMuted = !audioMuted)}
+				onclick={() => { onAudioToggle(); audioMuted = !audioMuted; }}
 				class="px-3 opacity-50 hover:opacity-100 active:opacity-100"
 				variant="outline"
 			>

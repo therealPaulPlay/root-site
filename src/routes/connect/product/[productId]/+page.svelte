@@ -99,13 +99,14 @@
 	// Audio streaming
 	let audioContext;
 	let audioGainNode;
-	let audioMuted = $state(false);
+	let audioMuted = $state(true);
 	let nextAudioTime = 0;
 	let audioStarted = $state(false);
+	let audioUnlockEl = $state(null);
 
 	// Mute/unmute via gain node
 	$effect(() => {
-		const muted = audioMuted; // Make reactive
+		const muted = audioMuted;
 		if (audioGainNode) audioGainNode.gain.value = muted ? 0 : 1;
 	});
 
@@ -405,7 +406,6 @@
 		}
 
 		if (!streamManager) setupMediaSource();
-		if (!audioContext) setupAudioContext();
 		if (!streamHeartbeatInterval) startStreamHeartbeat();
 	}
 
@@ -443,18 +443,19 @@
 
 	// Audio streaming functions
 	function setupAudioContext() {
+		audioUnlockEl?.play()?.catch(() => {}); // Unlock iOS audio session
 		audioContext = new AudioContext();
 		audioGainNode = audioContext.createGain();
 		audioGainNode.gain.value = audioMuted ? 0 : 1;
 		audioGainNode.connect(audioContext.destination);
-		nextAudioTime = 0;
-		audioStarted = false;
+		nextAudioTime = audioContext.currentTime;
 	}
 
 	let bufferedChunks = [];
 
 	function handleStreamAudioChunk(msg) {
 		if (!msg.payload.success) return console.error("Audio stream error:", msg.payload.error);
+		if (!audioStarted) audioStarted = true; // Set audio started when first chunk arrives
 		if (!audioContext) return;
 
 		// Decode PCM data from chunk field (slice creates aligned copy for Int16Array)
@@ -470,13 +471,7 @@
 		const audioBuffer = audioContext.createBuffer(1, float32Data.length, 48000);
 		audioBuffer.getChannelData(0).set(float32Data);
 		bufferedChunks.push(audioBuffer);
-
-		// Wait for initial buffer before starting (1 chunk)
-		if (!audioStarted && bufferedChunks.length >= 1) {
-			audioStarted = true;
-			nextAudioTime = audioContext.currentTime;
-			scheduleAudio();
-		} else if (audioStarted) scheduleAudio();
+		scheduleAudio();
 	}
 
 	function scheduleAudio() {
@@ -813,13 +808,27 @@
 	}
 </script>
 
+<audio
+	bind:this={audioUnlockEl}
+	src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
+	class="hidden"
+></audio>
 <div class="safe-h-svh flex w-full flex-col overflow-hidden">
 	<div class="flex border-b text-xl">
 		<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" href="/connect">
 			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
 		</Button>
 	</div>
-	<StreamPlayer bind:audioMuted bind:videoElement {streamLoading} {streamEnded} showMuteButton={audioStarted} />
+	<StreamPlayer
+		bind:audioMuted
+		bind:videoElement
+		{streamLoading}
+		{streamEnded}
+		showMuteButton={audioStarted}
+		onAudioToggle={() => {
+			if (!audioContext) setupAudioContext(); // Set up audio context on user input for working playback
+		}}
+	/>
 	<div class="w-full basis-full overflow-hidden border-t">
 		<Tabs.Root
 			bind:value={activeTab}
