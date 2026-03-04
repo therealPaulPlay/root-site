@@ -202,7 +202,7 @@
 	<div class="relative flex h-fit min-h-32 w-full shrink-0 {isFirst ? 'border-b' : 'border-y'} max-md:flex-wrap">
 		<!-- Preview image -->
 		<div
-			class="aspect-video w-full content-center bg-muted text-muted-foreground text-center max-md:border-b md:w-1/3 md:border-r"
+			class="aspect-video w-full content-center overflow-hidden bg-muted text-muted-foreground text-center max-md:border-b md:w-1/3 md:border-r"
 		>
 			{#if !previewImages[product.id]}
 				{#if previewFailed[product.id]}

@@ -8,7 +8,6 @@
 		RiCheckLine,
 		RiCloseLine,
 		RiFileShredLine,
-		RiInformationLine,
 		RiRefreshLine,
 		RiRestartLine
 	} from "svelte-remixicon";
@@ -126,16 +125,17 @@
 							: ''}"
 					>
 						<div class="flex flex-1 items-center gap-1 truncate">
-							<p class="text-sm font-medium">{device.name || "N/A"}</p>
-							<Button
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+							<p
+								class="text-sm font-medium hover:underline active:underline"
 								onclick={() =>
 									toast.info(
 										"Device ID: " + device.id + ", paired on " + new Date(device.pairedAt)?.toLocaleDateString()
 									)}
-								size="xs"
-								variant="ghost"
-								class="text-muted-foreground"><RiInformationLine class="size-4" /></Button
 							>
+								{device.name || "N/A"}
+							</p>
 						</div>
 						<!-- Removing the user's currently used device is done via the /connect page -->
 						{#if device.id !== localStorage.getItem("deviceId")}
