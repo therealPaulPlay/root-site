@@ -21,9 +21,9 @@
 </script>
 
 <div
-	class="relative aspect-video w-full bg-muted text-muted-foreground {isFullscreen
-		? 'fixed! inset-0! z-100! h-full!'
-		: 'max-h-[45svh]'}"
+	class="relative aspect-video w-full {!streamLoading && !streamEnded
+		? 'bg-black'
+		: 'bg-muted'} text-muted-foreground {isFullscreen ? 'fixed! inset-0! z-100! h-full!' : 'max-h-[45svh]'}"
 >
 	{#if streamLoading || streamEnded}
 		<div class="absolute inset-0 flex h-full w-full items-center justify-center">
