@@ -48,7 +48,6 @@
 	let eventDetectionEnabled = $state(false);
 	let eventDetectionTypes = $state([]);
 
-
 	// Dialog open states (closed on success)
 	let restartDialogOpen = $state(false);
 	let resetDialogOpen = $state(false);
@@ -436,7 +435,11 @@
 
 	function handleVisibilityChange() {
 		if (document.hidden) endStream();
-		else setTimeout(startStream, 250); // Wait briefly to allow relay to reconnect since phones like to kill WS when app goes to background
+		else
+			setTimeout(() => {
+				// Wait briefly to allow relay to reconnect since phones kill WebSocket when app goes to background
+				if (relayCommInstance.connected) startStream();
+			}, 250);
 	}
 
 	// Audio streaming functions
@@ -867,7 +870,13 @@
 				</Tabs.List>
 			</div>
 			<Tabs.Content value={TABS.EVENTS} class="min-h-0">
-				<PullToRefresh onRefresh={() => { loadEvents(); return loading.promise("events"); }} class="of-bottom p-6 pb-12">
+				<PullToRefresh
+					onRefresh={() => {
+						loadEvents();
+						return loading.promise("events");
+					}}
+					class="of-bottom p-6 pb-12"
+				>
 					<CameraEvents
 						{events}
 						{observeThumbnail}
@@ -887,7 +896,16 @@
 				</PullToRefresh>
 			</Tabs.Content>
 			<Tabs.Content value={TABS.CONTROLS} class="min-h-0">
-				<PullToRefresh onRefresh={() => { loadMicrophone(); loadRecordingSound(); loadEventDetectionConfig(); loadDevices(); return loading.promise("mic", "sound", "eventDetection", "devices"); }} class="of-top of-bottom space-y-6 p-6 pb-12">
+				<PullToRefresh
+					onRefresh={() => {
+						loadMicrophone();
+						loadRecordingSound();
+						loadEventDetectionConfig();
+						loadDevices();
+						return loading.promise("mic", "sound", "eventDetection", "devices");
+					}}
+					class="of-top of-bottom space-y-6 p-6 pb-12"
+				>
 					<CameraControls
 						{loading}
 						bind:restartDialogOpen
@@ -910,7 +928,14 @@
 				</PullToRefresh>
 			</Tabs.Content>
 			<Tabs.Content value={TABS.HEALTH} class="min-h-0">
-				<PullToRefresh onRefresh={() => { loadHealth(); loadUpdateStatus(); return loading.promise("health", "updateStatus"); }} class="of-top of-bottom space-y-6 p-6 pb-12">
+				<PullToRefresh
+					onRefresh={() => {
+						loadHealth();
+						loadUpdateStatus();
+						return loading.promise("health", "updateStatus");
+					}}
+					class="of-top of-bottom space-y-6 p-6 pb-12"
+				>
 					<CameraHealth
 						{loading}
 						bind:devDialogOpen
