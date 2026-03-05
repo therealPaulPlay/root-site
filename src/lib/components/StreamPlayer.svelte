@@ -13,7 +13,7 @@
 	let {
 		videoElement = $bindable(),
 		audioMuted = $bindable(),
-		streamLoading = true,
+		loading,
 		streamEnded = false,
 		showMuteButton = false,
 		onAudioToggle = () => {}
@@ -26,7 +26,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="relative aspect-video w-full {!streamLoading && !streamEnded
+	class="relative aspect-video w-full {!loading.is("stream") && !streamEnded
 		? 'bg-black'
 		: 'bg-muted'} text-muted-foreground {isFullscreen ? 'fixed! inset-0! z-100! h-full!' : 'max-h-[45svh]'}"
 	onpointerup={(e) => {
@@ -51,9 +51,9 @@
 		}
 	}}
 >
-	{#if streamLoading || streamEnded}
+	{#if loading.is("stream") || streamEnded}
 		<div class="absolute inset-0 flex h-full w-full items-center justify-center">
-			{#if streamLoading}
+			{#if loading.is("stream")}
 				<Spinner class="size-8" />
 			{:else if streamEnded}
 				<RiErrorWarningLine class="size-8" />

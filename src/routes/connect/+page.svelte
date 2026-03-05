@@ -20,6 +20,9 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import PullToRefresh from "$lib/components/PullToRefresh.svelte";
+	import { LoadingState } from "$lib/utils/loadingState.svelte.js";
+
+	const loading = new LoadingState();
 
 	let products = $state([]);
 	let relayCommInstance;
@@ -29,11 +32,9 @@
 	let previewFailed = $state({});
 
 	let renameDialogOpen = $state({});
-	let renameDialogLoading = $state({});
 	let removeDialogOpen = $state({});
-	let removeDialogLoading = $state({});
-	let idForProductVisible = $state();
 	let renameValue = $state({});
+	let idForProductVisible = $state();
 
 	function loadProducts() {
 		products = getAllProducts();
@@ -118,13 +119,13 @@
 					}
 					// Close dialog & stop loading
 					delete removeDialogOpen[msg.originId];
-					delete removeDialogLoading[msg.originId];
+					loading.set(`remove-${msg.originId}`, false);
 					removeProduct(msg.originId); // Remove product locally
 					loadProducts(); // Refresh products
 				});
 
 				relayCommInstance.on("setProductAliasResult", (msg) => {
-					delete renameDialogLoading[msg.originId];
+					loading.set(`rename-${msg.originId}`, false);
 					if (!msg.payload.success) {
 						toast.error(`Failed to rename product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
 						return;
@@ -157,25 +158,25 @@
 		}
 		if (!relayCommInstance) return toast.warning("Relaycomm instance is undefined!");
 
-		renameDialogLoading[product.id] = true;
+		loading.set(`rename-${product.id}`, true);
 		relayCommInstance.send(product.id, "setProductAlias", { alias: newName }).catch((error) => {
 			toast.error(`Failed to rename product ${product.id}: ` + error.message);
 			console.error(`Failed to rename product ${product.id}:`, error);
-			delete renameDialogLoading[product.id];
+			loading.set(`rename-${product.id}`, false);
 		});
 	}
 
 	// Inform product of device removal & remove product locally
 	function removeProductAndRemoveDevice(productId) {
 		if (!relayCommInstance) return toast.warning("Relaycomm instance is undefined!");
-		removeDialogLoading[productId] = true; // Set loading
+		loading.set(`remove-${productId}`, true);
 		relayCommInstance
 			.send(productId, "removeDevice", { targetDeviceId: localStorage.getItem("deviceId") })
 			.catch((error) => {
 				toast.error(`Failed to inform product ${productId} about device removal: ` + error.message);
 				console.error(`Failed to inform product ${productId} about device removal:`, error);
 				delete removeDialogOpen[productId]; // Close dialog since we remove the product anyway
-				delete removeDialogLoading[productId]; // Stop loading
+				loading.set(`remove-${productId}`, false);
 				removeProduct(productId); // Remove prodcut locally anyway
 				loadProducts(); // Refresh products
 			});
@@ -196,13 +197,13 @@
 	</Button>
 </div>
 
-{#snippet productItem(product, isFirst = false)}
+{#snippet productItem(product)}
 	{@const isRenameDialogOpen = renameDialogOpen[product.id] ?? false}
 	{@const isRemoveDialogOpen = removeDialogOpen[product.id] ?? false}
-	<div class="relative flex h-fit min-h-32 w-full shrink-0 {isFirst ? 'border-b' : 'border-y'} max-md:flex-wrap">
+	<div class="relative flex h-fit min-h-32 w-full shrink-0 border-y max-md:flex-wrap">
 		<!-- Preview image -->
 		<div
-			class="aspect-video w-full content-center overflow-hidden bg-muted text-muted-foreground text-center max-md:border-b md:w-1/3 md:border-r"
+			class="aspect-video w-full content-center overflow-hidden bg-muted text-center text-muted-foreground max-md:border-b md:w-1/3 md:border-r"
 		>
 			{#if !previewImages[product.id]}
 				{#if previewFailed[product.id]}
@@ -219,24 +220,24 @@
 			<div class="flex grow flex-col overflow-hidden p-4">
 				<span class="inline-flex items-center gap-1 overflow-hidden text-nowrap"
 					><h3 class="truncate text-xl">{product.name}</h3>
-					<Dialog.Root
+					<AlertDialog.Root
 						open={isRenameDialogOpen}
 						onOpenChange={(open) => {
 							renameDialogOpen[product.id] = open;
 						}}
 					>
-						<Dialog.Trigger
+						<AlertDialog.Trigger
 							class="{buttonVariants({ variant: 'ghost' })} ml-1 h-fit! px-1!"
 							onclick={() => {
 								renameValue[product.id] = product.name;
 							}}
 						>
 							<RiEdit2Line />
-						</Dialog.Trigger>
-						<Dialog.Content>
-							<Dialog.Header>
-								<Dialog.Title>Edit name</Dialog.Title>
-							</Dialog.Header>
+						</AlertDialog.Trigger>
+						<AlertDialog.Content>
+							<AlertDialog.Header>
+								<AlertDialog.Title>Edit name</AlertDialog.Title>
+							</AlertDialog.Header>
 							<div class="flex flex-col gap-4">
 								<div class="space-y-1">
 									<Label for="product-name" class="text-sm font-medium">Name</Label>
@@ -250,15 +251,19 @@
 										}}
 									/>
 								</div>
-								<div class="flex justify-end gap-2">
-									<Button disabled={renameDialogLoading[product.id]} onclick={() => handleRename(product)}>
-										{#if renameDialogLoading[product.id]}<Spinner />{/if}
+								<AlertDialog.Footer>
+									<AlertDialog.Cancel disabled={loading.is(`rename-${product.id}`)}>Cancel</AlertDialog.Cancel>
+									<AlertDialog.Action
+										disabled={loading.is(`rename-${product.id}`) || product.name === renameValue[product.id]?.trim()}
+										onclick={() => handleRename(product)}
+									>
+										{#if loading.is(`rename-${product.id}`)}<Spinner />{/if}
 										Rename
-									</Button>
-								</div>
+									</AlertDialog.Action>
+								</AlertDialog.Footer>
 							</div>
-						</Dialog.Content>
-					</Dialog.Root>
+						</AlertDialog.Content>
+					</AlertDialog.Root>
 					<AlertDialog.Root
 						open={isRemoveDialogOpen}
 						onOpenChange={(open) => {
@@ -276,12 +281,12 @@
 								>
 							</AlertDialog.Header>
 							<AlertDialog.Footer>
-								<AlertDialog.Cancel disabled={removeDialogLoading[product.id]}>Cancel</AlertDialog.Cancel>
+								<AlertDialog.Cancel disabled={loading.is(`remove-${product.id}`)}>Cancel</AlertDialog.Cancel>
 								<AlertDialog.Action
-									disabled={removeDialogLoading[product.id]}
+									disabled={loading.is(`remove-${product.id}`)}
 									onclick={() => removeProductAndRemoveDevice(product.id)}
 								>
-									{#if removeDialogLoading[product.id]}<Spinner />{/if}
+									{#if loading.is(`remove-${product.id}`)}<Spinner />{/if}
 									Remove
 								</AlertDialog.Action>
 							</AlertDialog.Footer>
@@ -300,16 +305,20 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<p
 					class="mt-auto w-fit max-w-full overflow-hidden text-xs text-nowrap text-muted-foreground hover:truncate"
-					onclick={() => (idForProductVisible = product.id)}
-					onmouseenter={() => (idForProductVisible = product.id)}
-					onmouseleave={() => (idForProductVisible = null)}
+					onclick={() =>
+						idForProductVisible === product.id ? (idForProductVisible = null) : (idForProductVisible = product.id)}
 				>
-					ID: <span class={idForProductVisible == product.id ? "" : "bg-accent text-transparent"}>{product.id}</span>
+					ID: <span class={"select-text" + (idForProductVisible == product.id ? "" : " bg-accent text-transparent")}
+						>{product.id}</span
+					>
 				</p>
 			</div>
 			<div class="flex h-full flex-col border-l">
-				<Button variant="ghost" class="grow" href={"/connect/product/" + product.id} disabled={!updateStatuses[product.id]}
-					><RiArrowRightSLine class="size-8" /></Button
+				<Button
+					variant="ghost"
+					class="grow"
+					href={"/connect/product/" + product.id}
+					disabled={!updateStatuses[product.id]}><RiArrowRightSLine class="size-8" /></Button
 				>
 			</div>
 		</div>
@@ -323,11 +332,11 @@
 		onRefresh={() => {
 			if (relayCommInstance && products.length) startLoadQueue();
 		}}
-		class="of-top of-bottom flex flex-col items-center justify-start gap-8 pb-30"
+		class="of-top of-bottom -mt-px flex flex-col items-center justify-start gap-8 pb-30"
 	>
 		{#if products.length}
-			{#each products as product, index}
-				{@render productItem(product, index === 0)}
+			{#each products as product}
+				{@render productItem(product)}
 			{/each}
 		{:else}
 			<Label class="mx-auto my-auto overflow-hidden text-nowrap"

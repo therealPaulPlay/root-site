@@ -12,27 +12,29 @@
 	import CameraControls from "$lib/components/CameraControls.svelte";
 	import CameraHealth from "$lib/components/CameraHealth.svelte";
 	import CameraEvents from "$lib/components/CameraEvents.svelte";
+	import PullToRefresh from "$lib/components/PullToRefresh.svelte";
 	import { RiArrowLeftLine, RiDownload2Line, RiErrorWarningLine } from "svelte-remixicon";
 	import { slide } from "svelte/transition";
 	import { SvelteSet } from "svelte/reactivity";
 	import { MediaSourceManager } from "$lib/utils/mediaSourceManager";
+	import { LoadingState } from "$lib/utils/loadingState.svelte.js";
 
 	const productId = page.params.productId;
 
+	const loading = new LoadingState();
+
 	let product = $state(null);
 	let relayCommInstance;
-	let streamLoading = $state(true);
 	let streamEnded = $state(false);
 	let streamHeartbeatInterval;
+	loading.set("stream", true);
 
 	// Events
 	let events = $state([]);
-	let eventsLoading = $state(false);
 	let eventThumbnails = $state({});
 	let viewRecordingDialog = $state(false);
 	let recordingAudioElement = $state();
 	let recordingVideoElement = $state();
-	let recordingLoading = $state(false);
 	let recordingVideoUrl = $state(null);
 	let recordingAudioUrl = $state(null);
 	let recordingHasAudio = $state(false);
@@ -46,8 +48,6 @@
 	let eventDetectionEnabled = $state(false);
 	let eventDetectionTypes = $state([]);
 
-	// Universal button / controls loading state
-	let buttonsLoading = $state({});
 
 	// Dialog open states (closed on success)
 	let restartDialogOpen = $state(false);
@@ -61,11 +61,9 @@
 
 	// Health
 	let health = $state(null);
-	let healthLoading = $state(false);
 
 	// Update status
 	let updateStatus = $state(null);
-	let updateStatusLoading = $state(false);
 
 	// Tab lazy loading
 	const TABS = { EVENTS: "events", CONTROLS: "controls", HEALTH: "health" };
@@ -192,16 +190,16 @@
 
 	// Events handlers
 	function loadEvents() {
-		eventsLoading = true;
+		loading.set("events", true);
 		relayCommInstance.send(productId, "getEvents").catch((error) => {
 			toast.error("Failed to load events: " + error.message);
 			console.error("Failed to load events:", error);
-			eventsLoading = false;
+			loading.set("events", false);
 		});
 	}
 
 	function handleEventsResult(msg) {
-		eventsLoading = false;
+		loading.set("events", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to load events: " + msg.payload.error || "Unknown error");
 			return;
@@ -249,7 +247,7 @@
 
 	function viewRecording(event) {
 		viewRecordingDialog = true;
-		recordingLoading = true;
+		loading.set("recording", true);
 		recordingDuration = event.duration || 0;
 		cleanupRecording();
 		recordingHasAudio = false;
@@ -259,7 +257,7 @@
 		relayCommInstance.send(productId, "getRecording", { id: event.id }).catch((error) => {
 			toast.error("Failed to load recording: " + error.message);
 			console.error("Failed to load recording:", error);
-			recordingLoading = false;
+			loading.set("recording", false);
 		});
 	}
 
@@ -268,7 +266,7 @@
 	function handleRecordingResult(msg) {
 		if (!msg.payload.success) {
 			toast.error("Failed to load recording: " + msg.payload.error || "Unknown error");
-			recordingLoading = false;
+			loading.set("recording", false);
 			return;
 		}
 
@@ -293,7 +291,7 @@
 		} else {
 			// Video: use MediaSource for progressive playback
 			if (chunkIndex === 0) {
-				recordingLoading = false;
+				loading.set("recording", false);
 				tick().then(() => {
 					let recordingPlayStarted = false;
 					recordingManager = new MediaSourceManager({
@@ -353,7 +351,7 @@
 	}
 
 	function startStream() {
-		streamLoading = true;
+		loading.set("stream", true);
 		streamEnded = false;
 		relayCommInstance.send(productId, "startStream").catch((error) => {
 			onStreamEnded(error);
@@ -382,11 +380,11 @@
 		audioStarted = false;
 		videoStarted = false;
 		streamEnded = true;
-		streamLoading = false;
+		loading.set("stream", false);
 	}
 
 	function onStreamEnded(error) {
-		if (!streamLoading) toast.error("Stream ended: " + error?.message); // Only toast if the stream was previously running, and not in the loading state
+		if (!loading.is("stream")) toast.error("Stream ended: " + error?.message); // Only toast if the stream was previously running, and not in the loading state
 		console.error("Stream ended: ", error);
 		endStream();
 	}
@@ -415,12 +413,12 @@
 			return;
 		}
 
-		if (streamLoading && msg.payload.chunkIndex !== 0)
+		if (loading.is("stream") && msg.payload.chunkIndex !== 0)
 			return console.warn("Received chunk with wrong index, waiting for index 0.");
 
 		if (videoElement?.error) return;
 
-		streamLoading = false; // Hide loading spinner
+		loading.set("stream", false); // Hide loading spinner
 		streamManager?.appendChunk(msg.payload.chunk);
 		correctVideoDrift();
 	}
@@ -492,16 +490,16 @@
 	}
 
 	function loadMicrophone() {
-		buttonsLoading.mic = true;
+		loading.set("mic", true);
 		relayCommInstance.send(productId, "getMicrophone").catch((error) => {
 			toast.error("Failed to load microphone setting: " + error.message);
 			console.error("Failed to load microphone setting:", error);
-			buttonsLoading.mic = false;
+			loading.set("mic", false);
 		});
 	}
 
 	function handleGetMicrophoneResult(msg) {
-		buttonsLoading.mic = false;
+		loading.set("mic", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to load microphone setting: " + msg.payload.error || "Unknown error");
 			return;
@@ -510,17 +508,17 @@
 	}
 
 	function toggleMicrophone() {
-		buttonsLoading.mic = true;
+		loading.set("mic", true);
 		relayCommInstance.send(productId, "setMicrophone", { enabled: micEnabled }).catch((error) => {
 			micEnabled = !micEnabled;
 			toast.error("Failed to set microphone: " + error.message);
 			console.error("Failed to set microphone:", error);
-			buttonsLoading.mic = false;
+			loading.set("mic", false);
 		});
 	}
 
 	function handleSetMicrophoneResult(msg) {
-		buttonsLoading.mic = false;
+		loading.set("mic", false);
 		if (!msg.payload.success) {
 			micEnabled = !micEnabled;
 			toast.error("Failed to set microphone: " + msg.payload.error || "Unknown error");
@@ -534,16 +532,16 @@
 	}
 
 	function loadRecordingSound() {
-		buttonsLoading.sound = true;
+		loading.set("sound", true);
 		relayCommInstance.send(productId, "getRecordingSound").catch((error) => {
 			toast.error("Failed to load recording sound setting: " + error.message);
 			console.error("Failed to load recording sound setting:", error);
-			buttonsLoading.sound = false;
+			loading.set("sound", false);
 		});
 	}
 
 	function handleGetRecordingSoundResult(msg) {
-		buttonsLoading.sound = false;
+		loading.set("sound", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to load recording sound setting: " + msg.payload.error || "Unknown error");
 			return;
@@ -552,17 +550,17 @@
 	}
 
 	function toggleRecordingSound() {
-		buttonsLoading.sound = true;
+		loading.set("sound", true);
 		relayCommInstance.send(productId, "setRecordingSound", { enabled: recordingSoundEnabled }).catch((error) => {
 			recordingSoundEnabled = !recordingSoundEnabled;
 			toast.error("Failed to toggle recording sound: " + error.message);
 			console.error("Failed to toggle recording sound:", error);
-			buttonsLoading.sound = false;
+			loading.set("sound", false);
 		});
 	}
 
 	function handleSetRecordingSoundResult(msg) {
-		buttonsLoading.sound = false;
+		loading.set("sound", false);
 		if (!msg.payload.success) {
 			recordingSoundEnabled = !recordingSoundEnabled;
 			toast.error("Failed to set recording sound: " + msg.payload.error || "Unknown error");
@@ -572,16 +570,16 @@
 	}
 
 	function loadEventDetectionConfig() {
-		buttonsLoading.eventDetection = true;
+		loading.set("eventDetection", true);
 		relayCommInstance.send(productId, "getEventDetectionConfig").catch((error) => {
 			toast.error("Failed to load event detection config: " + error.message);
 			console.error("Failed to load event detection config:", error);
-			buttonsLoading.eventDetection = false;
+			loading.set("eventDetection", false);
 		});
 	}
 
 	function handleGetEventDetectionConfigResult(msg) {
-		buttonsLoading.eventDetection = false;
+		loading.set("eventDetection", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to load event detection config: " + msg.payload.error || "Unknown error");
 			return;
@@ -592,17 +590,17 @@
 	}
 
 	function toggleEventDetection() {
-		buttonsLoading.eventDetection = true;
+		loading.set("eventDetection", true);
 		relayCommInstance.send(productId, "setEventDetectionEnabled", { enabled: eventDetectionEnabled }).catch((error) => {
 			eventDetectionEnabled = !eventDetectionEnabled;
 			toast.error("Failed to toggle event detection: " + error.message);
 			console.error("Failed to toggle event detection:", error);
-			buttonsLoading.eventDetection = false;
+			loading.set("eventDetection", false);
 		});
 	}
 
 	function handleSetEventDetectionEnabledResult(msg) {
-		buttonsLoading.eventDetection = false;
+		loading.set("eventDetection", false);
 		if (!msg.payload.success) {
 			eventDetectionEnabled = !eventDetectionEnabled;
 			toast.error("Failed to set event detection: " + msg.payload.error || "Unknown error");
@@ -612,18 +610,18 @@
 	}
 
 	function updateEventDetectionTypes() {
-		buttonsLoading.eventDetectionTypes = true;
+		loading.set("eventDetectionTypes", true);
 		relayCommInstance
 			.send(productId, "setEventDetectionTypes", { enabledTypes: eventDetectionTypes })
 			.catch((error) => {
 				toast.error("Failed to update event detection types: " + error.message || "Unknown error");
 				console.error("Failed to update event detection types:", error);
-				buttonsLoading.eventDetectionTypes = false;
+				loading.set("eventDetectionTypes", false);
 			});
 	}
 
 	function handleSetEventDetectionTypesResult(msg) {
-		buttonsLoading.eventDetectionTypes = false;
+		loading.set("eventDetectionTypes", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to set event detection types: " + msg.payload.error || "Unknown error");
 			return;
@@ -632,16 +630,16 @@
 	}
 
 	function loadDevices() {
-		buttonsLoading.devices = true;
+		loading.set("devices", true);
 		relayCommInstance.send(productId, "getDevices").catch((error) => {
 			toast.error("Failed to load devices: " + error.message);
 			console.error("Failed to load devices:", error);
-			buttonsLoading.devices = false;
+			loading.set("devices", false);
 		});
 	}
 
 	function handleGetDevicesResult(msg) {
-		buttonsLoading.devices = false;
+		loading.set("devices", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to load devices: " + msg.payload.error || "Unknown error");
 			return;
@@ -650,39 +648,37 @@
 	}
 
 	function removeDevice(deviceId) {
-		buttonsLoading[`remove-${deviceId}`] = true;
+		loading.set(`remove-${deviceId}`, true);
 		relayCommInstance.send(productId, "removeDevice", { targetDeviceId: deviceId }).catch((error) => {
 			toast.error("Failed to remove device: " + error.message);
 			console.error("Failed to remove device:", error);
-			buttonsLoading[`remove-${deviceId}`] = false;
+			loading.set(`remove-${deviceId}`, false);
 		});
 	}
 
 	function handleRemoveDeviceResult(msg) {
 		if (!msg.payload.success) {
 			toast.error("Failed to remove device: " + msg.payload.error || "Unknown error");
-			Object.keys(buttonsLoading).forEach((key) => {
-				if (key.startsWith("remove-")) buttonsLoading[key] = false;
-			});
+			for (const d of devices) loading.set(`remove-${d.id}`, false);
 			return;
 		}
 		const removedId = msg.payload.removedDeviceId;
 		devices = devices.filter((d) => d.id !== removedId);
 		delete removeDeviceDialogOpen[removedId];
-		buttonsLoading[`remove-${removedId}`] = false;
+		loading.set(`remove-${removedId}`, false);
 	}
 
 	function restartProduct() {
-		buttonsLoading.restart = true;
+		loading.set("restart", true);
 		relayCommInstance.send(productId, "restart").catch((error) => {
 			toast.error("Failed to restart device: " + error.message);
 			console.error("Failed to restart device:", error);
-			buttonsLoading.restart = false;
+			loading.set("restart", false);
 		});
 	}
 
 	function handleRestartResult(msg) {
-		buttonsLoading.restart = false;
+		loading.set("restart", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to restart product: " + msg.payload.error || "Unknown error");
 			return;
@@ -695,16 +691,16 @@
 	}
 
 	function resetProduct() {
-		buttonsLoading.reset = true;
+		loading.set("reset", true);
 		relayCommInstance.send(productId, "reset").catch((error) => {
 			toast.error("Failed to reset device: " + error.message);
 			console.error("Failed to reset device:", error);
-			buttonsLoading.reset = false;
+			loading.set("reset", false);
 		});
 	}
 
 	function handleResetResult(msg) {
-		buttonsLoading.reset = false;
+		loading.set("reset", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to reset device: " + msg.payload.error || "Unknown error");
 			return;
@@ -719,16 +715,16 @@
 
 	// Health handlers
 	function loadHealth() {
-		healthLoading = true;
+		loading.set("health", true);
 		relayCommInstance.send(productId, "getHealth").catch((error) => {
 			toast.error("Failed to load health data: " + error.message);
 			console.error("Failed to load health data:", error);
-			healthLoading = false;
+			loading.set("health", false);
 		});
 	}
 
 	function handleHealthResult(msg) {
-		healthLoading = false;
+		loading.set("health", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to load health data: " + msg.payload.error || "Unknown error");
 			return;
@@ -745,16 +741,16 @@
 
 	// Update status handlers
 	function loadUpdateStatus() {
-		updateStatusLoading = true;
+		loading.set("updateStatus", true);
 		relayCommInstance.send(productId, "getUpdateStatus").catch((error) => {
 			toast.error("Failed to load update status: " + error.message);
 			console.error("Failed to load update status:", error);
-			updateStatusLoading = false;
+			loading.set("updateStatus", false);
 		});
 	}
 
 	function handleUpdateStatusResult(msg) {
-		updateStatusLoading = false;
+		loading.set("updateStatus", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to load update status: " + msg.payload.error || "Unknown error");
 			return;
@@ -768,16 +764,16 @@
 	}
 
 	function startUpdate() {
-		buttonsLoading.update = true;
+		loading.set("update", true);
 		relayCommInstance.send(productId, "startUpdate").catch((error) => {
 			toast.error("Failed to start update: " + error.message);
 			console.error("Failed to start update:", error);
-			buttonsLoading.update = false;
+			loading.set("update", false);
 		});
 	}
 
 	function handleStartUpdateResult(msg) {
-		buttonsLoading.update = false;
+		loading.set("update", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to start update: " + msg.payload.error || "Unknown error");
 			return;
@@ -788,16 +784,16 @@
 	}
 
 	function setVersionDev() {
-		buttonsLoading.setVersionDev = true;
+		loading.set("setVersionDev", true);
 		relayCommInstance.send(productId, "setVersionDev").catch((error) => {
 			toast.error("Failed to set version to dev: " + error.message);
 			console.error("Failed to set version to dev:", error);
-			buttonsLoading.setVersionDev = false;
+			loading.set("setVersionDev", false);
 		});
 	}
 
 	function handleSetVersionDevResult(msg) {
-		buttonsLoading.setVersionDev = false;
+		loading.set("setVersionDev", false);
 		if (!msg.payload.success) {
 			toast.error("Failed to set version to dev: " + msg.payload.error || "Unknown error");
 			return;
@@ -822,7 +818,7 @@
 	<StreamPlayer
 		bind:audioMuted
 		bind:videoElement
-		{streamLoading}
+		{loading}
 		{streamEnded}
 		showMuteButton={audioStarted}
 		onAudioToggle={() => {
@@ -846,7 +842,7 @@
 					// Update status is loaded in onMount() already
 				}
 			}}
-			class="relative max-h-full"
+			class="relative h-full"
 		>
 			<div class="w-full">
 				<Tabs.List class="w-full">
@@ -870,64 +866,66 @@
 					</Tabs.Trigger>
 				</Tabs.List>
 			</div>
-			<Tabs.Content value={TABS.EVENTS} class="of-bottom overflow-y-auto p-6 pb-12">
-				<CameraEvents
-					{events}
-					{loadEvents}
-					{observeThumbnail}
-					{viewRecording}
-					{eventsLoading}
-					{eventThumbnails}
-					{loadingThumbnails}
-					{thumbnailQueue}
-					{recordingHasAudio}
-					bind:viewRecordingDialog
-					bind:recordingAudioElement
-					bind:recordingVideoElement
-					{recordingLoading}
-					{recordingVideoUrl}
-					{recordingAudioUrl}
-					onVideoError={switchRecordingToBlobUrl}
-				/>
+			<Tabs.Content value={TABS.EVENTS} class="min-h-0">
+				<PullToRefresh onRefresh={() => { loadEvents(); return loading.promise("events"); }} class="of-bottom p-6 pb-12">
+					<CameraEvents
+						{events}
+						{observeThumbnail}
+						{viewRecording}
+						{loading}
+						{eventThumbnails}
+						{loadingThumbnails}
+						{thumbnailQueue}
+						{recordingHasAudio}
+						bind:viewRecordingDialog
+						bind:recordingAudioElement
+						bind:recordingVideoElement
+						{recordingVideoUrl}
+						{recordingAudioUrl}
+						onVideoError={switchRecordingToBlobUrl}
+					/>
+				</PullToRefresh>
 			</Tabs.Content>
-			<Tabs.Content value={TABS.CONTROLS} class="of-top of-bottom space-y-6 overflow-y-auto p-6 pb-12">
-				<CameraControls
-					bind:buttonsLoading
-					bind:restartDialogOpen
-					bind:resetDialogOpen
-					bind:removeDeviceDialogOpen
-					{toggleMicrophone}
-					{toggleRecordingSound}
-					{toggleEventDetection}
-					{updateEventDetectionTypes}
-					{loadDevices}
-					{removeDevice}
-					{restartProduct}
-					{resetProduct}
-					bind:micEnabled
-					bind:recordingSoundEnabled
-					bind:eventDetectionEnabled
-					bind:eventDetectionTypes
-					{devices}
-				/>
+			<Tabs.Content value={TABS.CONTROLS} class="min-h-0">
+				<PullToRefresh onRefresh={() => { loadMicrophone(); loadRecordingSound(); loadEventDetectionConfig(); loadDevices(); return loading.promise("mic", "sound", "eventDetection", "devices"); }} class="of-top of-bottom space-y-6 p-6 pb-12">
+					<CameraControls
+						{loading}
+						bind:restartDialogOpen
+						bind:resetDialogOpen
+						bind:removeDeviceDialogOpen
+						{toggleMicrophone}
+						{toggleRecordingSound}
+						{toggleEventDetection}
+						{updateEventDetectionTypes}
+						{loadDevices}
+						{removeDevice}
+						{restartProduct}
+						{resetProduct}
+						bind:micEnabled
+						bind:recordingSoundEnabled
+						bind:eventDetectionEnabled
+						bind:eventDetectionTypes
+						{devices}
+					/>
+				</PullToRefresh>
 			</Tabs.Content>
-			<Tabs.Content value={TABS.HEALTH} class="of-top of-bottom space-y-6 overflow-y-auto p-6 pb-12">
-				<CameraHealth
-					bind:buttonsLoading
-					bind:devDialogOpen
-					bind:updateDialogOpen
-					{loadHealth}
-					{loadUpdateStatus}
-					{health}
-					model={product?.model}
-					{updateStatus}
-					{activeTab}
-					healthTab={TABS.HEALTH}
-					{healthLoading}
-					{updateStatusLoading}
-					{startUpdate}
-					{setVersionDev}
-				/>
+			<Tabs.Content value={TABS.HEALTH} class="min-h-0">
+				<PullToRefresh onRefresh={() => { loadHealth(); loadUpdateStatus(); return loading.promise("health", "updateStatus"); }} class="of-top of-bottom space-y-6 p-6 pb-12">
+					<CameraHealth
+						{loading}
+						bind:devDialogOpen
+						bind:updateDialogOpen
+						{loadHealth}
+						{loadUpdateStatus}
+						{health}
+						model={product?.model}
+						{updateStatus}
+						{activeTab}
+						healthTab={TABS.HEALTH}
+						{startUpdate}
+						{setVersionDev}
+					/>
+				</PullToRefresh>
 			</Tabs.Content>
 		</Tabs.Root>
 	</div>

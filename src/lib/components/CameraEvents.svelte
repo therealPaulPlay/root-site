@@ -13,7 +13,6 @@
 		RiFilterLine,
 		RiPauseFill,
 		RiPlayFill,
-		RiRefreshLine,
 		RiSearchAi2Line,
 		RiTimeLine
 	} from "svelte-remixicon";
@@ -29,8 +28,7 @@
 
 	let {
 		events = [],
-		loadEvents = () => {},
-		eventsLoading = false,
+		loading,
 		recordingHasAudio = false,
 		eventThumbnails = {},
 		loadingThumbnails = [],
@@ -40,7 +38,6 @@
 		viewRecordingDialog = $bindable(false),
 		recordingAudioElement = $bindable(),
 		recordingVideoElement = $bindable(),
-		recordingLoading = false,
 		recordingVideoUrl,
 		recordingAudioUrl,
 		onVideoError = () => {}
@@ -250,19 +247,12 @@
 			</div>
 		</Dialog.Content>
 	</Dialog.Root>
-
-	<Button onclick={loadEvents} variant="outline" disabled={eventsLoading}>
-		Refresh
-		{#if !eventsLoading}
-			<RiRefreshLine class="size-4" />
-		{:else}
-			<Spinner class="size-4" />
-		{/if}
-	</Button>
 </div>
 
 {#if events.length === 0}
-	<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">No events available.</div>
+	<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">
+		{loading.is("events") ? "Events loading..." : "No events available."}
+	</div>
 {:else if Object.keys(groupedEvents).length === 0}
 	<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">No events match the selected filters.</div>
 {:else}
@@ -379,7 +369,7 @@
 			</Dialog.Title>
 		</Dialog.Header>
 		<div class="relative flex aspect-video w-full items-center justify-center border bg-muted text-muted-foreground">
-			{#if recordingLoading}
+			{#if loading.is("recording")}
 				<Spinner class="size-8" />
 			{:else if recordingVideoUrl || !viewRecordingDialog}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->

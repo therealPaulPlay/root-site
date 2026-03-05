@@ -8,7 +8,6 @@
 		RiCheckLine,
 		RiCloseLine,
 		RiFileShredLine,
-		RiRefreshLine,
 		RiRestartLine
 	} from "svelte-remixicon";
 	import Switch from "./ui/switch/switch.svelte";
@@ -16,7 +15,7 @@
 	import { vibrate } from "$lib/utils/haptics";
 
 	let {
-		buttonsLoading = $bindable({}),
+		loading,
 		restartDialogOpen = $bindable(false),
 		resetDialogOpen = $bindable(false),
 		removeDeviceDialogOpen = $bindable({}),
@@ -42,7 +41,7 @@
 			<Label class="text-base">Microphone</Label>
 			<p class="text-sm text-muted-foreground">Record audio together with video.</p>
 		</div>
-		<Switch onCheckedChange={toggleMicrophone} disabled={buttonsLoading.mic} bind:checked={micEnabled} />
+		<Switch onCheckedChange={toggleMicrophone} disabled={loading.is("mic")} bind:checked={micEnabled} />
 	</div>
 	<div class="flex items-center justify-between gap-4 border p-4">
 		<div class="pr-6">
@@ -51,7 +50,7 @@
 		</div>
 		<Switch
 			onCheckedChange={toggleRecordingSound}
-			disabled={buttonsLoading.sound}
+			disabled={loading.is("sound")}
 			bind:checked={recordingSoundEnabled}
 		/>
 	</div>
@@ -64,7 +63,7 @@
 			</div>
 			<Switch
 				onCheckedChange={toggleEventDetection}
-				disabled={buttonsLoading.eventDetection}
+				disabled={loading.is("eventDetection")}
 				bind:checked={eventDetectionEnabled}
 			/>
 		</div>
@@ -101,19 +100,13 @@
 	</div>
 
 	<div class="border p-4">
-		<div class="mb-4 flex items-center justify-between gap-4">
+		<div class="mb-4">
 			<Label class="text-base">Paired devices</Label>
-			<Button onclick={loadDevices} variant="outline" disabled={buttonsLoading.devices}>
-				Refresh
-				{#if buttonsLoading.devices}
-					<Spinner class="size-4" />
-				{:else}
-					<RiRefreshLine class="size-4" />
-				{/if}
-			</Button>
 		</div>
 		{#if devices.length === 0}
-			<div class="border p-4 text-center text-sm text-muted-foreground">No paired devices available.</div>
+			<div class="border p-4 text-center text-sm text-muted-foreground">
+				{loading.is("devices") ? "Devices loading..." : "No paired devices available."}
+			</div>
 		{:else}
 			<div class="space-y-4">
 				{#each devices as device}
@@ -126,7 +119,7 @@
 						<div class="flex flex-1 items-center gap-1 truncate">
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-							<p
+							<button
 								class="text-sm font-medium hover:underline active:underline"
 								onclick={() =>
 									toast.info(
@@ -134,7 +127,7 @@
 									)}
 							>
 								{device.name || "N/A"}
-							</p>
+								</button>
 						</div>
 						<!-- Removing the user's currently used device is done via the /connect page -->
 						{#if device.id !== localStorage.getItem("deviceId")}
@@ -156,12 +149,12 @@
 										</AlertDialog.Description>
 									</AlertDialog.Header>
 									<AlertDialog.Footer>
-										<AlertDialog.Cancel disabled={buttonsLoading[`remove-${device.id}`]}>Cancel</AlertDialog.Cancel>
+										<AlertDialog.Cancel disabled={loading.is(`remove-${device.id}`)}>Cancel</AlertDialog.Cancel>
 										<AlertDialog.Action
-											disabled={buttonsLoading[`remove-${device.id}`]}
+											disabled={loading.is(`remove-${device.id}`)}
 											onclick={() => removeDevice(device.id)}
 										>
-											{#if buttonsLoading[`remove-${device.id}`]}<Spinner />{/if}
+											{#if loading.is(`remove-${device.id}`)}<Spinner />{/if}
 											Remove
 										</AlertDialog.Action>
 									</AlertDialog.Footer>
@@ -187,9 +180,9 @@
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
-				<AlertDialog.Cancel disabled={buttonsLoading.restart}>Cancel</AlertDialog.Cancel>
-				<AlertDialog.Action disabled={buttonsLoading.restart} onclick={restartProduct}>
-					{#if buttonsLoading.restart}<Spinner />{/if}
+				<AlertDialog.Cancel disabled={loading.is("restart")}>Cancel</AlertDialog.Cancel>
+				<AlertDialog.Action disabled={loading.is("restart")} onclick={restartProduct}>
+					{#if loading.is("restart")}<Spinner />{/if}
 					Restart
 				</AlertDialog.Action>
 			</AlertDialog.Footer>
@@ -209,9 +202,9 @@
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
-				<AlertDialog.Cancel disabled={buttonsLoading.reset}>Cancel</AlertDialog.Cancel>
-				<AlertDialog.Action disabled={buttonsLoading.reset} onclick={resetProduct}>
-					{#if buttonsLoading.reset}<Spinner />{/if}
+				<AlertDialog.Cancel disabled={loading.is("reset")}>Cancel</AlertDialog.Cancel>
+				<AlertDialog.Action disabled={loading.is("reset")} onclick={resetProduct}>
+					{#if loading.is("reset")}<Spinner />{/if}
 					Reset
 				</AlertDialog.Action>
 			</AlertDialog.Footer>

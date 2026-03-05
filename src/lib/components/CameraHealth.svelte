@@ -1,5 +1,5 @@
 <script>
-	import { RiDownload2Line, RiRefreshLine } from "svelte-remixicon";
+	import { RiDownload2Line } from "svelte-remixicon";
 	import Button from "./ui/button/button.svelte";
 	import Label from "./ui/label/label.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
@@ -9,13 +9,11 @@
 
 	let {
 		health,
-		healthLoading,
+		loading,
 		model,
 		updateStatus,
-		updateStatusLoading,
 		activeTab,
 		healthTab = "",
-		buttonsLoading = $bindable(),
 		devDialogOpen = $bindable(false),
 		updateDialogOpen = $bindable(false),
 		loadHealth = () => {},
@@ -69,24 +67,6 @@
 
 </script>
 
-<div class="flex items-center justify-end">
-	<Button
-		onclick={() => {
-			loadHealth();
-			loadUpdateStatus();
-		}}
-		variant="outline"
-		disabled={healthLoading || updateStatusLoading}
-	>
-		Refresh
-		{#if !healthLoading && !updateStatusLoading}
-			<RiRefreshLine class="size-4" />
-		{:else}
-			<Spinner class="size-4" />
-		{/if}
-	</Button>
-</div>
-
 <div class="space-y-6">
 	{#if updateStatus}
 		<div class="space-y-4 border p-4">
@@ -136,7 +116,9 @@
 			{/if}
 		</div>
 	{:else}
-		<div class="border p-8 text-center text-sm text-muted-foreground">No update status available.</div>
+		<div class="border p-8 text-center text-sm text-muted-foreground">
+			{loading.is("updateStatus") ? "Update status loading..." : "No update status available."}
+		</div>
 	{/if}
 
 	{#if health}
@@ -196,7 +178,9 @@
 			</div>
 		{/if}
 	{:else}
-		<div class="border p-8 text-center text-sm text-muted-foreground">No health data available.</div>
+		<div class="border p-8 text-center text-sm text-muted-foreground">
+			{loading.is("health") ? "Health data loading..." : "No health data available."}
+		</div>
 	{/if}
 </div>
 
@@ -210,12 +194,12 @@
 			>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={buttonsLoading.setVersionDev}>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={loading.is("setVersionDev")}>Cancel</AlertDialog.Cancel>
 			<AlertDialog.Action
-				disabled={buttonsLoading.setVersionDev}
+				disabled={loading.is("setVersionDev")}
 				onclick={setVersionDev}
 			>
-				{#if buttonsLoading.setVersionDev}<Spinner />{/if}
+				{#if loading.is("setVersionDev")}<Spinner />{/if}
 				Yes, switch
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
@@ -231,12 +215,12 @@
 			>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={buttonsLoading.update}>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={loading.is("update")}>Cancel</AlertDialog.Cancel>
 			<AlertDialog.Action
-				disabled={buttonsLoading.update}
+				disabled={loading.is("update")}
 				onclick={startUpdate}
 			>
-				{#if buttonsLoading.update}<Spinner />{/if}
+				{#if loading.is("update")}<Spinner />{/if}
 				Update
 			</AlertDialog.Action>
 		</AlertDialog.Footer>

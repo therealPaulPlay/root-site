@@ -1,9 +1,9 @@
 <script>
-	import { RiRefreshLine } from "svelte-remixicon";
+	import { RiArrowUpLine, RiRefreshLine } from "svelte-remixicon";
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import { vibrate } from "$lib/utils/haptics";
 	import { on } from "svelte/events";
-	import { slide } from "svelte/transition";
+	import { Tween } from "svelte/motion";
 
 	let { onRefresh, disabled = false, class: className = "", children } = $props();
 
@@ -11,9 +11,10 @@
 	const DAMPEN = 0.6;
 	const MOMENTUM_GAP = 100;
 
-	let pull = $state(0);
+	let pull = new Tween(0, { duration: 150 });
 	let refreshing = $state(false);
 	let scrollEl = $state();
+	let done = $state(false);
 	let pulling = $state(false);
 	let blockTopOverscroll = $state(false);
 
@@ -24,25 +25,29 @@
 	let prevWheelEventAt = 0;
 	let releaseTimer;
 
-	const progress = $derived(pull / THRESHOLD);
+	const progress = $derived(pull.current / THRESHOLD);
 
-	function updateOverscrollBlock() {
-		if (!scrollEl) return;
-		const overflows = scrollEl.scrollHeight > scrollEl.clientHeight;
-		blockTopOverscroll = overflows && scrollEl.scrollTop <= 0 && window.scrollY <= 0;
-	}
+	// Reset done state after retraction tween completes
+	$effect(() => {
+		if (done && pull.current === 0) done = false;
+	});
 
 	function release() {
 		clearTimeout(releaseTimer);
-		if (pull >= THRESHOLD && !refreshing) {
+		if (pull.current >= THRESHOLD && !refreshing) {
 			refreshing = true;
 			vibrate.medium();
-			onRefresh?.();
-			setTimeout(() => {
+			const result = onRefresh?.();
+			const finish = () => {
 				refreshing = false;
-				pull = 0;
-			}, 500);
-		} else if (!refreshing) pull = 0;
+				done = true;
+				pull.target = 0;
+			};
+			if (result && typeof result.then === "function") {
+				const minDelay = new Promise((r) => setTimeout(r, 500));
+				Promise.all([result, minDelay]).finally(finish);
+			} else setTimeout(finish, 500);
+		} else if (!refreshing) pull.target = 0;
 		pulling = false;
 	}
 
@@ -68,9 +73,9 @@
 				if (pulling && e.cancelable) e.preventDefault();
 
 				// Shrink pull indicator gradually while scrolled
-				if (pull > 0 && (scrollEl.scrollTop > 0 || window.scrollY > 0)) {
+				if (pull.current > 0 && (scrollEl.scrollTop > 0 || window.scrollY > 0)) {
 					const scrollDelta = scrollEl.scrollTop - touchScrollSnapshot;
-					pull = Math.max(0, pull - Math.max(0, scrollDelta) * DAMPEN);
+					pull.set(Math.max(0, pull.current - Math.max(0, scrollDelta) * DAMPEN), { duration: 0 });
 				}
 
 				const wasScrolled = scrollEl.scrollTop > 0 || window.scrollY > 0;
@@ -83,13 +88,13 @@
 
 				const delta = touchY - touchStartY;
 				if (delta <= 0) {
-					pull = 0;
+					pull.set(0, { duration: 0 });
 					touchStartY = touchY;
 					return;
 				}
 				if (e.cancelable) e.preventDefault();
 				pulling = true;
-				pull = Math.min(THRESHOLD, delta * DAMPEN);
+				pull.set(Math.min(THRESHOLD, delta * DAMPEN), { duration: 0 });
 			},
 			{ passive: false }
 		);
@@ -98,7 +103,6 @@
 	function onTouchStart(e) {
 		if (disabled || refreshing || scrollEl?.scrollTop > 0 || window.scrollY > 0) return;
 		touchStartY = e.touches[0].clientY;
-		updateOverscrollBlock();
 	}
 
 	// Wheel/trackpad handling — incremental deltas
@@ -110,29 +114,20 @@
 		if (e.deltaY < 0) {
 			e.preventDefault();
 			pulling = true;
-			pull = Math.min(THRESHOLD, pull + Math.abs(e.deltaY) * 0.15);
-			if (pull >= THRESHOLD) {
+			pull.set(Math.min(THRESHOLD, pull.current + Math.abs(e.deltaY) * 0.15), { duration: 0 });
+			if (pull.current >= THRESHOLD) {
 				release();
 				return;
 			}
-		} else if (pull > 0) {
+		} else if (pull.current > 0) {
 			e.preventDefault();
-			pull = Math.max(0, pull - Math.abs(e.deltaY) * 0.15);
-			if (pull <= 0) pulling = false;
+			pull.set(Math.max(0, pull.current - Math.abs(e.deltaY) * 0.15), { duration: 0 });
+			if (pull.current <= 0) pulling = false;
 		}
 
 		clearTimeout(releaseTimer);
 		releaseTimer = setTimeout(release, 150);
 	}
-
-	// Re-evaluate overscroll block when element or content resizes
-	$effect(() => {
-		if (!scrollEl) return;
-		const observer = new ResizeObserver(() => updateOverscrollBlock());
-		observer.observe(scrollEl);
-		for (const child of scrollEl.children) observer.observe(child);
-		return () => observer.disconnect();
-	});
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -142,18 +137,19 @@
 	ontouchend={release}
 	ontouchcancel={() => {
 		pulling = false;
-		pull = 0;
+		pull.set(0, { duration: 0 });
 	}}
 	onwheel={onWheel}
 >
-	{#if pull > 0}
+	{#if pull.current > 0}
 		<div
 			class="flex w-full shrink-0 items-center justify-center overflow-hidden border-b pb-px"
-			style="height: {pull}px"
-			out:slide={{ duration: 300 }}
+			style="height: {pull.current}px"
 		>
 			{#if refreshing}
 				<Spinner class="size-5" />
+			{:else if done}
+				<RiArrowUpLine class="size-5 text-accent-foreground" style="opacity: {progress};" />
 			{:else}
 				<RiRefreshLine
 					class="size-5 text-accent-foreground"
@@ -162,12 +158,7 @@
 			{/if}
 		</div>
 	{/if}
-	<div
-		class="min-h-0 flex-1 overflow-y-auto {className}"
-		bind:this={scrollEl}
-		style="overscroll-behavior-y: {blockTopOverscroll ? 'none' : 'auto'}"
-		onscroll={updateOverscrollBlock}
-	>
+	<div class="min-h-0 flex-1 overflow-y-auto {className}" bind:this={scrollEl}>
 		{@render children?.()}
 	</div>
 </div>
