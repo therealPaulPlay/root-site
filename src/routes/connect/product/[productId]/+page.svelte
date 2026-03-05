@@ -438,7 +438,7 @@
 
 	function handleVisibilityChange() {
 		if (document.hidden) endStream();
-		else startStream();
+		else setTimeout(startStream, 250); // Wait briefly to allow relay to reconnect since phones like to kill WS when app goes to background
 	}
 
 	// Audio streaming functions
