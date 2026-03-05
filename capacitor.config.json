@@ -1,5 +1,10 @@
 {
 	"appId": "com.paulplay.root",
 	"appName": "ROOT Connect",
-	"webDir": "build"
+	"webDir": "build",
+	"plugins": {
+		"Keyboard": {
+			"resize": "none"
+		}
+	}
 }
