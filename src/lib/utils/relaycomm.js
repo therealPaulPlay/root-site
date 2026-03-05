@@ -15,10 +15,11 @@ export class RelayComm {
 	#renewalPromises = new Map(); // productId -> Promise (for ongoing renewals)
 	#handlers = new Map();
 	#pendingRequestTimeouts = new Map(); // requestId -> timeout handle
-	#muteConnectionErrors = false;
 	#reconnectTimeout;
+	#connectionLostToastTimeout;
 	#reconnectAttempt = 0;
 	#intentionalDisconnect = false;
+	#hasConnected = false;
 
 	constructor(relayDomain, deviceId) {
 		this.relayDomain = relayDomain;
@@ -41,15 +42,14 @@ export class RelayComm {
 			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?client-id=${this.deviceId}`);
 			this.#ws.onopen = () => {
 				this.#connected = true;
+				if (this.#reconnectAttempt > 1) toast.info("Reconnected!");
+				this.#hasConnected = true;
 				this.#reconnectAttempt = 0;
-				if (this.#muteConnectionErrors) toast.info("Reconnected!"); // If errors are muted (indicating that relay connection is in bad state), toast on reconnect
-				this.#muteConnectionErrors = false;
 				console.info("Relay connection opened.");
 				resolve();
 			}
 			this.#ws.onerror = (e) => {
-				if (!this.#muteConnectionErrors) toast.error("Relay connection lost.");
-				this.#muteConnectionErrors = true;
+				if (!this.#hasConnected && this.#reconnectAttempt === 0) toast.error("Relay connection error.");
 				console.error("Relay connection error:", e);
 			}
 			this.#ws.binaryType = "arraybuffer";
@@ -62,20 +62,26 @@ export class RelayComm {
 				}
 			};
 			this.#ws.onclose = () => {
-				this.#connected = false;
 				console.warn("Relay connection closed.");
+				this.#connected = false;
 
 				// Only attempt reconnect if this was not an intentional disconnect
 				if (!this.#intentionalDisconnect) {
-					if (!this.#muteConnectionErrors) toast.error("Relay connection closed, attempting reconnect...");
-					this.#muteConnectionErrors = true;
 					this.#ws = null; // To prevent .disconnect() attempt on .connect() - not needed, since we are already disconnected
 
 					// Reconnect with exponential back-off (first attempt is synchronous)
-					const reconnect = () => this.connect().catch((e) => { console.error("Reconnecting to the relay failed:", e) });
-					const delay = this.#reconnectAttempt++;
-					if (delay === 0) reconnect();
-					else this.#reconnectTimeout = setTimeout(reconnect, Math.min(delay, 5) * 1000);
+					const reconnect = () => this.connect().catch((e) => {
+						console.error("Reconnecting to the relay failed:", e);
+					});
+					this.#reconnectAttempt++;
+					if (this.#reconnectAttempt === 1) {
+						this.#connectionLostToastTimeout = setTimeout(() => {
+							if (!this.#connected) toast.error("Relay connection lost, reconnecting...");
+						}, 1500);
+						reconnect().finally(() => clearTimeout(this.#connectionLostToastTimeout));
+					} else {
+						this.#reconnectTimeout = setTimeout(reconnect, Math.min(this.#reconnectAttempt - 1, 5) * 1000);
+					}
 				}
 			}
 		});
@@ -259,8 +265,8 @@ export class RelayComm {
 
 	disconnect() {
 		this.#intentionalDisconnect = true;
-		this.#muteConnectionErrors = true;
 		clearTimeout(this.#reconnectTimeout);
+		clearTimeout(this.#connectionLostToastTimeout);
 		this.#reconnectAttempt = 0;
 
 		this.#ws?.close();
