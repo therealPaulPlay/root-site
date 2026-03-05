@@ -57,7 +57,7 @@
 	async function viewfinderLoop() {
 		while (!isDestroyed) {
 			await updateViewfinder();
-			await new Promise((resolve) => setTimeout(resolve, 250)); // Wait 0.25s in between
+			await new Promise((resolve) => setTimeout(resolve, 250)); // Wait 250ms in between
 		}
 	}
 

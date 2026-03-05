@@ -87,8 +87,7 @@
 		}
 	});
 
-	function showControls(e) {
-		if (e?.type === "pointerdown") controlsWereVisible = controlsVisible;
+	function showControls() {
 		controlsVisible = true;
 		clearTimeout(controlsTimeout);
 		if (!videoPaused)
@@ -97,10 +96,8 @@
 			}, 3000);
 	}
 
-	let controlsWereVisible = true;
-
 	function togglePlayPause() {
-		if (!recordingVideoElement || !controlsWereVisible) return;
+		if (!recordingVideoElement) return;
 		if (videoEnded) {
 			recordingVideoElement.currentTime = 0;
 			videoEnded = false;
@@ -390,9 +387,12 @@
 					class="relative h-full w-full"
 					role="button"
 					tabindex="0"
-					onclick={togglePlayPause}
+					onclick={() => {
+						clearTimeout(controlsTimeout);
+						if (controlsVisible) controlsVisible = false;
+						else showControls();
+					}}
 					onpointermove={showControls}
-					onpointerdown={showControls}
 				>
 					<video
 						src={recordingVideoUrl}
@@ -436,7 +436,7 @@
 				<!-- Custom controls (native controls break ManagedMediaSource on iOS) -->
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<div
-					class="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/50 to-transparent p-4 text-white transition-opacity duration-250 {controlsVisible
+					class="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/50 to-transparent p-4 text-white transition-opacity duration-150 {controlsVisible
 						? 'opacity-100'
 						: 'pointer-events-none opacity-0'}"
 					role="toolbar"
