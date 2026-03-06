@@ -1,6 +1,7 @@
 <script>
 	import { page } from "$app/state";
 	import { onMount, onDestroy, tick } from "svelte";
+	import { on } from "svelte/events";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { getProduct, removeProduct } from "$lib/utils/pairedProductsStorage";
@@ -41,6 +42,8 @@
 	let recordingChunks = $state({ video: [], audio: [] });
 	let recordingTotalChunks = $state({ video: 0, audio: 0 });
 	let recordingManager = null;
+	let eventListScrollElement = $state(null);
+	let eventListScrollTop = $state(0);
 
 	// Controls
 	let micEnabled = $state(false);
@@ -100,6 +103,14 @@
 	let nextAudioTime = 0;
 	let audioStarted = $state(false);
 	let audioUnlockEl = $state(null);
+
+	// Track event tab scroll position reactively
+	$effect(() => {
+		if (!eventListScrollElement) return;
+		return on(eventListScrollElement, "scroll", () => (eventListScrollTop = eventListScrollElement.scrollTop), {
+			passive: true
+		});
+	});
 
 	// Mute/unmute via gain node
 	$effect(() => {
@@ -875,8 +886,13 @@
 						loadEvents();
 						return loading.promise("events");
 					}}
-					class="of-bottom p-6 pb-12"
+					bind:scrollEl={eventListScrollElement}
+					class="of-bottom relative mask-t-from-100% p-6 pb-12"
 				>
+					<div
+						class="absolute top-0 right-0 left-0 h-25 bg-linear-to-b from-background via-background to-background/50 pointer-events-none"
+						style:opacity={Math.min(1, eventListScrollTop / 30) * 100 + "%"}
+					></div>
 					<CameraEvents
 						{events}
 						{observeThumbnail}

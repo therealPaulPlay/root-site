@@ -5,7 +5,7 @@
 	import { on } from "svelte/events";
 	import { Tween } from "svelte/motion";
 
-	let { onRefresh, disabled = false, class: className = "", children } = $props();
+	let { onRefresh, disabled = false, class: className = "", scrollEl = $bindable(), children } = $props();
 
 	const THRESHOLD = 80;
 	const DAMPEN = 0.6;
@@ -13,7 +13,6 @@
 
 	let pull = new Tween(0, { duration: 150 });
 	let refreshing = $state(false);
-	let scrollEl = $state();
 	let done = $state(false);
 	let pulling = $state(false);
 	let blockTopOverscroll = $state(false);
