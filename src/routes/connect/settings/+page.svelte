@@ -69,7 +69,8 @@
 			<Button
 				disabled={relayDomainInput === relayDomain}
 				onclick={() => {
-					const domain = relayDomainInput.trim();
+					let domain = relayDomainInput.trim();
+					if (domain.endsWith('/')) domain = domain.slice(0, -1);
 					if (domain) {
 						localStorage.setItem("relayDomain", domain);
 						relayDomain = domain;

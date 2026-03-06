@@ -469,7 +469,8 @@
 						onclick={async () => {
 							try {
 								currentlySettingRelay = true;
-								const relayDomain = relayDomainInput.trim();
+								let relayDomain = relayDomainInput.trim();
+								if (relayDomain.endsWith('/')) relayDomain = relayDomain.slice(0, -1);
 								const encryption = await Encryption.initForProduct(currentProductId);
 								const payload = await encryption.encrypt(encode({ relayDomain }), null);
 								await bluetoothInstance.writeAndRead("relaySet", {
