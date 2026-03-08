@@ -1,4 +1,4 @@
-package com.paulplay.root;
+package com.paulplay.rootconnect;
 
 import com.getcapacitor.BridgeActivity;
 

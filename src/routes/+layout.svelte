@@ -7,6 +7,8 @@
 	import Footer from "$lib/components/Footer.svelte";
 	import { Toaster } from "$lib/components/ui/sonner/index.js";
 	import { initializeBackGestureHandler, removeBackGestureHandler } from "$lib/utils/backGesture";
+	import { onNotificationTap } from "$lib/utils/pushNotifications.js";
+	import { goto } from "$app/navigation";
 	import { browser } from "$app/environment";
 
 	let { children } = $props();
@@ -18,6 +20,19 @@
 	onMount(init); // Overfade
 	onMount(initializeBackGestureHandler); // Back gesture support for going back
 	onDestroy(removeBackGestureHandler);
+
+	// Handle notification taps - navigate to the product page
+	let removeNotificationTapListener;
+	
+	onMount(() => {
+		removeNotificationTapListener = onNotificationTap((data) => {
+			if (data.productId) {
+				const params = data.eventId ? `?event-id=${data.eventId}` : "";
+				goto(`/connect/product/${data.productId}${params}`);
+			}
+		});
+	});
+	onDestroy(() => removeNotificationTapListener?.());
 </script>
 
 <svelte:head>

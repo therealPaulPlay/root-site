@@ -19,6 +19,8 @@
 	import { SvelteSet } from "svelte/reactivity";
 	import { MediaSourceManager } from "$lib/utils/mediaSourceManager";
 	import { LoadingState } from "$lib/utils/loadingState.svelte.js";
+	import { getFCMToken } from "$lib/utils/pushNotifications.js";
+	import { Capacitor } from "@capacitor/core";
 
 	const productId = page.params.productId;
 
@@ -50,6 +52,7 @@
 	let recordingSoundEnabled = $state(false);
 	let eventDetectionEnabled = $state(false);
 	let eventDetectionTypes = $state([]);
+	let notificationsEnabled = $state(false);
 
 	// Dialog open states (closed on success)
 	let restartDialogOpen = $state(false);
@@ -71,6 +74,13 @@
 	const TABS = { EVENTS: "events", CONTROLS: "controls", HEALTH: "health" };
 	let activeTab = $state(TABS.EVENTS);
 	let tabsLoaded = $state({ [TABS.EVENTS]: false, [TABS.CONTROLS]: false, [TABS.HEALTH]: false });
+
+	// Switch to events tab and reload when navigating from a notification tap
+	$effect(() => {
+		if (!page.url.searchParams.get("event-id")) return;
+		activeTab = TABS.EVENTS;
+		if (relayCommInstance) relayCommInstance.onConnected(() => loadEvents());
+	});
 
 	// Thumbnail IntersectionObserver
 	function observeThumbnail(eventId) {
@@ -145,6 +155,8 @@
 			relayCommInstance.on("getEventDetectionConfigResult", handleGetEventDetectionConfigResult);
 			relayCommInstance.on("setEventDetectionEnabledResult", handleSetEventDetectionEnabledResult);
 			relayCommInstance.on("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
+			relayCommInstance.on("getNotificationsResult", handleGetNotificationsResult);
+			relayCommInstance.on("setNotificationsResult", handleSetNotificationsResult);
 			relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
 			relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
 			relayCommInstance.on("getHealthResult", handleHealthResult);
@@ -446,11 +458,7 @@
 
 	function handleVisibilityChange() {
 		if (document.hidden) endStream();
-		else
-			setTimeout(() => {
-				// Wait briefly to allow relay to reconnect since phones kill WebSocket when app goes to background
-				if (relayCommInstance.connected) startStream();
-			}, 250);
+		else relayCommInstance.onConnected(() => startStream());
 	}
 
 	// Audio streaming functions
@@ -641,6 +649,65 @@
 			return;
 		}
 		eventDetectionTypes = msg.payload.enabledTypes || [];
+	}
+
+	function loadNotifications() {
+		loading.set("notifications", true);
+		relayCommInstance.send(productId, "getNotifications").catch((error) => {
+			toast.error("Failed to load notification status: " + error.message);
+			console.error("Failed to load notification status:", error);
+			loading.set("notifications", false);
+		});
+	}
+
+	function handleGetNotificationsResult(msg) {
+		loading.set("notifications", false);
+		if (!msg.payload.success) {
+			toast.error("Failed to load notification status: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		notificationsEnabled = msg.payload.enabled;
+	}
+
+	async function toggleNotifications() {
+		if (!Capacitor.isNativePlatform()) {
+			setTimeout(() => (notificationsEnabled = false), 250);
+			return toast.error("Push notifications are not available in this environment.");
+		}
+		loading.set("notifications", true);
+
+		if (notificationsEnabled) {
+			// Enabling: get FCM token first
+			const fcmToken = await getFCMToken();
+			if (!fcmToken) {
+				notificationsEnabled = false;
+				loading.set("notifications", false);
+				return;
+			}
+			relayCommInstance.send(productId, "setNotifications", { enabled: true, fcmToken }).catch((error) => {
+				notificationsEnabled = false;
+				toast.error("Failed to enable notifications: " + error.message);
+				console.error("Failed to enable notifications:", error);
+				loading.set("notifications", false);
+			});
+		} else {
+			relayCommInstance.send(productId, "setNotifications", { enabled: false }).catch((error) => {
+				notificationsEnabled = true;
+				toast.error("Failed to disable notifications: " + error.message);
+				console.error("Failed to disable notifications:", error);
+				loading.set("notifications", false);
+			});
+		}
+	}
+
+	function handleSetNotificationsResult(msg) {
+		loading.set("notifications", false);
+		if (!msg.payload.success) {
+			notificationsEnabled = !notificationsEnabled;
+			toast.error("Failed to update notifications: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		notificationsEnabled = msg.payload.enabled;
 	}
 
 	function loadDevices() {
@@ -849,6 +916,7 @@
 					loadMicrophone();
 					loadRecordingSound();
 					loadEventDetectionConfig();
+					loadNotifications();
 					loadDevices();
 				} else if (v === TABS.HEALTH && !tabsLoaded[TABS.HEALTH]) {
 					tabsLoaded[TABS.HEALTH] = true;
@@ -890,7 +958,7 @@
 					class="of-bottom relative mask-t-from-100% p-6 pb-12"
 				>
 					<div
-						class="absolute top-0 right-0 left-0 h-25 bg-linear-to-b from-background via-background to-background/50 pointer-events-none"
+						class="pointer-events-none absolute top-0 right-0 left-0 h-25 bg-linear-to-b from-background via-background to-background/50"
 						style:opacity={Math.min(1, eventListScrollTop / 30) * 100 + "%"}
 					></div>
 					<CameraEvents
@@ -917,8 +985,9 @@
 						loadMicrophone();
 						loadRecordingSound();
 						loadEventDetectionConfig();
+						loadNotifications();
 						loadDevices();
-						return loading.promise("mic", "sound", "eventDetection", "devices");
+						return loading.promise("mic", "sound", "eventDetection", "notifications", "devices");
 					}}
 					class="of-top of-bottom space-y-6 p-6 pb-12"
 				>
@@ -929,6 +998,7 @@
 						bind:removeDeviceDialogOpen
 						{toggleMicrophone}
 						{toggleRecordingSound}
+						{toggleNotifications}
 						{toggleEventDetection}
 						{updateEventDetectionTypes}
 						{loadDevices}
@@ -939,6 +1009,7 @@
 						bind:recordingSoundEnabled
 						bind:eventDetectionEnabled
 						bind:eventDetectionTypes
+						bind:notificationsEnabled
 						{devices}
 					/>
 				</PullToRefresh>

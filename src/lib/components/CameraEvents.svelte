@@ -23,8 +23,12 @@
 	import Separator from "./ui/separator/separator.svelte";
 	import { SvelteSet } from "svelte/reactivity";
 	import CameraDetectionDialog from "./CameraDetectionDialog.svelte";
+	import { page } from "$app/state";
+	import { tick } from "svelte";
+
 
 	const groupEventsThreshold = 5 * 60 * 1000; // 5 minutes
+	let highlightEventId = $derived(page.url.searchParams.get("event-id"));
 
 	let {
 		events = [],
@@ -53,6 +57,33 @@
 	let expandedStacks = new SvelteSet();
 	let detectionEvent = $state(null);
 	let detectionDialogOpen = $state(false);
+
+	// Highlight event from notification deep link
+	let highlightedEventId = $state(null);
+	let lastHandledEventId = null;
+	let eventElements = $state({});
+
+	$effect(() => {
+		if (!highlightEventId || highlightEventId === lastHandledEventId || events.length === 0) return;
+		if (!events.some((e) => e.id === highlightEventId)) return;
+		lastHandledEventId = highlightEventId;
+		highlightedEventId = highlightEventId;
+
+		// Expand the cluster if the event is collapsed inside a stack
+		for (const clusters of Object.values(groupedEvents)) {
+			for (const cluster of clusters) {
+				if (cluster.events.length > 1 && cluster.events.some((e) => e.id === highlightEventId)) {
+					expandedStacks.add(cluster.id);
+					break;
+				}
+			}
+		}
+
+		tick().then(() => {
+			eventElements[highlightEventId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+			setTimeout(() => (highlightedEventId = null), 1500);
+		});
+	});
 
 	// Recording player state
 	let videoPaused = $state(true);
@@ -259,7 +290,8 @@
 	{#snippet eventItem(event)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
-			class="relative flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-accent active:bg-accent"
+			bind:this={eventElements[event.id]}
+			class="relative flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-accent active:bg-accent {highlightedEventId === event.id ? 'animate-highlight' : ''}"
 			role="button"
 			tabindex="0"
 			onclick={() => {
@@ -472,3 +504,26 @@
 	event={detectionEvent}
 	thumbnailSrc={detectionEvent ? eventThumbnails[detectionEvent.id] : null}
 />
+
+<style>
+	.animate-highlight {
+		animation: highlight 1.5s ease-out;
+	}
+
+	@keyframes highlight {
+		0%,
+		15% {
+			background-color: var(--accent);
+		}
+		30% {
+			background-color: transparent;
+		}
+		45% {
+			background-color: var(--accent);
+		}
+		70%,
+		100% {
+			background-color: transparent;
+		}
+	}
+</style>

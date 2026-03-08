@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "838409155966",
+    "project_id": "root-connect-f14d2",
+    "storage_bucket": "root-connect-f14d2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838409155966:android:ab05765ef2efb3b0b8ef2f",
+        "android_client_info": {
+          "package_name": "com.paulplay.rootconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6mi_1fNiyKQreYgczN1VJEKlVbQFhCbQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

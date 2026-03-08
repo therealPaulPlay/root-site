@@ -4,12 +4,7 @@
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import {
-		RiCheckLine,
-		RiCloseLine,
-		RiFileShredLine,
-		RiRestartLine
-	} from "svelte-remixicon";
+	import { RiCheckLine, RiCloseLine, RiFileShredLine, RiRestartLine } from "svelte-remixicon";
 	import Switch from "./ui/switch/switch.svelte";
 	import { toast } from "svelte-sonner";
 	import { vibrate } from "$lib/utils/haptics";
@@ -21,6 +16,7 @@
 		removeDeviceDialogOpen = $bindable({}),
 		toggleMicrophone = () => {},
 		toggleRecordingSound = () => {},
+		toggleNotifications = () => {},
 		toggleEventDetection = () => {},
 		updateEventDetectionTypes = () => {},
 		loadDevices = () => {},
@@ -31,11 +27,24 @@
 		recordingSoundEnabled = $bindable(),
 		eventDetectionEnabled = $bindable(),
 		eventDetectionTypes = $bindable([]),
+		notificationsEnabled = $bindable(),
 		devices = []
 	} = $props();
 </script>
 
 <div class="space-y-6">
+	<div class="flex items-center justify-between gap-4 border p-4">
+		<div class="pr-6">
+			<Label class="text-base">Push notifications</Label>
+			<p class="text-sm text-muted-foreground">Get notified when events are detected.</p>
+		</div>
+		<Switch
+			onCheckedChange={toggleNotifications}
+			disabled={loading.is("notifications")}
+			bind:checked={notificationsEnabled}
+		/>
+	</div>
+
 	<div class="flex items-center justify-between gap-4 border p-4">
 		<div class="pr-6">
 			<Label class="text-base">Microphone</Label>
@@ -127,7 +136,7 @@
 									)}
 							>
 								{device.name || "N/A"}
-								</button>
+							</button>
 						</div>
 						<!-- Removing the user's currently used device is done via the /connect page -->
 						{#if device.id !== localStorage.getItem("deviceId")}
