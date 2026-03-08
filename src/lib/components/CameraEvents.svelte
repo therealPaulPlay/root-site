@@ -339,7 +339,7 @@
 
 	{#each Object.entries(groupedEvents) as [dateKey, clusters]}
 		<!-- Date header -->
-		<div class="sticky -top-6 z-10 flex items-center gap-4 bg-background mask-b-from-70% mask-b-to-100% py-4">
+		<div class="sticky -top-6 z-10 flex items-center gap-4 bg-background smooth-mask-b py-4">
 			<span class="shrink-0 text-sm text-muted-foreground">{dateKey}</span>
 			<Separator class="flex-1" />
 		</div>
@@ -525,5 +525,18 @@
 		100% {
 			background-color: transparent;
 		}
+	}
+
+	.smooth-mask-b {
+		mask-image: linear-gradient(
+			to bottom,
+			black 0%,
+			black 70%,
+			rgba(0, 0, 0, 0.67) 77.5%,
+			rgba(0, 0, 0, 0.45) 83%,
+			rgba(0, 0, 0, 0.26) 88.5%,
+			rgba(0, 0, 0, 0.1) 94%,
+			transparent 100%
+		);
 	}
 </style>
