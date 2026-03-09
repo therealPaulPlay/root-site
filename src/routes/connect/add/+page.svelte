@@ -24,7 +24,7 @@
 	import { toast } from "svelte-sonner";
 	import QrCode from "svelte-qrcode";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import { DEFAULT_RELAY_DOMAIN } from "$lib/config.js";
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
 	import QRViewfinder from "$lib/components/QRViewfinder.svelte";
@@ -104,6 +104,15 @@
 			.then((res) => res.json())
 			.then((data) => (countryCodes = data))
 			.catch((err) => console.error("Failed to load country codes:", err));
+	});
+
+	// Disconnect bluetooth when leaving the page
+	// Otherwise, it would stay connected and therefore wouldn't show up
+	// inside the BLE menu for selection the second time someone opens it
+	onDestroy(() => {
+		bluetoothInstance.disconnect().catch((error) => {
+			console.warn("Failed to disconnect bluetooth on page cleanup:", error);
+		});
 	});
 
 	async function getWifiNetworks() {

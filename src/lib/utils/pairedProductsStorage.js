@@ -1,4 +1,22 @@
+import { Capacitor, registerPlugin } from "@capacitor/core";
+
 const STORAGE_KEY = "pairedProducts";
+
+// Native storage plugin for syncing product keys to iOS/Android native layer
+// so notification service extensions can access them for decryption
+const NativeStorage = Capacitor.isNativePlatform() ? registerPlugin("NativeStorage") : null;
+
+function syncToNative(products) {
+	// Only sync the fields needed for notification decryption
+	const minimal = products.map((p) => ({
+		id: p.id,
+		productPublicKey: p.productPublicKey,
+		devicePrivateKey: p.devicePrivateKey,
+	}));
+	NativeStorage?.sync({ products: JSON.stringify(minimal) }).catch((error) =>
+		console.error("Failed to sync products to native storage:", error)
+	);
+}
 
 export function getAllProducts() {
 	const data = localStorage.getItem(STORAGE_KEY);
@@ -35,6 +53,7 @@ export function saveProduct(product) {
 
 	try {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+		syncToNative(products);
 	} catch (error) {
 		console.error("Failed to save product:", error);
 	}
@@ -44,6 +63,7 @@ export function removeProduct(productId) {
 	const products = getAllProducts().filter((p) => p.id !== productId);
 	try {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+		syncToNative(products);
 	} catch (error) {
 		console.error("Failed to remove product:", error);
 	}

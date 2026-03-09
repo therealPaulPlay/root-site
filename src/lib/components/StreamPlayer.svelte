@@ -9,6 +9,7 @@
 	import Button from "./ui/button/button.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import { fade } from "svelte/transition";
+	import { MediaQuery } from "svelte/reactivity";
 
 	let {
 		videoElement = $bindable(),
@@ -19,6 +20,7 @@
 		onAudioToggle = () => {}
 	} = $props();
 
+	const isPortrait = new MediaQuery("(orientation: portrait)");
 	let isFullscreen = $state(false);
 	let controlsVisible = $state(false);
 	let controlsTimeout = null;
@@ -26,9 +28,13 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="relative aspect-video w-full {!loading.is("stream") && !streamEnded
+	class="relative aspect-video w-full {!loading.is('stream') && !streamEnded
 		? 'bg-black'
-		: 'bg-muted'} text-muted-foreground {isFullscreen ? 'fixed! inset-0! z-100! h-full!' : 'max-h-[45svh]'}"
+		: 'bg-muted'} text-muted-foreground {isFullscreen
+		? isPortrait.current
+			? 'fixed! top-1/2! left-1/2! z-100! h-[100svw]! w-[100svh]! -translate-x-1/2! -translate-y-1/2! rotate-90!'
+			: 'fixed! inset-0! z-100! h-full!'
+		: 'max-h-[45svh]'}"
 	onpointerup={(e) => {
 		if (e.pointerType !== "mouse") {
 			clearTimeout(controlsTimeout);
@@ -63,7 +69,7 @@
 	<!-- disableRemotePlayback required on iOS -->
 	<video
 		bind:this={videoElement}
-		class="absolute inset-0 h-full w-full"
+		class="absolute inset-0 h-full w-full {loading.is('stream') || streamEnded ? 'invisible' : ''}"
 		disableremoteplayback
 		playsinline
 		muted

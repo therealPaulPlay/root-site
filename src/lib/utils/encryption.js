@@ -61,7 +61,7 @@ export class Encryption {
 				name: "HKDF",
 				hash: "SHA-256",
 				salt: new Uint8Array(0),
-				info: new TextEncoder().encode("root-camera-encryption")
+				info: new TextEncoder().encode("root-privacy-encryption")
 			},
 			hkdfKey,
 			{ name: "AES-GCM", length: 256 },

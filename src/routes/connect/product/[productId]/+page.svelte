@@ -1,6 +1,6 @@
 <script>
 	import { page } from "$app/state";
-	import { onMount, onDestroy, tick } from "svelte";
+	import { onMount, onDestroy } from "svelte";
 	import { on } from "svelte/events";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Tabs from "$lib/components/ui/tabs";
@@ -38,7 +38,6 @@
 	let viewRecordingDialog = $state(false);
 	let recordingAudioElement = $state();
 	let recordingVideoElement = $state();
-	let recordingVideoUrl = $state(null);
 	let recordingAudioUrl = $state(null);
 	let recordingHasAudio = $state(false);
 	let recordingChunks = $state({ video: [], audio: [] });
@@ -102,9 +101,9 @@
 	}
 
 	// Video streaming
-	let videoElement = $state();
+	let streamVideoElement = $state();
 	let streamManager = null;
-	let videoStarted = false;
+	let streamVideoStarted = false;
 
 	// Audio streaming
 	let audioContext;
@@ -204,9 +203,11 @@
 	function cleanupRecording() {
 		recordingManager?.cleanup();
 		recordingManager = null;
-		if (recordingVideoUrl) URL.revokeObjectURL(recordingVideoUrl);
+		if (recordingVideoElement?.src) {
+			URL.revokeObjectURL(recordingVideoElement.src);
+			recordingVideoElement.src = "";
+		}
 		if (recordingAudioUrl) URL.revokeObjectURL(recordingAudioUrl);
-		recordingVideoUrl = null;
 		recordingAudioUrl = null;
 	}
 
@@ -314,21 +315,19 @@
 			// Video: use MediaSource for progressive playback
 			if (chunkIndex === 0) {
 				loading.set("recording", false);
-				tick().then(() => {
-					let recordingPlayStarted = false;
-					recordingManager = new MediaSourceManager({
-						isLive: false,
-						duration: recordingDuration,
-						onChunkAppended: () => {
-							if (!recordingPlayStarted && recordingVideoElement?.buffered.length > 0) {
-								recordingPlayStarted = true;
-								recordingVideoElement.play().catch(console.error);
-							}
+				let recordingPlayStarted = false;
+				recordingManager = new MediaSourceManager({
+					isLive: false,
+					duration: recordingDuration,
+					onChunkAppended: () => {
+						if (!recordingPlayStarted && recordingVideoElement?.buffered.length > 0) {
+							recordingPlayStarted = true;
+							recordingVideoElement.play().catch(console.error);
 						}
-					});
-					recordingVideoUrl = recordingManager.setup();
-					recordingManager.appendChunk(chunk);
+					}
 				});
+				recordingVideoElement.src = recordingManager.setup();
+				recordingManager.appendChunk(chunk);
 			} else recordingManager?.appendChunk(chunk);
 			if (chunkIndex === totalChunks - 1) recordingManager?.finalize();
 		}
@@ -346,15 +345,15 @@
 	}
 
 	function switchRecordingToBlobUrl() {
-		if (!recordingChunks.video.length) return;
+		if (!recordingChunks.video.length || !recordingVideoElement) return;
 		if (recordingManager) {
 			recordingManager.cleanup();
 			recordingManager = null;
 		}
 		// Revoke old blob URL if present
-		if (recordingVideoUrl?.startsWith("blob:")) URL.revokeObjectURL(recordingVideoUrl);
+		if (recordingVideoElement.src?.startsWith("blob:")) URL.revokeObjectURL(recordingVideoElement.src);
 		const chunks = recordingChunks.video.filter(Boolean);
-		recordingVideoUrl = createBlobUrl(chunks, "video/mp4");
+		recordingVideoElement.src = createBlobUrl(chunks, "video/mp4");
 	}
 
 	// Streaming handlers
@@ -363,13 +362,13 @@
 			isLive: true,
 			onChunkAppended: () => {
 				// Start playback once we have at least one chunk in the buffer
-				if (!videoStarted && videoElement && videoElement.buffered.length > 0) {
-					videoStarted = true;
-					videoElement.play().catch(console.error);
+				if (!streamVideoStarted && streamVideoElement?.buffered.length > 0) {
+					streamVideoStarted = true;
+					streamVideoElement.play().catch(console.error);
 				}
 			}
 		});
-		videoElement.src = streamManager.setup();
+		streamVideoElement.src = streamManager.setup();
 	}
 
 	function startStream() {
@@ -389,9 +388,9 @@
 			streamManager.cleanup();
 			streamManager = null;
 		}
-		if (videoElement) {
-			videoElement.src = "";
-			videoElement.load();
+		if (streamVideoElement) {
+			streamVideoElement.src = "";
+			streamVideoElement.load();
 		}
 		if (audioContext) {
 			audioContext.close();
@@ -400,7 +399,7 @@
 		bufferedChunks = [];
 		nextAudioTime = 0;
 		audioStarted = false;
-		videoStarted = false;
+		streamVideoStarted = false;
 		streamEnded = true;
 		loading.set("stream", false);
 	}
@@ -438,7 +437,7 @@
 		if (loading.is("stream") && msg.payload.chunkIndex !== 0)
 			return console.warn("Received chunk with wrong index, waiting for index 0.");
 
-		if (videoElement?.error) return;
+		if (streamVideoElement?.error) return;
 
 		loading.set("stream", false); // Hide loading spinner
 		streamManager?.appendChunk(msg.payload.chunk);
@@ -446,14 +445,14 @@
 	}
 
 	function correctVideoDrift() {
-		if (!videoElement || !videoStarted || videoElement.buffered.length === 0) return;
+		if (!streamVideoElement || !streamVideoStarted || streamVideoElement.buffered.length === 0) return;
 
-		const bufferEnd = videoElement.buffered.end(videoElement.buffered.length - 1);
-		const currentTime = videoElement.currentTime;
+		const bufferEnd = streamVideoElement.buffered.end(streamVideoElement.buffered.length - 1);
+		const currentTime = streamVideoElement.currentTime;
 		const drift = bufferEnd - currentTime;
 
 		// If video is more than 500ms behind the buffer end, seek forward to catch up (100ms behind to avoid edge issues)
-		if (drift > 0.5) videoElement.currentTime = bufferEnd - 0.1;
+		if (drift > 0.5) streamVideoElement.currentTime = bufferEnd - 0.1;
 	}
 
 	function handleVisibilityChange() {
@@ -898,7 +897,7 @@
 	</div>
 	<StreamPlayer
 		bind:audioMuted
-		bind:videoElement
+		bind:videoElement={streamVideoElement}
 		{loading}
 		{streamEnded}
 		showMuteButton={audioStarted}
@@ -973,7 +972,6 @@
 						bind:viewRecordingDialog
 						bind:recordingAudioElement
 						bind:recordingVideoElement
-						{recordingVideoUrl}
 						{recordingAudioUrl}
 						onVideoError={switchRecordingToBlobUrl}
 					/>

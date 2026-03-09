@@ -34,7 +34,7 @@ async function ensureInitialized() {
 	if (initialized) return;
 
 	// Check for Bluetooth support on web
-	if (!bluetoothSupported) throw new Error("Bluetooth is not supported in this environment");
+	if (!bluetoothSupported) throw new Error("Bluetooth unsupported in this environment");
 
 	await BleClient.initialize({ androidNeverForLocation: true });
 	initialized = true;
@@ -43,6 +43,7 @@ async function ensureInitialized() {
 export class Bluetooth {
 	#deviceId = null;
 	#deviceName = null;
+	#intentionalDisconnect = false;
 
 	async scan() {
 		await ensureInitialized();
@@ -63,19 +64,21 @@ export class Bluetooth {
 
 	async connect() {
 		await ensureInitialized();
+		this.#intentionalDisconnect = false; // Reset to false
 		if (!this.isConnected()) throw new Error("No device selected. Call scan() first");
 
 		await BleClient.connect(this.#deviceId, (deviceId) => {
 			// On disconnect...
 			this.#deviceId = null;
 			this.#deviceName = null;
-			toast.info("Bluetooth device disconnected.");
+			if (!this.#intentionalDisconnect) toast.info("Bluetooth device disconnected.");
 			console.log(`Bluetooth device ${deviceId} disconnected!`);
 		});
 	}
 
 	async disconnect() {
 		await ensureInitialized();
+		this.#intentionalDisconnect = true;
 		if (this.isConnected()) await BleClient.disconnect(this.#deviceId);
 		this.#deviceId = null;
 		this.#deviceName = null;
