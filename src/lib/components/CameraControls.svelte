@@ -96,9 +96,9 @@
 					Pet
 					{#if eventDetectionTypes.includes("pet")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
 				</ToggleGroup.Item>
-				<ToggleGroup.Item value="car" class="gap-2">
-					Car
-					{#if eventDetectionTypes.includes("car")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
+				<ToggleGroup.Item value="vehicle" class="gap-2">
+					Vehicle
+					{#if eventDetectionTypes.includes("vehicle")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
 				</ToggleGroup.Item>
 				<ToggleGroup.Item value="motion" class="gap-2">
 					Other motion

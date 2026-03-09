@@ -607,7 +607,7 @@
 		}
 		eventDetectionEnabled = msg.payload.enabled;
 		const types = msg.payload.enabledTypes || [];
-		eventDetectionTypes = types.length > 0 ? types : ["person", "pet", "car"];
+		eventDetectionTypes = types.length > 0 ? types : ["person", "pet", "vehicle"];
 	}
 
 	function toggleEventDetection() {

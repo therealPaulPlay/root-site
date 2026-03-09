@@ -49,7 +49,7 @@
 		<li>Intuitive web app that focuses on simplicity</li>
 		<li>Relay server that allows for remotely accessing cameras</li>
 		<li>Local-first architecture where recordings are stored on-device</li>
-		<li>Person, pet and car detection using local AI – without a hub</li>
+		<li>Person, pet and vehicle detection using local AI – without a hub</li>
 	</ul>
 
 	<p>
