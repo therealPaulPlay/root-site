@@ -30,13 +30,17 @@ export class RelayComm {
 		return this.#ws?.readyState === WebSocket.OPEN;
 	}
 
-	// Run fn immediately if the WebSocket is open, otherwise queue it for when the connection opens
+	// Run fn when the WebSocket is confirmed open, otherwise queue it for when the connection opens
+	// Brief delay lets stale connections close first (e.g. mobile app resume)
+	// On iOS, at least ~90ms are required for WebKit to update the WebSocket state
 	onConnected(fn) {
-		if (this.#ws?.readyState === WebSocket.OPEN) {
-			try { fn(); } catch (e) { console.error("onConnected callback error:", e); }
-		} else {
-			this.#onConnectQueue.push(fn);
-		}
+		setTimeout(() => {
+			if (this.#ws?.readyState === WebSocket.OPEN) {
+				try { fn(); } catch (e) { console.error("onConnected callback error:", e); }
+			} else {
+				this.#onConnectQueue.push(fn);
+			}
+		}, 250);
 	}
 
 	async connect() {
