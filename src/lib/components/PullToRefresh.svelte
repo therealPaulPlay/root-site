@@ -19,6 +19,9 @@
 
 	// Input tracking
 	let touchStartY = 0;
+	let touchStartX = 0;
+	let touchDirectionLocked = false;
+	let touchIsHorizontal = false;
 	let touchScrollSnapshot = 0;
 	let touchReachedTopAt = 0;
 	let prevWheelEventAt = 0;
@@ -68,6 +71,18 @@
 			"touchmove",
 			(e) => {
 				const touchY = e.touches[0].clientY;
+				const touchX = e.touches[0].clientX;
+
+				// Lock direction after enough movement to distinguish horizontal vs vertical
+				if (!touchDirectionLocked) {
+					const dx = Math.abs(touchX - touchStartX);
+					const dy = Math.abs(touchY - touchStartY);
+					if (dx > 5 || dy > 5) {
+						touchDirectionLocked = true;
+						touchIsHorizontal = dx > dy;
+					}
+				}
+				if (touchIsHorizontal) return; // Let horizontal swipes pass through (Swipe-back gesture)
 
 				if (pulling && e.cancelable) e.preventDefault();
 
@@ -102,6 +117,9 @@
 	function onTouchStart(e) {
 		if (disabled || refreshing || scrollEl?.scrollTop > 0 || window.scrollY > 0) return;
 		touchStartY = e.touches[0].clientY;
+		touchStartX = e.touches[0].clientX;
+		touchDirectionLocked = false;
+		touchIsHorizontal = false;
 	}
 
 	// Wheel/trackpad handling — incremental deltas

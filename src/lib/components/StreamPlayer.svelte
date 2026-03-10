@@ -21,6 +21,7 @@
 	} = $props();
 
 	const isPortrait = new MediaQuery("(orientation: portrait)");
+	
 	let isFullscreen = $state(false);
 	let controlsVisible = $state(false);
 	let controlsTimeout = null;

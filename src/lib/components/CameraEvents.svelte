@@ -372,7 +372,7 @@
 
 <!-- Recording Viewer Dialog -->
 <Dialog.Root bind:open={viewRecordingDialog}>
-	<Dialog.Content class="max-w-4xl">
+	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>
 				{selectedEvent
@@ -471,7 +471,7 @@
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					bind:this={scrubBarEl}
-					class="relative h-2 flex-1 cursor-pointer bg-white/25 touch-none select-none"
+					class="relative h-2 flex-1 cursor-pointer touch-none bg-white/25 select-none"
 					onpointerdown={startScrubDrag}
 					onpointermove={(e) => {
 						if (scrubBarEl?.hasPointerCapture(e.pointerId)) scrubTo(e.clientX);

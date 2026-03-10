@@ -30,7 +30,6 @@
 	let relayCommInstance;
 	let streamEnded = $state(false);
 	let streamHeartbeatInterval;
-	loading.set("stream", true);
 
 	// Events
 	let events = $state([]);
@@ -187,6 +186,7 @@
 	onDestroy(() => {
 		endStream();
 		cleanupRecording();
+		clearTimeout(thumbnailDrainTimeout);
 		if (typeof window !== "undefined") document.removeEventListener("visibilitychange", handleVisibilityChange);
 		if (relayCommInstance) relayCommInstance.disconnect();
 		for (const url of Object.values(eventThumbnails)) URL.revokeObjectURL(url);
@@ -234,6 +234,7 @@
 	let thumbnailQueue = $state([]);
 	let loadingThumbnails = new SvelteSet();
 	let thumbnailsThisSecond = 0;
+	let thumbnailDrainTimeout;
 
 	function queueThumbnail(eventId) {
 		if (eventThumbnails[eventId] || loadingThumbnails.has(eventId) || thumbnailQueue.includes(eventId)) return;
@@ -244,7 +245,7 @@
 	function drainThumbnailQueue() {
 		while (thumbnailQueue.length > 0 && thumbnailsThisSecond < 5) {
 			if (thumbnailsThisSecond === 0)
-				setTimeout(() => {
+				thumbnailDrainTimeout = setTimeout(() => {
 					thumbnailsThisSecond = 0;
 					drainThumbnailQueue();
 				}, 1000);

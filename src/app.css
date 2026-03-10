@@ -195,6 +195,41 @@
 	}
 }
 
+/* View transitions for navigation */
+@keyframes slide-right {
+	from { transform: translateX(30%); opacity: 0; }
+}
+
+@keyframes slide-left {
+	from { transform: translateX(-30%); opacity: 0; }
+}
+
+/* Disable the default root transition */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation: none;
+}
+
+::view-transition-group(content) {
+	overflow: hidden;
+}
+
+::view-transition-old(content) {
+	animation: 150ms ease-out both reverse slide-left;
+}
+
+::view-transition-new(content) {
+	animation: 150ms ease-out both slide-right;
+}
+
+.back-navigation::view-transition-old(content) {
+	animation: 150ms ease-out both reverse slide-right;
+}
+
+.back-navigation::view-transition-new(content) {
+	animation: 150ms ease-out both slide-left;
+}
+
 @layer utilities {
 	.no-scrollbar {
 		scrollbar-width: none;

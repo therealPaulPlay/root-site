@@ -68,8 +68,9 @@ export class MediaSourceManager {
 			URL.revokeObjectURL(this.blobUrl);
 			this.blobUrl = null;
 		}
+		this.onChunkAppended = null;
+		this.pendingChunks = [];
 		this.mediaSource = null;
 		this.sourceBuffer = null;
-		this.pendingChunks = [];
 	}
 }

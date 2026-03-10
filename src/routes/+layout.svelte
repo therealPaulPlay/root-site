@@ -6,20 +6,46 @@
 	import Navbar from "$lib/components/Navbar.svelte";
 	import Footer from "$lib/components/Footer.svelte";
 	import { Toaster } from "$lib/components/ui/sonner/index.js";
-	import { initializeBackGestureHandler, removeBackGestureHandler } from "$lib/utils/backGesture";
+	import { initializeBackGestureHandler } from "$lib/utils/backGesture";
 	import { onNotificationTap } from "$lib/utils/pushNotifications.js";
-	import { goto } from "$app/navigation";
+	import { goto, onNavigate } from "$app/navigation";
 	import { browser } from "$app/environment";
+	import { page } from "$app/state";
 
 	let { children } = $props();
 	let isNative = Capacitor.isNativePlatform();
+
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+
+		// Only apply view transitions within /connect routes
+		const from = navigation.from?.url.pathname;
+		const to = navigation.to?.url.pathname;
+		if (!from?.startsWith("/connect") || !to?.startsWith("/connect")) return;
+
+		// On iOS, the WKWebView swipe gesture already animates popstate navigations
+		if (navigation.type === "popstate" && Capacitor.getPlatform() === "ios") return;
+		
+		// Calculate depth by counting slashes (e.g. /connect/add is deeper than /connect)
+		const fromDepth = (from.match(/\//g) || []).length;
+		const toDepth = (to.match(/\//g) || []).length;
+		const isBack = toDepth < fromDepth;
+		
+		return new Promise((resolve) => {
+			document.documentElement.classList.toggle("back-navigation", isBack);
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
+	
 	let isIframed = browser && window.self !== window.top;
 	if (isIframed) document.documentElement.style.setProperty("--safe-area-top", "0px");
 	if (isNative && browser) document.documentElement.classList.add("native");
 
 	onMount(init); // Overfade
-	onMount(initializeBackGestureHandler); // Back gesture support for going back
-	onDestroy(removeBackGestureHandler);
+	onMount(initializeBackGestureHandler); // Back gesture support for going back (Android)
 
 	// Handle notification taps - navigate to the product page
 	let removeNotificationTapListener;
@@ -28,7 +54,9 @@
 		removeNotificationTapListener = onNotificationTap((data) => {
 			if (data.productId) {
 				const params = data.eventId ? `?event-id=${data.eventId}` : "";
-				goto(`/connect/product/${data.productId}${params}`);
+				const target = `/connect/product/${data.productId}${params}`;
+				const isSamePage = page.url.pathname === `/connect/product/${data.productId}`;
+				goto(target, { replaceState: isSamePage });
 			}
 		});
 	});
@@ -58,7 +86,9 @@
 <main class="items-start-safe relative container mx-auto flex">
 	<Navbar />
 	<article class="no-scrollbar safe-min-h-svh relative flex w-full flex-col overflow-x-hidden sm:border-x">
-		{@render children?.()}
+		<div style="view-transition-name: content" class="flex min-h-0 flex-1 flex-col">
+			{@render children?.()}
+		</div>
 		<Footer />
 	</article>
 </main>
