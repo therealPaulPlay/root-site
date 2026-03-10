@@ -123,6 +123,8 @@
 		else recordingVideoElement.pause();
 	}
 
+	let scrubPointerId = null;
+
 	function scrubTo(clientX) {
 		if (!recordingVideoElement || !videoDuration || !scrubBarEl) return;
 		const rect = scrubBarEl.getBoundingClientRect();
@@ -133,6 +135,7 @@
 	}
 
 	function startScrubDrag(e) {
+		scrubPointerId = e.pointerId;
 		e.currentTarget.setPointerCapture(e.pointerId);
 		scrubTo(e.clientX);
 	}
@@ -436,7 +439,12 @@
 						// Triggers when a new video / new src is loaded
 						videoDuration = recordingVideoElement?.duration || 0;
 						videoPaused = true;
+						recordingVideoElement.currentTime = 0; // Since video just got synchronously replaced, videoCurrentTime is occasionally a tick delayed
 						videoCurrentTime = 0;
+						if (scrubPointerId != null) {
+							scrubBarEl?.releasePointerCapture(scrubPointerId);
+							scrubPointerId = null;
+						}
 					}}
 					onended={() => {
 						videoEnded = true;
@@ -451,7 +459,7 @@
 			<!-- Custom controls (native controls break ManagedMediaSource on iOS) -->
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div
-				class="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/50 to-transparent p-4 text-white transition-opacity duration-150 {controlsVisible &&
+				class="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/50 to-transparent p-4 pb-3 text-white transition-opacity duration-150 {controlsVisible &&
 				!loading.is('recording') &&
 				recordingVideoElement?.src
 					? 'opacity-100'
@@ -461,7 +469,7 @@
 				onpointerup={(e) => e.stopPropagation()}
 				onpointerdown={showControls}
 			>
-				<button onclick={togglePlayPause} class="shrink-0">
+				<button onclick={togglePlayPause} class="-m-2 shrink-0 p-2">
 					{#if videoPaused}
 						<RiPlayFill class="size-6" />
 					{:else}
@@ -471,16 +479,18 @@
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					bind:this={scrubBarEl}
-					class="relative h-2 flex-1 cursor-pointer touch-none bg-white/25 select-none"
+					class="relative -mx-2 flex flex-1 cursor-pointer touch-none items-center px-2 py-3 select-none"
 					onpointerdown={startScrubDrag}
 					onpointermove={(e) => {
 						if (scrubBarEl?.hasPointerCapture(e.pointerId)) scrubTo(e.clientX);
 					}}
 				>
-					<div
-						class="pointer-events-none absolute inset-y-0 left-0 bg-white"
-						style:width={(videoDuration ? (videoCurrentTime / videoDuration) * 100 : 0) + "%"}
-					></div>
+					<div class="relative h-2 w-full bg-white/25">
+						<div
+							class="pointer-events-none absolute inset-y-0 left-0 bg-white"
+							style:width={(videoDuration ? (videoCurrentTime / videoDuration) * 100 : 0) + "%"}
+						></div>
+					</div>
 				</div>
 				<span class="shrink-0 text-sm tabular-nums select-none"
 					>{formatTime(videoCurrentTime)} / {formatTime(videoDuration)}</span

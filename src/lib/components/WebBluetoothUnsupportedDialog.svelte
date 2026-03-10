@@ -1,16 +1,18 @@
 <script>
-	import { bluetoothSupported } from "$lib/utils/bluetooth";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { RiExternalLinkLine } from "svelte-remixicon";
+	import { Capacitor } from "@capacitor/core";
 </script>
 
-<Dialog.Root open={!bluetoothSupported()}>
+<Dialog.Root open={Capacitor.getPlatform() === "web" && !navigator.bluetooth}>
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Browser unsupported</Dialog.Title>
 		</Dialog.Header>
 		<Dialog.Description>
-			<p class="mb-4">This browser does not support the Web Bluetooth API. Bluetooth is necessary for pairing ROOT products.</p>
+			<p class="mb-4">
+				This browser does not support the Web Bluetooth API. Bluetooth is necessary for pairing ROOT products.
+			</p>
 			<div>
 				<p>Solutions:</p>
 				<ul class="mt-2 ml-4 list-disc space-y-2">

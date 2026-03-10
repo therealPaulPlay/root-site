@@ -111,7 +111,7 @@
 	// inside the BLE menu for selection the second time someone opens it
 	onDestroy(() => {
 		bluetoothInstance.disconnect().catch((error) => {
-			console.warn("Failed to disconnect bluetooth on page cleanup:", error);
+			console.warn("Failed to disconnect bluetooth on page cleanup:", error.message);
 		});
 	});
 
