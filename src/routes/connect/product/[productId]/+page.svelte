@@ -345,6 +345,29 @@
 		return URL.createObjectURL(new Blob([combined], { type: mimeType }));
 	}
 
+	async function shareRecording() {
+		if (!navigator.share) return toast.error("Sharing is not supported in this environment.");
+		const chunks = recordingChunks?.video?.filter(Boolean);
+		if (!chunks?.length) return;
+		try {
+			const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+			const combined = new Uint8Array(totalLength);
+			let offset = 0;
+			for (const chunk of chunks) {
+				combined.set(chunk, offset);
+				offset += chunk.length;
+			}
+			const eventTimestamp = events.find((e) => e.id === currentRecordingEventId)?.timestamp;
+			const timestamp = eventTimestamp
+				? new Date(eventTimestamp).toISOString().replace(/[:.]/g, "-")
+				: "default-no-date";
+			const file = new File([combined], `recording-${timestamp}.mp4`, { type: "video/mp4" });
+			await navigator.share({ files: [file] });
+		} catch (error) {
+			if (error.name !== "AbortError") console.error("Share failed:", error);
+		}
+	}
+
 	function switchRecordingToBlobUrl() {
 		if (!recordingChunks.video.length || !recordingVideoElement) return;
 		if (recordingManager) {
@@ -975,6 +998,7 @@
 						bind:recordingVideoElement
 						{recordingAudioUrl}
 						onVideoError={switchRecordingToBlobUrl}
+						onShareRecording={shareRecording}
 					/>
 				</PullToRefresh>
 			</Tabs.Content>

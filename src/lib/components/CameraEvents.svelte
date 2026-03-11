@@ -14,6 +14,7 @@
 		RiPauseFill,
 		RiPlayFill,
 		RiSearchAi2Line,
+		RiShareLine,
 		RiTimeLine
 	} from "svelte-remixicon";
 	import { slide } from "svelte/transition";
@@ -42,6 +43,7 @@
 		recordingAudioElement = $bindable(),
 		recordingVideoElement = $bindable(),
 		recordingAudioUrl,
+		onShareRecording = () => {},
 		onVideoError = () => {}
 	} = $props();
 
@@ -441,8 +443,8 @@
 						videoPaused = true;
 						recordingVideoElement.currentTime = 0; // Since video just got synchronously replaced, videoCurrentTime is occasionally a tick delayed
 						videoCurrentTime = 0;
-						if (scrubPointerId != null) {
-							scrubBarEl?.releasePointerCapture(scrubPointerId);
+						if (scrubPointerId != null && scrubBarEl?.hasPointerCapture(scrubPointerId)) {
+							scrubBarEl.releasePointerCapture(scrubPointerId);
 							scrubPointerId = null;
 						}
 					}}
@@ -495,6 +497,9 @@
 				<span class="shrink-0 text-sm tabular-nums select-none"
 					>{formatTime(videoCurrentTime)} / {formatTime(videoDuration)}</span
 				>
+				<button onclick={onShareRecording} class="-m-2 shrink-0 p-2">
+					<RiShareLine class="size-5" />
+				</button>
 			</div>
 			{#if recordingAudioUrl}
 				<audio src={recordingAudioUrl} class="hidden" bind:this={recordingAudioElement}></audio>

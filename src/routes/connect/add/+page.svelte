@@ -228,7 +228,8 @@
 
 			{#if step == 2}
 				<p class="max-w-3xl">
-					Ensure Bluetooth is enabled on your device. Then, click "OPEN BLUETOOTH" and select the new ROOT product.
+					Click "OPEN BLUETOOTH" and select your new ROOT product from the popup. Ensure Bluetooth is enabled on your
+					device.
 				</p>
 				<Button
 					class="mt-4 w-fit"
@@ -296,7 +297,9 @@
 			{/if}
 
 			{#if step == 3}
-				<p class="max-w-3xl">Point your ROOT camera towards the QR code displayed above. Then, click "SCAN CODE".</p>
+				<p class="max-w-3xl">
+					Point your ROOT camera at the QR code from at least half a meter away. Then, click "SCAN CODE".
+				</p>
 				<div class="mt-4 space-y-8">
 					<Button
 						class="w-fit"
