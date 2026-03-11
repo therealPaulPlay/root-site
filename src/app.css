@@ -197,11 +197,11 @@
 
 /* View transitions for navigation */
 @keyframes slide-right {
-	from { transform: translateX(30%); opacity: 0; }
+	from { transform: translateX(15%); opacity: 0; }
 }
 
 @keyframes slide-left {
-	from { transform: translateX(-30%); opacity: 0; }
+	from { transform: translateX(-15%); opacity: 0; }
 }
 
 /* Disable the default root transition */
