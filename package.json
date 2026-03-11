@@ -49,7 +49,7 @@
 		"@capacitor/keyboard": "^8.0.1",
 		"@capacitor/push-notifications": "^8.0.2",
 		"cbor-x": "^1.6.0",
-		"overfade": "^0.0.10",
+		"overfade": "^0.0.11",
 		"svelte-qrcode": "^1.0.1"
 	}
 }
