@@ -67,7 +67,7 @@ export class Bluetooth {
 	}
 
 	async disconnect() {
-		await ensureInitialized();
+		if (!initialized) return;
 		this.#intentionalDisconnect = true;
 		if (this.isConnected()) await BleClient.disconnect(this.#deviceId);
 		this.#deviceId = null;
