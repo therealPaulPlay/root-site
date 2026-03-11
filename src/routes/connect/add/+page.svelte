@@ -187,16 +187,19 @@
 
 <div class="safe-h-svh flex w-full flex-col justify-center">
 	{#if stepImage[step - 1] && step !== 3}
-		<div class="h-[50svh] max-h-[60svw] w-full shrink-0 overflow-hidden border-b">
-			<img
-				alt="Step illustration"
-				src={stepImage[step - 1]}
-				class="h-full w-full object-cover dark:brightness-70 dark:contrast-200"
-			/>
-		</div>
+		{#key step}
+			<div class="h-[50svh] max-h-[60svw] w-full shrink-0 overflow-hidden border-b" in:fly={{ axis: "x", x: 15 }}>
+				<img
+					alt="Step illustration"
+					src={stepImage[step - 1]}
+					class="h-full w-full object-cover dark:brightness-70 dark:contrast-200"
+				/>
+			</div>
+		{/key}
 	{:else if step === 3}
 		<div
 			class="flex min-h-fit w-full items-center justify-center overflow-hidden border-b bg-white! py-8 md:py-12 lg:py-16"
+			in:fly={{ axis: "x", x: 15 }}
 		>
 			{#if pairingCode}
 				<div class="pt-0.5 pl-0.5">
