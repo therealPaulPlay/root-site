@@ -196,12 +196,20 @@
 }
 
 /* View transitions for navigation */
-@keyframes slide-right {
+@keyframes slide-from-right {
 	from { transform: translateX(15%); opacity: 0; }
 }
 
-@keyframes slide-left {
+@keyframes slide-to-left {
+	to { transform: translateX(-15%); opacity: 0; }
+}
+
+@keyframes slide-from-left {
 	from { transform: translateX(-15%); opacity: 0; }
+}
+
+@keyframes slide-to-right {
+	to { transform: translateX(15%); opacity: 0; }
 }
 
 /* Disable the default root transition */
@@ -215,19 +223,19 @@
 }
 
 ::view-transition-old(content) {
-	animation: 150ms ease-out both reverse slide-left;
+	animation: 150ms ease-out both slide-to-left;
 }
 
 ::view-transition-new(content) {
-	animation: 150ms ease-out both slide-right;
+	animation: 150ms ease-out both slide-from-right;
 }
 
 .back-navigation::view-transition-old(content) {
-	animation: 150ms ease-out both reverse slide-right;
+	animation: 150ms ease-out both slide-to-right;
 }
 
 .back-navigation::view-transition-new(content) {
-	animation: 150ms ease-out both slide-left;
+	animation: 150ms ease-out both slide-from-left;
 }
 
 @layer utilities {
