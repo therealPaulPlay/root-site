@@ -64,7 +64,6 @@
 	$effect(() => {
 		if (highlightedLogIndex !== -1) vibrate.light();
 	});
-
 </script>
 
 <div class="space-y-6">
@@ -94,6 +93,17 @@
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">Available</span>
 						<span>{updateStatus.availableVersion}</span>
+					</div>
+				{/if}
+				{#if updateStatus.scheduledFor}
+					<div class="flex justify-between">
+						<span class="text-muted-foreground">Scheduled</span>
+						<span
+							>{new Date(updateStatus.scheduledFor).toLocaleString(undefined, {
+								dateStyle: "short",
+								timeStyle: "short"
+							})}</span
+						>
 					</div>
 				{/if}
 				{#if updateStatus.error}
@@ -195,10 +205,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel disabled={loading.is("setVersionDev")}>Cancel</AlertDialog.Cancel>
-			<AlertDialog.Action
-				disabled={loading.is("setVersionDev")}
-				onclick={setVersionDev}
-			>
+			<AlertDialog.Action disabled={loading.is("setVersionDev")} onclick={setVersionDev}>
 				{#if loading.is("setVersionDev")}<Spinner />{/if}
 				Yes, switch
 			</AlertDialog.Action>
@@ -216,10 +223,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel disabled={loading.is("update")}>Cancel</AlertDialog.Cancel>
-			<AlertDialog.Action
-				disabled={loading.is("update")}
-				onclick={startUpdate}
-			>
+			<AlertDialog.Action disabled={loading.is("update")} onclick={startUpdate}>
 				{#if loading.is("update")}<Spinner />{/if}
 				Update
 			</AlertDialog.Action>
