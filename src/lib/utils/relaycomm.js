@@ -51,7 +51,7 @@ export class RelayComm {
 
 		this.#intentionalDisconnect = false;
 
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			this.#ws = new WebSocket(`wss://${this.relayDomain}/ws?client-id=${this.deviceId}`);
 			this.#ws.onopen = () => {
 				if (this.#reconnectAttempt > 1) toast.info("Reconnected!");
@@ -91,11 +91,11 @@ export class RelayComm {
 					this.#reconnectAttempt++;
 					if (this.#reconnectAttempt === 1) {
 						this.#connectionLostToastTimeout = setTimeout(() => {
-							if (!this.connected) toast.error("Relay connection lost, reconnecting...");
+							if (!this.connected) toast.error(this.#hasConnected ? "Relay connection lost, reconnecting..." : "Waiting for connection...");
 						}, 1500);
 						reconnect().finally(() => clearTimeout(this.#connectionLostToastTimeout));
 					} else {
-						this.#reconnectTimeout = setTimeout(reconnect, Math.min(this.#reconnectAttempt - 1, 5) * 1000);
+						this.#reconnectTimeout = setTimeout(reconnect, Math.min(this.#reconnectAttempt - 1, 3) * 1000);
 					}
 				}
 			}

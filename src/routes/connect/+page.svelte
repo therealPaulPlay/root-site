@@ -41,6 +41,7 @@
 	}
 
 	let loadAbort;
+	let lastLoadTimestamp;
 	let activeRequestIds = new Set();
 
 	function loadProductData(productId) {
@@ -65,6 +66,7 @@
 		previewFailed = {};
 		updateStatuses = {};
 		activeRequestIds.clear();
+		lastLoadTimestamp = Date.now();
 
 		const abort = new AbortController();
 		loadAbort = abort;
@@ -187,6 +189,15 @@
 	<title>ROOT Connect</title>
 	<meta name="description" content="Connect and interface with your Root device." />
 </svelte:head>
+
+<svelte:document
+	onvisibilitychange={() => {
+		// Refresh loaded data if app or site was in background for more than 30s
+		if (!document.hidden && products.length && lastLoadTimestamp && lastLoadTimestamp < Date.now() - 30_000) {
+			startLoadQueue();
+		}
+	}}
+/>
 
 <div class="absolute top-0 right-0 z-1 flex bg-background text-xl">
 	<Button class="h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/settings">

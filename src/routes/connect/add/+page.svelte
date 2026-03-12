@@ -188,7 +188,10 @@
 <div class="safe-h-svh flex w-full flex-col justify-center">
 	{#if stepImage[step - 1] && step !== 3}
 		{#key step}
-			<div class="h-[50svh] max-h-[60svw] w-full shrink-0 overflow-hidden border-b" in:fly={{ axis: "x", x: 15 }}>
+			<div
+				class="h-[50svh] max-h-[60svw] w-full shrink-0 overflow-hidden border-b"
+				in:fly={{ axis: "x", x: 15, duration: 250 }}
+			>
 				<img
 					alt="Step illustration"
 					src={stepImage[step - 1]}
@@ -199,7 +202,7 @@
 	{:else if step === 3}
 		<div
 			class="flex min-h-fit w-full items-center justify-center overflow-hidden border-b bg-white! py-8 md:py-12 lg:py-16"
-			in:fly={{ axis: "x", x: 15 }}
+			in:fly={{ axis: "x", x: 15, duration: 250 }}
 		>
 			{#if pairingCode}
 				<div class="pt-0.5 pl-0.5">
@@ -212,7 +215,10 @@
 	{/if}
 
 	{#key step}
-		<div class="of-top of-bottom flex grow flex-col space-y-4 overflow-y-auto p-6 lg:p-8" in:fly={{ axis: "x", x: 15 }}>
+		<div
+			class="of-top of-bottom flex grow flex-col space-y-4 overflow-y-auto p-6 lg:p-8"
+			in:fly={{ axis: "x", x: 15, duration: 250 }}
+		>
 			<h3 class="text-3xl">{step}. {stepTitle[step - 1] || "Default."}</h3>
 
 			{#if step == 1}
