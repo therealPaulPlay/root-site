@@ -5,7 +5,7 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { getAllProducts, removeProduct, saveProduct } from "$lib/utils/pairedProductsStorage";
 	import { RelayComm } from "$lib/utils/relaycomm";
-	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
+	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config";
 	import { onDestroy, onMount } from "svelte";
 	import {
 		RiArrowRightSLine,
@@ -78,7 +78,7 @@
 	}
 
 	onMount(async () => {
-		const relayDomain = localStorage.getItem("relayDomain") || DEFAULT_RELAY_DOMAIN;
+		const relayDomain = localStorage.getItem("relayDomain") || OFFICIAL_RELAY_DOMAIN;
 		loadProducts(); // Load paired products from storage
 
 		// If the user has products, connect to relay
@@ -194,7 +194,7 @@
 	onvisibilitychange={() => {
 		// Refresh loaded data if app or site was in background for more than 30s
 		if (!document.hidden && products.length && lastLoadTimestamp && lastLoadTimestamp < Date.now() - 30_000) {
-			startLoadQueue();
+			relayCommInstance?.onConnected(startLoadQueue);
 		}
 	}}
 />

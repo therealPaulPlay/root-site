@@ -1,7 +1,7 @@
 <script>
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
-	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
+	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config";
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { RiArrowLeftLine, RiExternalLinkLine } from "svelte-remixicon";
@@ -14,7 +14,7 @@
 	let relayDomainInput = $state("");
 
 	onMount(() => {
-		relayDomain = localStorage.getItem("relayDomain") || DEFAULT_RELAY_DOMAIN;
+		relayDomain = localStorage.getItem("relayDomain") || OFFICIAL_RELAY_DOMAIN;
 		relayDomainInput = relayDomain;
 	});
 </script>
@@ -57,7 +57,7 @@
 			<div class="flex max-w-lg flex-col gap-4">
 				<div class="space-y-1">
 					<Label for="relay-domain" class="text-sm font-medium">Relay domain</Label>
-					<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={DEFAULT_RELAY_DOMAIN} />
+					<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={OFFICIAL_RELAY_DOMAIN} />
 				</div>
 				<p class="text-xs text-muted-foreground">
 					The relay server domain. Connected products must be configured to use the same

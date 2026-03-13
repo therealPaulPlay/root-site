@@ -25,7 +25,7 @@
 	import QrCode from "svelte-qrcode";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { onDestroy, onMount } from "svelte";
-	import { DEFAULT_RELAY_DOMAIN } from "$lib/config.js";
+	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config.js";
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
 	import QRViewfinder from "$lib/components/QRViewfinder.svelte";
 	import WebBluetoothUnsupportedDialog from "$lib/components/WebBluetoothUnsupportedDialog.svelte";
@@ -68,11 +68,12 @@
 	let pairingCode = $state();
 	let deviceNameInput = $state("My phone");
 	let wifiNetworks = $state([]);
-	let selectedWiFiSSID = $state("");
+	let currentWifiSSID = $state();
 	let showWifiPassword = $state(false);
-	let relayDomainInput = $state(DEFAULT_RELAY_DOMAIN);
-	let wifiPasswordInput = $state("");
-	let wifiCountryCode = $state("");
+	let wifiPasswordInput = $state();
+	let wifiCountryCode = $state();
+	let relayDomainInput = $state(OFFICIAL_RELAY_DOMAIN);
+	let currentRelayDomain = $state();
 	let pendingWifiNetwork = $state(null);
 	let currentProductId = $state(null);
 
@@ -92,8 +93,8 @@
 	let successfulConnect = $state(false);
 	let successfulScan = $state(false);
 	let successfulPair = $state(false);
-	let relayConfigured = $state(false);
-	let wifiConfigured = $state(false);
+	let relayConfigured = $derived(currentRelayDomain);
+	let wifiConfigured = $derived(currentWifiSSID);
 
 	// Data
 	let countryCodes = $state({});
@@ -138,8 +139,7 @@
 	async function getWifiAndRelayStatus() {
 		try {
 			const wifiStatusResponse = await bluetoothInstance.read("wifiStatus");
-			wifiConfigured = Boolean(wifiStatusResponse.connected);
-			if (wifiStatusResponse.ssid) selectedWiFiSSID = wifiStatusResponse.ssid;
+			if (wifiStatusResponse.connectedSSID) currentWifiSSID = wifiStatusResponse.connectedSSID;
 		} catch (error) {
 			toast.error("Error getting WiFi status: " + error.message);
 		}
@@ -147,8 +147,8 @@
 		try {
 			const relayStatusResponse = await bluetoothInstance.read("relayStatus");
 			if (relayStatusResponse.relayDomain) {
-				relayConfigured = true;
-				relayDomainInput = relayStatusResponse.relayDomain;
+				currentRelayDomain = relayStatusResponse.relayDomain;
+				relayDomainInput = currentRelayDomain;
 			}
 		} catch (error) {
 			toast.error("Error getting relay status: " + error.message);
@@ -170,8 +170,7 @@
 				payload
 			});
 
-			wifiConfigured = true;
-			selectedWiFiSSID = pendingWifiNetwork.ssid;
+			currentWifiSSID = pendingWifiNetwork.ssid;
 			wifiConnectDialogOpen = false;
 		} catch (error) {
 			toast.error("Error connecting to WiFi: " + error.message);
@@ -414,7 +413,7 @@
 				{#if !wifiConfigured}
 					<p class="max-w-3xl">Please choose a WiFi network that the ROOT product can connect to.</p>
 				{:else}
-					<p class="max-w-3xl">The product is connected to Wifi. The network can be changed below.</p>
+					<p class="max-w-3xl">The product is connected to Wifi. You can change the network below.</p>
 				{/if}
 				<div class="mt-4 space-y-4">
 					<div
@@ -429,12 +428,12 @@
 										tabindex="0"
 										onclick={() => {
 											pendingWifiNetwork = network;
-											wifiPasswordInput = "";
-											wifiCountryCode = "";
+											wifiPasswordInput = null;
+											wifiCountryCode = null;
 											wifiConnectDialogOpen = true;
 										}}
 										class="flex w-full items-center justify-between gap-2 border-b p-2 hover:bg-accent/50 active:bg-accent/50 {network.ssid ===
-										selectedWiFiSSID
+										currentWifiSSID
 											? 'pointer-events-none bg-muted'
 											: ''}"
 									>
@@ -446,7 +445,7 @@
 											{/if}
 											<p class="truncate text-sm text-nowrap">
 												{network.ssid}
-												{network.ssid === selectedWiFiSSID ? "(Connected)" : ""}
+												{network.ssid === currentWifiSSID ? "(Connected)" : ""}
 											</p>
 										</span>
 										<span class="text-sm text-nowrap">{network.signal}/100</span>
@@ -484,7 +483,7 @@
 						<Label for="relay-domain">Domain</Label>
 						<Input
 							type="text"
-							placeholder="relay.com"
+							placeholder={OFFICIAL_RELAY_DOMAIN}
 							class="max-w-xs"
 							id="relay-domain"
 							bind:value={relayDomainInput}
@@ -494,19 +493,24 @@
 						<Button
 							class="w-fit"
 							variant={relayConfigured ? "outline" : "default"}
-							disabled={currentlySettingRelay}
+							disabled={currentlySettingRelay || relayDomainInput === currentRelayDomain}
 							onclick={async () => {
 								try {
 									currentlySettingRelay = true;
+
+									// Clean up relay domain input
 									let relayDomain = relayDomainInput.trim();
 									if (relayDomain.endsWith("/")) relayDomain = relayDomain.slice(0, -1);
+
 									const encryption = await Encryption.initForProduct(currentProductId);
 									const payload = await encryption.encrypt(encode({ relayDomain }), null);
+
 									await bluetoothInstance.writeAndRead("relaySet", {
 										deviceId: localStorage.getItem("deviceId"),
 										payload
 									});
-									relayConfigured = true;
+
+									currentRelayDomain = relayDomain;
 									newRelayDomain = relayDomain; // Passed to adjust connect relay dialog
 								} catch (error) {
 									toast.error("Error setting relay domain: " + error.message);
@@ -524,7 +528,7 @@
 								Update domain
 							{/if}
 						</Button>
-						{#if relayDomainInput !== DEFAULT_RELAY_DOMAIN}
+						{#if relayDomainInput !== OFFICIAL_RELAY_DOMAIN}
 							<Label><RiAlertLine class="size-4!" /> Unofficial!</Label>
 						{/if}
 					</div>

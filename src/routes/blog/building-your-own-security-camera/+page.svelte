@@ -7,7 +7,7 @@
 	import FirmwareDownloadButton from "$lib/components/FirmwareDownloadButton.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import * as Dialog from "$lib/components/ui/dialog";
-	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
+	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config";
 </script>
 
 <svelte:head>
@@ -143,7 +143,7 @@
 
 	<p>
 		For testing purposes, you are allowed to use the official relay server <span class="bg-accent"
-			>{DEFAULT_RELAY_DOMAIN}</span
+			>{OFFICIAL_RELAY_DOMAIN}</span
 		>. However, relaying video footage is very expensive, hence prolonged use of the official instance is not permitted.
 	</p>
 

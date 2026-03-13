@@ -6,7 +6,7 @@
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { getProduct, removeProduct } from "$lib/utils/pairedProductsStorage";
 	import { RelayComm } from "$lib/utils/relaycomm";
-	import { DEFAULT_RELAY_DOMAIN } from "$lib/config";
+	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config";
 	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
 	import StreamPlayer from "$lib/components/StreamPlayer.svelte";
@@ -134,7 +134,7 @@
 			return;
 		}
 
-		const relayDomain = localStorage.getItem("relayDomain") || DEFAULT_RELAY_DOMAIN;
+		const relayDomain = localStorage.getItem("relayDomain") || OFFICIAL_RELAY_DOMAIN;
 		const deviceId = localStorage.getItem("deviceId");
 		if (!deviceId) return toast.error("No device ID set!");
 

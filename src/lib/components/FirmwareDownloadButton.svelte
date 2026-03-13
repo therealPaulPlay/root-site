@@ -1,5 +1,5 @@
 <script>
-	import { DEFAULT_RELAY_DOMAIN } from "$lib/config.js";
+	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config.js";
 	import { toast } from "svelte-sonner";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
@@ -14,7 +14,7 @@
 
 	onMount(async () => {
 		try {
-			const response = await fetch(`https://${DEFAULT_RELAY_DOMAIN}/firmware/observer/image`);
+			const response = await fetch(`https://${OFFICIAL_RELAY_DOMAIN}/firmware/observer/image`);
 			if (!response.ok) throw new Error(`Failed to fetch firmware info: ${response.status}`);
 
 			const data = await response.json();

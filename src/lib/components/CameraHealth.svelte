@@ -135,16 +135,10 @@
 		<div class="space-y-4 border p-4">
 			<Label class="text-base">Network</Label>
 			<div class="space-y-2 text-sm">
-				{#if health.wifi.connected !== undefined}
+				{#if health.wifi.connectedSSID}
 					<div class="flex justify-between">
-						<span class="text-muted-foreground">WiFi status</span>
-						<span>{health.wifi.connected ? "connected" : "disconnected"}</span>
-					</div>
-				{/if}
-				{#if health.wifi.ssid}
-					<div class="flex justify-between">
-						<span class="text-muted-foreground">SSID</span>
-						<span>{health.wifi.ssid}</span>
+						<span class="text-muted-foreground">WiFi</span>
+						<span>{health.wifi.connectedSSID}</span>
 					</div>
 				{/if}
 				{#if health.relayDomain}

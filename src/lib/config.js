@@ -1,1 +1,1 @@
-export const DEFAULT_RELAY_DOMAIN = "relay.rootprivacy.com";
+export const OFFICIAL_RELAY_DOMAIN = "relay.rootprivacy.com";
