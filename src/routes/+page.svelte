@@ -234,7 +234,7 @@
 </section>
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
-	<div class="min-w-2/3 space-y-4 p-6 max-lg:border-b max-lg:border-dashed lg:border-r lg:p-8">
+	<div class="min-w-2/3 space-y-4 p-6 max-lg:border-b max-lg:border-dashed max-lg:w-full lg:border-r lg:p-8">
 		<h3 class="text-3xl">Keeping you safe.</h3>
 		<p class="max-w-150">
 			Privacy protects everyone. It’s a basic human right, <span class="bg-accent"
@@ -333,7 +333,7 @@
 			{/each}
 		</div>
 	</div>
-	<div class="min-w-2/3 space-y-4 p-6 max-lg:border-b max-lg:border-dashed lg:border-l lg:p-8">
+	<div class="min-w-2/3 space-y-4 p-6 max-lg:border-b max-lg:border-dashed max-lg:w-full lg:border-l lg:p-8">
 		<h3 class="text-3xl">Why it matters.</h3>
 		<p class="max-w-150">
 			Large tech corporations collect huge amounts of user information <span class="bg-accent"
@@ -433,7 +433,7 @@
 	</div>
 
 	<!-- Text content (right side) -->
-	<div class="min-w-1/2 space-y-4 p-6 max-xl:border-b max-xl:border-dashed lg:p-8 xl:border-l">
+	<div class="min-w-1/2 space-y-4 p-6 max-xl:border-b max-xl:border-dashed lg:p-8 xl:border-l max-xl:w-full">
 		<h3 class="text-3xl">A secure architecture.</h3>
 		<p class="max-w-130">
 			All data is end-to-end encrypted with forward secrecy to ensure <span class="bg-accent"
