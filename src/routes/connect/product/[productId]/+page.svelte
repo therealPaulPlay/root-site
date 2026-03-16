@@ -25,6 +25,7 @@
 	const productId = page.params.productId;
 
 	const loading = new LoadingState();
+	loading.set("stream", true); // Init with stream loading
 
 	let product = $state(null);
 	let relayCommInstance;
