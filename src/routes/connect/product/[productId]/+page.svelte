@@ -459,8 +459,7 @@
 			return;
 		}
 
-		if (loading.is("stream") && msg.payload.chunkIndex !== 0)
-			return console.warn("Received chunk with wrong index, waiting for index 0.");
+		if (loading.is("stream") && msg.payload.chunkIndex !== 0) return console.warn("Received chunk with wrong index.");
 
 		if (streamVideoElement?.error) return;
 

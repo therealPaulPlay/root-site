@@ -75,9 +75,9 @@
 		playsinline
 		muted
 		onerror={(e) => {
-			// Ignore empty src errors (code 4)
+			// Ignore empty src errors
 			const error = e.currentTarget.error;
-			if (error && error.code !== 4) console.error("Video playback error:", error.code, error.message);
+			if (error && !error.message?.toLowerCase()?.includes("empty src")) console.error("Video playback error:", error);
 		}}
 	></video>
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
