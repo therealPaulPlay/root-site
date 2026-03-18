@@ -378,6 +378,20 @@
 		// Revoke old blob URL if present
 		if (recordingVideoElement.src?.startsWith("blob:")) URL.revokeObjectURL(recordingVideoElement.src);
 		const chunks = recordingChunks.video.filter(Boolean);
+		// Pause and reset playback once the new blob src loads
+		recordingVideoElement.addEventListener(
+			"loadedmetadata",
+			() => {
+				recordingVideoElement.pause();
+				recordingVideoElement.dispatchEvent(new Event("pause")); // Ensure onpause fires even if already paused
+				recordingVideoElement.currentTime = 0;
+				if (recordingAudioElement) {
+					recordingAudioElement.pause();
+					recordingAudioElement.currentTime = 0;
+				}
+			},
+			{ once: true }
+		);
 		recordingVideoElement.src = createBlobUrl(chunks, "video/mp4");
 	}
 
