@@ -120,7 +120,12 @@
 	}
 
 	body {
-		@apply bg-background text-foreground;
+		@apply text-foreground;
+	}
+
+	html,
+	body {
+		@apply bg-background;
 	}
 
 	h1,
@@ -197,19 +202,31 @@
 
 /* View transitions for navigation */
 @keyframes slide-from-right {
-	from { transform: translateX(15%); opacity: 0; }
+	from {
+		transform: translateX(15%);
+		opacity: 0;
+	}
 }
 
 @keyframes slide-to-left {
-	to { transform: translateX(-15%); opacity: 0; }
+	to {
+		transform: translateX(-15%);
+		opacity: 0;
+	}
 }
 
 @keyframes slide-from-left {
-	from { transform: translateX(-15%); opacity: 0; }
+	from {
+		transform: translateX(-15%);
+		opacity: 0;
+	}
 }
 
 @keyframes slide-to-right {
-	to { transform: translateX(15%); opacity: 0; }
+	to {
+		transform: translateX(15%);
+		opacity: 0;
+	}
 }
 
 /* Disable the default root transition */
@@ -257,5 +274,14 @@
 
 	.safe-h-svh {
 		height: calc(100svh - var(--safe-area-top));
+	}
+}
+
+/* Immediately set bg color dark if that's the OS preference since ModeWatcher needs a tick to start */
+@media (prefers-color-scheme: dark) {
+
+	html,
+	body {
+		background-color: oklch(0 0 0);
 	}
 }

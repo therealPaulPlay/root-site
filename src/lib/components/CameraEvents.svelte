@@ -443,6 +443,10 @@
 						videoPaused = true;
 						recordingVideoElement.currentTime = 0; // Since video just got synchronously replaced, videoCurrentTime is occasionally a tick delayed
 						videoCurrentTime = 0;
+						if (recordingAudioElement) {
+							recordingAudioElement.pause();
+							recordingAudioElement.currentTime = 0;
+						}
 						if (scrubPointerId != null && scrubBarEl?.hasPointerCapture(scrubPointerId)) {
 							scrubBarEl.releasePointerCapture(scrubPointerId);
 							scrubPointerId = null;
