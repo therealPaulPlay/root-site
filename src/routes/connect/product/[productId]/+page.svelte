@@ -400,9 +400,10 @@
 		streamManager = new MediaSourceManager({
 			isLive: true,
 			onChunkAppended: () => {
-				// Start playback once we have at least one chunk in the buffer
+				// Start playback once we have actual playable data in the buffer
 				if (!streamVideoStarted && streamVideoElement?.buffered.length > 0) {
 					streamVideoStarted = true;
+					loading.set("stream", false);
 					streamVideoElement.play().catch(console.error);
 				}
 			}
@@ -473,11 +474,9 @@
 			return;
 		}
 
-		if (loading.is("stream") && msg.payload.chunkIndex !== 0) return console.warn("Received chunk with wrong index.");
-
+		if (!streamVideoStarted && !streamManager && msg.payload.chunkIndex !== 0) return console.warn("Received chunk with wrong index.");
 		if (streamVideoElement?.error) return;
 
-		loading.set("stream", false); // Hide loading spinner
 		streamManager?.appendChunk(msg.payload.chunk);
 		correctVideoDrift();
 	}
