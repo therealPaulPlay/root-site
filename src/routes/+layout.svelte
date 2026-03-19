@@ -1,5 +1,6 @@
 <script>
 	import "../app.css";
+	import "$lib/utils/theme.svelte.js";
 	import { onDestroy, onMount } from "svelte";
 	import { Capacitor } from "@capacitor/core";
 	import init from "overfade";
@@ -25,12 +26,12 @@
 
 		// On iOS, the WKWebView swipe gesture already animates popstate navigations
 		if (navigation.type === "popstate" && Capacitor.getPlatform() === "ios") return;
-		
+
 		// Calculate depth by counting slashes (e.g. /connect/add is deeper than /connect)
 		const fromDepth = (from.match(/\//g) || []).length;
 		const toDepth = (to.match(/\//g) || []).length;
 		const isBack = toDepth < fromDepth;
-		
+
 		return new Promise((resolve) => {
 			document.documentElement.classList.toggle("back-navigation", isBack);
 			document.startViewTransition(async () => {
@@ -39,7 +40,7 @@
 			});
 		});
 	});
-	
+
 	let isIframed = browser && window.self !== window.top;
 	if (isIframed) document.documentElement.style.setProperty("--safe-area-top", "0px");
 	if (isNative && browser) document.documentElement.classList.add("native");
@@ -49,7 +50,7 @@
 
 	// Handle notification taps - navigate to the product page
 	let removeNotificationTapListener;
-	
+
 	onMount(() => {
 		removeNotificationTapListener = onNotificationTap((data) => {
 			if (data.productId) {

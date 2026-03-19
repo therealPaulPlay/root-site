@@ -7,7 +7,7 @@
 	import { RiArrowLeftLine, RiExternalLinkLine } from "svelte-remixicon";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
-	import { setMode, userPrefersMode } from "mode-watcher";
+	import { theme, ThemePreference } from "$lib/utils/theme.svelte.js";
 	import * as NativeSelect from "$lib/components/ui/native-select";
 
 	let relayDomain = $state("");
@@ -43,10 +43,13 @@
 			<div class="flex max-w-lg flex-col gap-4">
 				<div class="space-y-1">
 					<Label class="text-sm font-medium">Theme</Label>
-					<NativeSelect.Root value={userPrefersMode.current} onchange={(e) => setMode(e.currentTarget.value)}>
-						<NativeSelect.Option value="system">System</NativeSelect.Option>
-						<NativeSelect.Option value="light">Light</NativeSelect.Option>
-						<NativeSelect.Option value="dark">Dark</NativeSelect.Option>
+					<NativeSelect.Root
+						value={theme.preference}
+						onchange={(e) => theme.preference = e.currentTarget.value}
+					>
+						<NativeSelect.Option value={ThemePreference.SYSTEM}>System</NativeSelect.Option>
+						<NativeSelect.Option value={ThemePreference.LIGHT}>Light</NativeSelect.Option>
+						<NativeSelect.Option value={ThemePreference.DARK}>Dark</NativeSelect.Option>
 					</NativeSelect.Root>
 				</div>
 			</div>

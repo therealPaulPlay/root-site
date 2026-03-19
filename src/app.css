@@ -276,12 +276,3 @@
 		height: calc(100svh - var(--safe-area-top));
 	}
 }
-
-/* Immediately set bg color dark if that's the OS preference since ModeWatcher needs a tick to start */
-@media (prefers-color-scheme: dark) {
-
-	html,
-	body {
-		background-color: oklch(0 0 0);
-	}
-}

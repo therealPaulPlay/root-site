@@ -1,19 +1,13 @@
 <script>
-	import CircleCheckIcon from "@lucide/svelte/icons/circle-check";
-	import InfoIcon from "@lucide/svelte/icons/info";
-	import Loader2Icon from "@lucide/svelte/icons/loader-2";
-	import OctagonXIcon from "@lucide/svelte/icons/octagon-x";
-	import TriangleAlertIcon from "@lucide/svelte/icons/triangle-alert";
-
 	import { Toaster as Sonner } from "svelte-sonner";
-	import { mode } from "mode-watcher";
 	import { RiAlertLine, RiCheckboxCircleLine, RiErrorWarningLine, RiInformationLine, RiLoader4Line } from "svelte-remixicon";
+	import { theme } from "$lib/utils/theme.svelte.js";
 
 	let { ...restProps } = $props();
 </script>
 
 <Sonner
-	theme={mode.current}
+	theme={theme.current}
 	class="toaster group [&_*]:rounded-none!"
 	style="--normal-bg: var(--color-popover); --normal-text: var(--color-popover-foreground); --normal-border: var(--color-border);"
 	{...restProps}
