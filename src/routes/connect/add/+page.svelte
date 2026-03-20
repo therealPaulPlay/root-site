@@ -154,30 +154,6 @@
 			toast.error("Error getting relay status: " + error.message);
 		}
 	}
-
-	async function connectToWifi() {
-		try {
-			currentlyConnectingWifi = true;
-
-			const encryption = await Encryption.initForProduct(currentProductId);
-			const payload = await encryption.encrypt(
-				encode({ ssid: pendingWifiNetwork.ssid, password: wifiPasswordInput, countryCode: wifiCountryCode }),
-				null
-			);
-
-			await bluetoothInstance.writeAndPoll("wifiConnect", {
-				deviceId: localStorage.getItem("deviceId"),
-				payload
-			});
-
-			currentWifiSSID = pendingWifiNetwork.ssid;
-			wifiConnectDialogOpen = false;
-		} catch (error) {
-			toast.error("Error connecting to WiFi: " + error.message);
-		} finally {
-			currentlyConnectingWifi = false;
-		}
-	}
 </script>
 
 <svelte:head>
@@ -510,6 +486,7 @@
 										payload
 									});
 
+									if (!relayConfigured) vibrate.success(); // If relay was previously unset and this action unlocked "next", vibrate
 									currentRelayDomain = relayDomain;
 									newRelayDomain = relayDomain; // Passed to adjust connect relay dialog
 								} catch (error) {
@@ -626,7 +603,30 @@
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel disabled={currentlyConnectingWifi}>Cancel</AlertDialog.Cancel>
 			<AlertDialog.Action
-				onclick={connectToWifi}
+				onclick={async () => {
+					try {
+						currentlyConnectingWifi = true;
+
+						const encryption = await Encryption.initForProduct(currentProductId);
+						const payload = await encryption.encrypt(
+							encode({ ssid: pendingWifiNetwork.ssid, password: wifiPasswordInput, countryCode: wifiCountryCode }),
+							null
+						);
+
+						await bluetoothInstance.writeAndPoll("wifiConnect", {
+							deviceId: localStorage.getItem("deviceId"),
+							payload
+						});
+
+						if (!wifiConfigured) vibrate.success(); // If WiFi was previously unset and this action unlocked "next", vibrate
+						currentWifiSSID = pendingWifiNetwork.ssid;
+						wifiConnectDialogOpen = false;
+					} catch (error) {
+						toast.error("Error connecting to WiFi: " + error.message);
+					} finally {
+						currentlyConnectingWifi = false;
+					}
+				}}
 				disabled={!pendingWifiNetwork || !wifiPasswordInput || !wifiCountryCode || currentlyConnectingWifi}
 			>
 				{#if currentlyConnectingWifi}
