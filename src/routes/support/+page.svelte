@@ -147,6 +147,15 @@
 				</p>
 			</Accordion.Content>
 		</Accordion.Item>
+		<Accordion.Item value="item-4">
+			<Accordion.Trigger>The WiFi connection is unreliable</Accordion.Trigger>
+			<Accordion.Content class="flex flex-col gap-4 text-balance">
+				<p>
+					Ensure your WiFi router provides a strong signal. Moreover, place the camera at least half a meter away from
+					any solid metal objects.
+				</p>
+			</Accordion.Content>
+		</Accordion.Item>
 	</Accordion.Root>
 </section>
 
