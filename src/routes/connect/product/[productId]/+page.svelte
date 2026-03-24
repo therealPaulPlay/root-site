@@ -104,6 +104,7 @@
 	let streamVideoElement = $state();
 	let streamManager = null;
 	let streamVideoStarted = false;
+	let streamInitReceived = false;
 
 	// Audio streaming
 	let audioContext;
@@ -440,6 +441,7 @@
 		nextAudioTime = 0;
 		audioStarted = false;
 		streamVideoStarted = false;
+		streamInitReceived = false;
 		streamEnded = true;
 		loading.set("stream", false);
 	}
@@ -474,7 +476,8 @@
 			return;
 		}
 
-		if (!streamVideoStarted && !streamManager && msg.payload.chunkIndex !== 0) return console.warn("Received chunk with inde that isn't 0 (waiting for 0).");
+		if (!streamInitReceived && msg.payload.chunkIndex !== 0) return;
+		if (msg.payload.chunkIndex === 0) streamInitReceived = true;
 		if (streamVideoElement?.error) return;
 
 		streamManager?.appendChunk(msg.payload.chunk);
