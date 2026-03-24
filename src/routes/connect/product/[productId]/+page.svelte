@@ -474,7 +474,7 @@
 			return;
 		}
 
-		if (!streamVideoStarted && !streamManager && msg.payload.chunkIndex !== 0) return console.warn("Received chunk with wrong index.");
+		if (!streamVideoStarted && !streamManager && msg.payload.chunkIndex !== 0) return console.warn("Received chunk with inde that isn't 0 (waiting for 0).");
 		if (streamVideoElement?.error) return;
 
 		streamManager?.appendChunk(msg.payload.chunk);
