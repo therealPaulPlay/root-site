@@ -319,7 +319,14 @@
 				<div class="mt-4 space-y-8">
 					<div class="space-y-1">
 						<Label for="device-name">Min. 3 characters</Label>
-						<Input type="text" placeholder="My device" class="max-w-xs" id="device-name" bind:value={deviceNameInput} />
+						<Input
+							type="text"
+							placeholder="My device"
+							class="max-w-xs"
+							id="device-name"
+							bind:value={deviceNameInput}
+							disabled={currentlyPairing || successfulPair}
+						/>
 					</div>
 					<Button
 						class="w-fit"
