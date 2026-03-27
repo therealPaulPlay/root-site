@@ -36,7 +36,11 @@ export class RelayComm {
 	onConnected(fn) {
 		setTimeout(() => {
 			if (this.#ws?.readyState === WebSocket.OPEN) {
-				try { fn(); } catch (e) { console.error("onConnected callback error:", e); }
+				try {
+					fn();
+				} catch (e) {
+					console.error("onConnected callback error:", e);
+				}
 			} else {
 				this.#onConnectQueue.push(fn);
 			}
@@ -59,15 +63,20 @@ export class RelayComm {
 				this.#reconnectAttempt = 0;
 				console.info("Relay connection opened.");
 				for (const fn of this.#onConnectQueue) {
-					try { fn(); } catch (e) { console.error("onConnected callback error:", e); }
+					try {
+						fn();
+					} catch (e) {
+						console.error("onConnected callback error:", e);
+					}
 				}
 				this.#onConnectQueue = [];
 				resolve();
-			}
+			};
 			this.#ws.onerror = (e) => {
-				if (!this.#intentionalDisconnect && !this.#hasConnected && this.#reconnectAttempt === 0) toast.error("Relay connection error.");
+				if (!this.#intentionalDisconnect && !this.#hasConnected && this.#reconnectAttempt === 0)
+					toast.error("Relay connection error.");
 				console.error("Relay connection error:", e);
-			}
+			};
 			this.#ws.binaryType = "arraybuffer";
 			this.#ws.onmessage = async (e) => {
 				try {
@@ -85,20 +94,24 @@ export class RelayComm {
 					this.#ws = null; // To prevent .disconnect() attempt on .connect() - not needed, since we are already disconnected
 
 					// Reconnect with exponential back-off (first attempt is synchronous)
-					const reconnect = () => this.connect().catch((e) => {
-						console.error("Reconnecting to the relay failed:", e);
-					});
+					const reconnect = () =>
+						this.connect().catch((e) => {
+							console.error("Reconnecting to the relay failed:", e);
+						});
 					this.#reconnectAttempt++;
 					if (this.#reconnectAttempt === 1) {
 						this.#connectionLostToastTimeout = setTimeout(() => {
-							if (!this.connected) toast.error(this.#hasConnected ? "Relay connection lost, reconnecting..." : "Waiting for connection...");
+							if (!this.connected)
+								toast.error(
+									this.#hasConnected ? "Relay connection lost, reconnecting..." : "Waiting for connection..."
+								);
 						}, 1500);
 						reconnect().finally(() => clearTimeout(this.#connectionLostToastTimeout));
 					} else {
 						this.#reconnectTimeout = setTimeout(reconnect, Math.min(this.#reconnectAttempt - 1, 3) * 1000);
 					}
 				}
-			}
+			};
 		});
 	}
 
@@ -120,9 +133,12 @@ export class RelayComm {
 
 		// Wait for existing renewal or start new one
 		if (!this.#renewalPromises.has(productId)) {
-			this.#renewalPromises.set(productId, this.#renewKey(productId).finally(() => {
-				this.#renewalPromises.delete(productId);
-			}));
+			this.#renewalPromises.set(
+				productId,
+				this.#renewKey(productId).finally(() => {
+					this.#renewalPromises.delete(productId);
+				})
+			);
 		}
 		await this.#renewalPromises.get(productId);
 	}
@@ -135,7 +151,9 @@ export class RelayComm {
 			const renewResult = await this.#send(productId, "renewKey", { newPublicKey: encodeKey(newKeypair.publicKey) });
 
 			if (!renewResult.payload.success) {
-				throw new Error(`Key renewal for product ${productId} failed: ` + (renewResult.payload.error || "Unknown error"));
+				throw new Error(
+					`Key renewal for product ${productId} failed: ` + (renewResult.payload.error || "Unknown error")
+				);
 			}
 
 			// Step 2: Store old encryption temporarily for in-flight chunks
@@ -156,7 +174,9 @@ export class RelayComm {
 			const ackResult = await this.#send(productId, "renewKeyAck", { ack: true });
 
 			if (!ackResult.payload.success) {
-				throw new Error(`Key renewal ACK for product ${productId} failed: ` + (ackResult.payload.error || "Unknown error"));
+				throw new Error(
+					`Key renewal ACK for product ${productId} failed: ` + (ackResult.payload.error || "Unknown error")
+				);
 			}
 
 			console.log(`Key renewed for product: ${productId}`);
@@ -217,7 +237,11 @@ export class RelayComm {
 	send(...args) {
 		if (KEY_RENEWAL_MSG_TYPES.includes(args[1])) throw new Error("Reserved message type");
 		const inner = this.#send(...args);
-		const promise = inner.then(() => { }).catch((e) => { if (e.message !== ERR_INTENTIONAL_DISCONNECT) throw e; }); // Discard resolve value + intentional errors
+		const promise = inner
+			.then(() => { })
+			.catch((e) => {
+				if (e.message !== ERR_INTENTIONAL_DISCONNECT) throw e;
+			}); // Discard resolve value + intentional errors
 		promise.requestId = inner.requestId;
 		return promise;
 	}
@@ -247,13 +271,15 @@ export class RelayComm {
 
 				this.#pendingRequestTimeouts.set(requestId, { timeout, resolve, reject });
 
-				this.#ws.send(encode({
-					type,
-					originId: this.deviceId,
-					targetId: productId,
-					requestId,
-					payload: encrypted
-				}));
+				this.#ws.send(
+					encode({
+						type,
+						originId: this.deviceId,
+						targetId: productId,
+						requestId,
+						payload: encrypted
+					})
+				);
 			});
 		})();
 

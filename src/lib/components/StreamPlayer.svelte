@@ -13,23 +13,24 @@
 
 	let {
 		videoElement = $bindable(),
-		audioMuted = $bindable(),
-		loading,
+		audioMuted = false,
+		streamLoading = false,
 		streamEnded = false,
 		showMuteButton = false,
+		showControls = true,
 		onAudioToggle = () => {}
 	} = $props();
 
 	const isPortrait = new MediaQuery("(orientation: portrait)");
-	
+
 	let isFullscreen = $state(false);
-	let controlsVisible = $state(false);
-	let controlsTimeout = null;
+	let controlsOverlayVisible = $state(false);
+	let controlsOverlayTimeout = null;
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="relative aspect-video w-full {!loading.is('stream') && !streamEnded
+	class="relative aspect-video w-full {!streamLoading && !streamEnded
 		? 'bg-black'
 		: 'bg-muted'} text-muted-foreground {isFullscreen
 		? isPortrait.current
@@ -38,29 +39,29 @@
 		: 'max-h-[45svh]'}"
 	onpointerup={(e) => {
 		if (e.pointerType !== "mouse") {
-			clearTimeout(controlsTimeout);
-			if (controlsVisible) controlsVisible = false;
+			clearTimeout(controlsOverlayTimeout);
+			if (controlsOverlayVisible) controlsOverlayVisible = false;
 			else {
-				controlsVisible = true;
-				controlsTimeout = setTimeout(() => {
-					controlsVisible = false;
+				controlsOverlayVisible = true;
+				controlsOverlayTimeout = setTimeout(() => {
+					controlsOverlayVisible = false;
 				}, 3000);
 			}
 		}
 	}}
 	onpointermove={(e) => {
 		if (e.pointerType === "mouse") {
-			controlsVisible = true;
-			clearTimeout(controlsTimeout);
-			controlsTimeout = setTimeout(() => {
-				controlsVisible = false;
+			controlsOverlayVisible = true;
+			clearTimeout(controlsOverlayTimeout);
+			controlsOverlayTimeout = setTimeout(() => {
+				controlsOverlayVisible = false;
 			}, 3000);
 		}
 	}}
 >
-	{#if loading.is("stream") || streamEnded}
+	{#if streamLoading || streamEnded}
 		<div class="absolute inset-0 flex h-full w-full items-center justify-center">
-			{#if loading.is("stream")}
+			{#if streamLoading}
 				<Spinner class="size-8" />
 			{:else if streamEnded}
 				<RiErrorWarningLine class="size-8" />
@@ -70,7 +71,7 @@
 	<!-- disableRemotePlayback required on iOS -->
 	<video
 		bind:this={videoElement}
-		class="absolute inset-0 h-full w-full {loading.is('stream') || streamEnded ? 'invisible' : ''}"
+		class="absolute inset-0 h-full w-full {streamLoading || streamEnded ? 'invisible' : ''}"
 		disableremoteplayback
 		playsinline
 		muted
@@ -80,37 +81,34 @@
 			if (error && !error.message?.toLowerCase()?.includes("empty src")) console.error("Video playback error:", error);
 		}}
 	></video>
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div
-		class="absolute {isFullscreen ? 'right-6 bottom-6' : 'right-4 bottom-4'} flex gap-2 transition-opacity duration-150"
-		class:opacity-0={!controlsVisible}
-		class:pointer-events-none={!controlsVisible}
-		onpointerup={(e) => e.stopPropagation()}
-	>
-		{#if showMuteButton}
-			<div transition:fade={{ duration: 150 }}>
-				<Button
-					onclick={() => {
-						onAudioToggle();
-						audioMuted = !audioMuted;
-					}}
-					class="px-3"
-					variant="outline"
-				>
-					{#if audioMuted}
-						<RiVolumeMuteLine class="size-4" />
-					{:else}
-						<RiVolumeUpLine class="size-4" />
-					{/if}
-				</Button>
-			</div>
-		{/if}
-		<Button onclick={() => (isFullscreen = !isFullscreen)} class="px-3" variant="outline">
-			{#if isFullscreen}
-				<RiFullscreenExitLine class="size-4" />
-			{:else}
-				<RiFullscreenLine class="size-4" />
+	{#if showControls}
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="absolute {isFullscreen
+				? 'right-6 bottom-6'
+				: 'right-4 bottom-4'} flex gap-2 transition-opacity duration-150"
+			class:opacity-0={!controlsOverlayVisible}
+			class:pointer-events-none={!controlsOverlayVisible}
+			onpointerup={(e) => e.stopPropagation()}
+		>
+			{#if showMuteButton}
+				<div transition:fade={{ duration: 150 }}>
+					<Button onclick={onAudioToggle} class="px-3" variant="outline">
+						{#if audioMuted}
+							<RiVolumeMuteLine class="size-4" />
+						{:else}
+							<RiVolumeUpLine class="size-4" />
+						{/if}
+					</Button>
+				</div>
 			{/if}
-		</Button>
-	</div>
+			<Button onclick={() => (isFullscreen = !isFullscreen)} class="px-3" variant="outline">
+				{#if isFullscreen}
+					<RiFullscreenExitLine class="size-4" />
+				{:else}
+					<RiFullscreenLine class="size-4" />
+				{/if}
+			</Button>
+		</div>
+	{/if}
 </div>

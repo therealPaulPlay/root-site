@@ -6,7 +6,7 @@
 		variants: {
 			variant: {
 				default: "bg-transparent",
-				outline: "border-input border bg-transparent"
+				outline: "border bg-transparent"
 			},
 			size: {
 				default: "h-9 min-w-9 px-2",

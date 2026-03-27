@@ -2,17 +2,14 @@
 	import Button, { buttonVariants } from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
-	import * as Dialog from "$lib/components/ui/dialog";
 	import { getAllProducts, removeProduct, saveProduct } from "$lib/utils/pairedProductsStorage";
-	import { RelayComm } from "$lib/utils/relaycomm";
-	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config";
-	import { onDestroy, onMount } from "svelte";
+	import { createRelayInstance } from "$lib/utils/createRelayInstance";
+	import { onMount } from "svelte";
 	import {
 		RiArrowRightSLine,
 		RiDeleteBinLine,
 		RiDownload2Line,
 		RiEdit2Line,
-		RiErrorWarningLine,
 		RiSettings3Line,
 		RiVideoAddLine
 	} from "svelte-remixicon";
@@ -20,136 +17,151 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import PullToRefresh from "$lib/components/PullToRefresh.svelte";
+	import StreamPlayer from "$lib/components/StreamPlayer.svelte";
+	import { StreamManager } from "$lib/utils/streamManager.svelte.js";
 	import { LoadingState } from "$lib/utils/loadingState.svelte.js";
+	import { SvelteSet } from "svelte/reactivity";
 
 	const loading = new LoadingState();
 
 	let products = $state([]);
 	let relayCommInstance;
 
-	let previewImages = $state({});
 	let updateStatuses = $state({});
-	let previewFailed = $state({});
+	let streamHandles = $state({});
+	let streamVideoElements = $state({});
 
 	let renameDialogOpen = $state({});
 	let removeDialogOpen = $state({});
 	let renameValue = $state({});
 	let idForProductVisible = $state();
 
-	function loadProducts() {
+	let offScreenTimers = {};
+	let visibleProducts = new SvelteSet();
+	let activeRequestIds = new SvelteSet();
+	let statusLoadedProducts = new SvelteSet();
+
+	function startProductStream(productId) {
+		if (streamHandles[productId] || !relayCommInstance || !visibleProducts.has(productId)) return;
+		streamHandles[productId] = new StreamManager(productId, relayCommInstance, {
+			onError: (error) => console.error(`Stream error for product ${productId}:`, error)
+		});
+		if (streamVideoElements[productId]) streamHandles[productId].bindVideo(streamVideoElements[productId]);
+	}
+
+	function stopProductStream(productId) {
+		streamHandles[productId]?.cleanup();
+		delete streamHandles[productId];
+		clearTimeout(offScreenTimers[productId]);
+		delete offScreenTimers[productId];
+	}
+
+	function stopAllStreams() {
+		for (const productId of Object.keys(streamHandles)) stopProductStream(productId);
+		for (const timer of Object.values(offScreenTimers)) clearTimeout(timer);
+		offScreenTimers = {};
+	}
+
+	// Observe product visibility and start/stop streams accordingly
+	function observeProduct(productId) {
+		return (element) => {
+			const observer = new IntersectionObserver(([entry]) => {
+				if (entry.isIntersecting) {
+					visibleProducts.add(productId);
+					clearTimeout(offScreenTimers[productId]);
+					delete offScreenTimers[productId];
+					relayCommInstance?.onConnected(() => {
+						startProductStream(productId);
+						loadUpdateStatus(productId);
+					});
+				} else {
+					visibleProducts.delete(productId);
+					// Stop stream after 5s off-screen
+					if (!offScreenTimers[productId])
+						offScreenTimers[productId] = setTimeout(() => stopProductStream(productId), 5000);
+				}
+			});
+			observer.observe(element);
+			return () => {
+				observer.disconnect();
+				visibleProducts.delete(productId);
+				stopProductStream(productId);
+			};
+		};
+	}
+
+	function loadUpdateStatus(productId) {
+		if (statusLoadedProducts.has(productId) || !relayCommInstance) return;
+		statusLoadedProducts.add(productId);
+		const status = relayCommInstance.send(productId, "getUpdateStatus");
+		activeRequestIds.add(status.requestId);
+		status.catch((error) => console.error(`Failed to get update status for product ${productId}:`, error));
+	}
+
+	function handleGetUpdateStatusResult(msg) {
+		if (!activeRequestIds.has(msg.requestId)) return;
+		if (!msg.payload.success) {
+			toast.error(`Failed to get update status for product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
+			return;
+		}
+		updateStatuses[msg.originId] = msg.payload;
+	}
+
+	function handleRemoveDeviceResult(msg) {
+		if (!msg.payload.success) {
+			toast.error(
+				`Failed to inform product ${msg.originId} about device removal: ` + (msg.payload.error || "Unknown error")
+			);
+			// Don't return, just acknowledge the error
+		}
+		delete removeDialogOpen[msg.originId];
+		loading.set(`remove-${msg.originId}`, false);
+		stopProductStream(msg.originId);
+		removeProduct(msg.originId);
 		products = getAllProducts();
 	}
 
-	let loadAbort;
-	let lastLoadTimestamp;
-	let activeRequestIds = new Set();
-
-	function loadProductData(productId) {
-		const preview = relayCommInstance.send(productId, "getPreview");
-		const status = relayCommInstance.send(productId, "getUpdateStatus");
-		activeRequestIds.add(preview.requestId);
-		activeRequestIds.add(status.requestId);
-		preview.catch((error) => {
-			if (activeRequestIds.has(preview.requestId)) previewFailed[productId] = true;
-			console.error(`Failed to get preview for product ${productId}:`, error);
-		});
-		status.catch((error) => {
-			console.error(`Failed to get update status for product ${productId}:`, error);
-		});
-	}
-
-	async function startLoadQueue() {
-		// Abort previous queue and reset preview/status state
-		if (loadAbort) loadAbort.abort();
-		for (const url of Object.values(previewImages)) URL.revokeObjectURL(url);
-		previewImages = {};
-		previewFailed = {};
-		updateStatuses = {};
-		activeRequestIds.clear();
-		lastLoadTimestamp = Date.now();
-
-		const abort = new AbortController();
-		loadAbort = abort;
-		for (let i = 0; i < products.length; i++) {
-			if (abort.signal.aborted) return;
-			loadProductData(products[i].id);
-			if ((i + 1) % 5 === 0) await new Promise((r) => setTimeout(r, 1000)); // Rate limit: 5/s (10 requests/s)
+	function handleSetProductAliasResult(msg) {
+		loading.set(`rename-${msg.originId}`, false);
+		if (!msg.payload.success) {
+			toast.error(`Failed to rename product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
+			return;
 		}
+		// Update locally only on success
+		const product = products.find((p) => p.id === msg.originId);
+		if (product) {
+			product.name = msg.payload.alias;
+			saveProduct(product);
+		}
+		delete renameDialogOpen[msg.originId];
 	}
 
-	onMount(async () => {
-		const relayDomain = localStorage.getItem("relayDomain") || OFFICIAL_RELAY_DOMAIN;
-		loadProducts(); // Load paired products from storage
+	onMount(() => {
+		products = getAllProducts();
 
-		// If the user has products, connect to relay
 		if (products.length) {
-			try {
-				const deviceId = localStorage.getItem("deviceId");
-				if (!deviceId) throw new Error("No device ID set! Cannot connect to relay.");
-				relayCommInstance = new RelayComm(relayDomain, localStorage.getItem("deviceId"));
-				await relayCommInstance.connect();
-				startLoadQueue(); // Start loading products with rate limit
+			relayCommInstance = createRelayInstance();
+			relayCommInstance
+				.connect()
+				.then(() => {
+					for (const productId of visibleProducts) {
+						startProductStream(productId);
+						loadUpdateStatus(productId);
+					}
 
-				relayCommInstance.on("getPreviewResult", (msg) => {
-					if (!activeRequestIds.has(msg.requestId)) return; // Stale response
-					if (!msg.payload.success) {
-						previewFailed[msg.originId] = true;
-						toast.error(`Failed to get preview for product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
-						return;
-					}
-					delete previewFailed[msg.originId]; // Clear any stale failure
-					previewImages[msg.originId] = URL.createObjectURL(new Blob([msg.payload.data], { type: "image/jpeg" }));
+					relayCommInstance.on("getUpdateStatusResult", handleGetUpdateStatusResult);
+					relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
+					relayCommInstance.on("setProductAliasResult", handleSetProductAliasResult);
+				})
+				.catch((error) => {
+					console.error("Error connecting to relay and getting data from products:", error);
 				});
-
-				relayCommInstance.on("getUpdateStatusResult", (msg) => {
-					if (!activeRequestIds.has(msg.requestId)) return; // Stale response
-					if (!msg.payload.success) {
-						toast.error(
-							`Failed to get update status for product ${msg.originId}: ` + (msg.payload.error || "Unknown error")
-						);
-						return;
-					}
-					updateStatuses[msg.originId] = msg.payload;
-				});
-
-				relayCommInstance.on("removeDeviceResult", (msg) => {
-					if (!msg.payload.success) {
-						toast.error(
-							`Failed to inform product ${msg.originId} about device removal: ` + (msg.payload.error || "Unknown error")
-						);
-						// Don't return, just acknowledge the error
-					}
-					// Close dialog & stop loading
-					delete removeDialogOpen[msg.originId];
-					loading.set(`remove-${msg.originId}`, false);
-					removeProduct(msg.originId); // Remove product locally
-					loadProducts(); // Refresh products
-				});
-
-				relayCommInstance.on("setProductAliasResult", (msg) => {
-					loading.set(`rename-${msg.originId}`, false);
-					if (!msg.payload.success) {
-						toast.error(`Failed to rename product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
-						return;
-					}
-					// Update locally only on success
-					const product = products.find((p) => p.id === msg.originId);
-					if (product) {
-						product.name = msg.payload.alias;
-						saveProduct(product);
-					}
-					delete renameDialogOpen[msg.originId];
-				});
-			} catch (error) {
-				console.error("Error connecting to relay and getting data from products:", error);
-			}
 		}
-	});
 
-	onDestroy(() => {
-		if (loadAbort) loadAbort.abort();
-		if (relayCommInstance) relayCommInstance.disconnect();
-		for (const url of Object.values(previewImages)) URL.revokeObjectURL(url);
+		return () => {
+			stopAllStreams();
+			relayCommInstance?.disconnect();
+		};
 	});
 
 	function handleRename(product) {
@@ -158,7 +170,7 @@
 			toast.error("Product name must be between 3 and 30 characters");
 			return;
 		}
-		if (!relayCommInstance) return toast.warning("Relaycomm instance is undefined!");
+		if (!relayCommInstance) return toast.warning("RelayComm instance is undefined!");
 
 		loading.set(`rename-${product.id}`, true);
 		relayCommInstance.send(product.id, "setProductAlias", { alias: newName }).catch((error) => {
@@ -168,9 +180,8 @@
 		});
 	}
 
-	// Inform product of device removal & remove product locally
 	function removeProductAndRemoveDevice(productId) {
-		if (!relayCommInstance) return toast.warning("Relaycomm instance is undefined!");
+		if (!relayCommInstance) return toast.warning("RelayComm instance is undefined!");
 		loading.set(`remove-${productId}`, true);
 		relayCommInstance
 			.send(productId, "removeDevice", { targetDeviceId: localStorage.getItem("deviceId") })
@@ -179,9 +190,23 @@
 				console.error(`Failed to inform product ${productId} about device removal:`, error);
 				delete removeDialogOpen[productId]; // Close dialog since we remove the product anyway
 				loading.set(`remove-${productId}`, false);
-				removeProduct(productId); // Remove prodcut locally anyway
-				loadProducts(); // Refresh products
+				stopProductStream(productId);
+				removeProduct(productId);
+				products = getAllProducts();
 			});
+	}
+
+	function refreshAll() {
+		stopAllStreams();
+
+		// Update status
+		updateStatuses = {};
+		activeRequestIds.clear();
+		statusLoadedProducts.clear();
+		for (const productId of visibleProducts) loadUpdateStatus(productId);
+
+		// Streams
+		for (const productId of visibleProducts) startProductStream(productId);
 	}
 </script>
 
@@ -192,10 +217,8 @@
 
 <svelte:document
 	onvisibilitychange={() => {
-		// Refresh loaded data if app or site was in background for more than 30s
-		if (!document.hidden && products.length && lastLoadTimestamp && lastLoadTimestamp < Date.now() - 30_000) {
-			relayCommInstance?.onConnected(startLoadQueue);
-		}
+		if (document.hidden) stopAllStreams();
+		else if (relayCommInstance && products.length) relayCommInstance.onConnected(refreshAll);
 	}}
 />
 
@@ -211,20 +234,18 @@
 {#snippet productItem(product)}
 	{@const isRenameDialogOpen = renameDialogOpen[product.id] ?? false}
 	{@const isRemoveDialogOpen = removeDialogOpen[product.id] ?? false}
-	<div class="relative flex h-fit min-h-32 w-full shrink-0 border-y max-md:flex-wrap">
-		<!-- Preview image -->
-		<div
-			class="aspect-video w-full content-center overflow-hidden bg-muted text-center text-muted-foreground max-md:border-b md:w-1/3 md:border-r"
-		>
-			{#if !previewImages[product.id]}
-				{#if previewFailed[product.id]}
-					<RiErrorWarningLine class="mx-auto size-8" />
-				{:else}
-					<Spinner class="mx-auto size-8" />
-				{/if}
-			{:else}
-				<img alt="preview" class="h-full w-full object-cover" src={previewImages[product.id]} />
-			{/if}
+	{@const stream = streamHandles[product.id]}
+	<div
+		class="relative flex h-fit min-h-32 w-full shrink-0 border-y max-lg:flex-wrap"
+		{@attach observeProduct(product.id)}
+	>
+		<div class="w-full overflow-hidden max-lg:border-b lg:w-1/3 lg:border-r">
+			<StreamPlayer
+				bind:videoElement={streamVideoElements[product.id]}
+				streamLoading={stream?.loading ?? true}
+				streamEnded={stream?.ended ?? false}
+				showControls={false}
+			/>
 		</div>
 		<div class="flex grow overflow-hidden">
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -310,12 +331,13 @@
 						class:opacity-0={!updateStatuses[product.id]?.status || updateStatuses[product.id]?.status == "up-to-date"}
 					>
 						<RiDownload2Line class="size-3! shrink-0" />
-						<p class="truncate">{updateStatuses[product.id]?.status.replaceAll("-", " ") || "N/A"}</p>
+						<p class="truncate">{updateStatuses[product.id]?.status?.replaceAll("-", " ") || "N/A"}</p>
 					</span>
 				</span>
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<p
-					class="mt-auto w-fit max-w-full overflow-hidden text-xs text-nowrap text-muted-foreground hover:truncate"
+					class="mt-auto w-fit max-w-full overflow-hidden text-xs text-nowrap text-muted-foreground"
+					class:truncate={idForProductVisible === product.id}
 					onclick={() =>
 						idForProductVisible === product.id ? (idForProductVisible = null) : (idForProductVisible = product.id)}
 				>
@@ -341,7 +363,7 @@
 	<PullToRefresh
 		disabled={!products.length}
 		onRefresh={() => {
-			if (relayCommInstance && products.length) startLoadQueue();
+			if (relayCommInstance && products.length) relayCommInstance.onConnected(refreshAll);
 		}}
 		class="of-top of-bottom -mt-px flex flex-col items-center justify-start gap-8 pb-30"
 	>

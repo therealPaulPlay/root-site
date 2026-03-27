@@ -3,7 +3,6 @@
 	import Input from "$lib/components/ui/input/input.svelte";
 	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config";
 	import { onMount } from "svelte";
-	import { goto } from "$app/navigation";
 	import { RiArrowLeftLine, RiExternalLinkLine } from "svelte-remixicon";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
@@ -29,7 +28,7 @@
 	</Button>
 </div>
 
-<div class="flex safe-h-svh flex-col">
+<div class="safe-h-svh flex flex-col">
 	<section class="mt-30 w-full space-y-4 border-y p-6 lg:p-8">
 		<div>
 			<h1 class="text-4xl">Settings</h1>
@@ -43,10 +42,7 @@
 			<div class="flex max-w-lg flex-col gap-4">
 				<div class="space-y-1">
 					<Label class="text-sm font-medium">Theme</Label>
-					<NativeSelect.Root
-						value={theme.preference}
-						onchange={(e) => theme.preference = e.currentTarget.value}
-					>
+					<NativeSelect.Root value={theme.preference} onchange={(e) => (theme.preference = e.currentTarget.value)}>
 						<NativeSelect.Option value={ThemePreference.SYSTEM}>System</NativeSelect.Option>
 						<NativeSelect.Option value={ThemePreference.LIGHT}>Light</NativeSelect.Option>
 						<NativeSelect.Option value={ThemePreference.DARK}>Dark</NativeSelect.Option>
@@ -63,8 +59,7 @@
 					<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={OFFICIAL_RELAY_DOMAIN} />
 				</div>
 				<p class="text-xs text-muted-foreground">
-					The relay server domain. Connected products must be configured to use the same
-					domain.
+					The relay server domain. Connected products must be configured to use the same domain.
 				</p>
 			</div>
 
@@ -73,7 +68,7 @@
 				disabled={relayDomainInput === relayDomain}
 				onclick={() => {
 					let domain = relayDomainInput.trim();
-					if (domain.endsWith('/')) domain = domain.slice(0, -1);
+					if (domain.endsWith("/")) domain = domain.slice(0, -1);
 					if (domain) {
 						localStorage.setItem("relayDomain", domain);
 						relayDomain = domain;

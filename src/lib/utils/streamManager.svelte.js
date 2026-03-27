@@ -1,0 +1,234 @@
+import { MediaSourceManager } from "./mediaSourceManager";
+
+export class StreamManager {
+	// Reactive state (read-only via getters)
+	#loading = $state(true);
+	#ended = $state(false);
+	#audioActive = $state(false);
+	#audioMuted = $state(true);
+	#videoStarted = false;
+	#initReceived = false;
+
+	// Internal
+	#relay;
+	#productId;
+	#options;
+	#videoElement = null;
+	#mediaSourceManager = null;
+	#heartbeatInterval = null;
+	#videoStaleTimeout = null;
+	#audioTimeout = null;
+	#audioContext = null;
+	#audioGainNode = null;
+	#nextAudioTime = 0;
+	#bufferedChunks = [];
+
+	get loading() {
+		return this.#loading;
+	}
+	get ended() {
+		return this.#ended;
+	}
+	get audioActive() {
+		return this.#audioActive;
+	}
+	get audioMuted() {
+		return this.#audioMuted;
+	}
+	set audioMuted(v) {
+		this.#audioMuted = v;
+		if (this.#audioGainNode) this.#audioGainNode.gain.value = v ? 0 : 1;
+	}
+
+	constructor(productId, relayCommInstance, options = {}) {
+		this.#relay = relayCommInstance;
+		this.#productId = productId;
+		this.#options = options;
+
+		// Register handlers
+		relayCommInstance.on("startStreamResult", this.#handleStartResult);
+		relayCommInstance.on("streamVideoChunkResult", this.#handleVideoChunk);
+		relayCommInstance.on("streamAudioChunkResult", this.#handleAudioChunk);
+		relayCommInstance.on("continueStreamResult", this.#handleContinueResult);
+
+		// Start stream
+		relayCommInstance.send(productId, "startStream").catch((error) => this.#endWithError(error));
+	}
+
+	bindVideo(el) {
+		this.#videoElement = el;
+	}
+
+	// Set up audio context on user interaction for working playback
+	// audioUnlockEl is an optional silent <audio> element to unlock iOS audio session
+	setupAudio(audioUnlockEl) {
+		if (this.#audioContext) return;
+		audioUnlockEl?.play()?.catch(() => { });
+		this.#audioContext = new AudioContext();
+		this.#audioGainNode = this.#audioContext.createGain();
+		this.#audioGainNode.gain.value = this.#audioMuted ? 0 : 1;
+		this.#audioGainNode.connect(this.#audioContext.destination);
+		this.#nextAudioTime = this.#audioContext.currentTime;
+	}
+
+	cleanup() {
+		if (this.#ended) return;
+		this.#ended = true;
+		this.#loading = false;
+
+		// Clear timeouts and intervals
+		clearTimeout(this.#videoStaleTimeout);
+		clearTimeout(this.#audioTimeout);
+		if (this.#heartbeatInterval) {
+			clearInterval(this.#heartbeatInterval);
+			this.#heartbeatInterval = null;
+		}
+
+		// Unregister event callbacks
+		this.#relay.off("startStreamResult", this.#handleStartResult);
+		this.#relay.off("streamVideoChunkResult", this.#handleVideoChunk);
+		this.#relay.off("streamAudioChunkResult", this.#handleAudioChunk);
+		this.#relay.off("continueStreamResult", this.#handleContinueResult);
+
+		// Media source and video
+		if (this.#mediaSourceManager) {
+			this.#mediaSourceManager.cleanup();
+			this.#mediaSourceManager = null;
+		}
+		if (this.#videoElement) {
+			this.#videoElement.src = "";
+			this.#videoElement.load();
+		}
+
+		// Audio
+		if (this.#audioContext) {
+			this.#audioContext.close();
+			this.#audioContext = null;
+			this.#audioGainNode = null;
+		}
+		this.#bufferedChunks = [];
+		this.#nextAudioTime = 0;
+		this.#audioActive = false;
+	}
+
+	// Private --------------------
+
+	#endWithError(error) {
+		if (this.#ended) return;
+		this.cleanup();
+		this.#options.onError?.(error);
+	}
+
+	#resetVideoStaleTimeout() {
+		clearTimeout(this.#videoStaleTimeout);
+		this.#videoStaleTimeout = setTimeout(() => this.#endWithError(new Error("Stream stale")), 10_000);
+	}
+
+	#setupMediaSource() {
+		const manager = new MediaSourceManager({
+			isLive: true,
+			onChunkAppended: () => {
+				// Start playback once we have actual playable data in the buffer
+				if (!this.#videoStarted && this.#videoElement?.buffered.length > 0) {
+					this.#videoStarted = true;
+					this.#loading = false;
+					this.#videoElement.play().catch(console.error);
+					this.#options.onVideoReady?.(this.#videoElement);
+				}
+			}
+		});
+		this.#mediaSourceManager = manager;
+		if (this.#videoElement) this.#videoElement.src = manager.setup();
+		else manager.setup();
+	}
+
+	#handleStartResult = (msg) => {
+		if (msg.originId !== this.#productId) return;
+		if (!msg.payload.success) return this.#endWithError(new Error(msg.payload.error || "Failed to start stream"));
+		if (!this.#mediaSourceManager) this.#setupMediaSource();
+		this.#startHeartbeat();
+		this.#resetVideoStaleTimeout();
+	};
+
+	#handleVideoChunk = (msg) => {
+		if (msg.originId !== this.#productId) return;
+		if (!msg.payload.success) return this.#endWithError(new Error(msg.payload.error));
+		if (!this.#initReceived && msg.payload.chunkIndex !== 0) return;
+		if (msg.payload.chunkIndex === 0) this.#initReceived = true;
+		if (this.#videoElement?.error) return this.#endWithError(new Error("Video element error"));
+
+		this.#resetVideoStaleTimeout();
+		this.#mediaSourceManager?.appendChunk(msg.payload.chunk);
+		this.#correctVideoDrift();
+	};
+
+	#handleAudioChunk = (msg) => {
+		if (msg.originId !== this.#productId) return;
+		if (!msg.payload.success) return console.error("Audio stream error:", msg.payload.error);
+		if (!this.#audioActive) this.#audioActive = true;
+
+		// Audio timeout to evaluate whether or not audio is active
+		clearTimeout(this.#audioTimeout);
+		this.#audioTimeout = setTimeout(() => {
+			this.#audioActive = false;
+		}, 3000);
+
+		// If no audio context is set up, ignore
+		if (!this.#audioContext) return;
+
+		// Decode PCM data from chunk field (slice creates aligned copy for Int16Array)
+		const pcmData = new Int16Array(msg.payload.chunk.slice().buffer);
+
+		// Convert Int16 PCM to Float32
+		const float32Data = new Float32Array(pcmData.length);
+		for (let i = 0; i < pcmData.length; i++) {
+			float32Data[i] = pcmData[i] / 32768.0;
+		}
+
+		// Create audio buffer (48kHz mono)
+		const audioBuffer = this.#audioContext.createBuffer(1, float32Data.length, 48000);
+		audioBuffer.getChannelData(0).set(float32Data);
+		this.#bufferedChunks.push(audioBuffer);
+		this.#scheduleAudio();
+	};
+
+	#handleContinueResult = (msg) => {
+		if (msg.originId !== this.#productId) return;
+		if (!msg.payload.success) this.#options.onError?.(new Error(msg.payload.error || "Stream heartbeat failed"));
+	};
+
+	#startHeartbeat() {
+		if (this.#heartbeatInterval) return;
+		this.#heartbeatInterval = setInterval(() => {
+			this.#relay.send(this.#productId, "continueStream").catch((error) => {
+				console.error("Failed to send heartbeat:", error);
+			});
+		}, 2000);
+	}
+
+	#correctVideoDrift() {
+		if (!this.#videoElement || !this.#videoStarted || this.#videoElement.buffered.length === 0) return;
+		const bufferEnd = this.#videoElement.buffered.end(this.#videoElement.buffered.length - 1);
+		const drift = bufferEnd - this.#videoElement.currentTime;
+		// If video is more than 500ms behind the buffer end, seek forward to catch up
+		if (drift > 0.5) this.#videoElement.currentTime = bufferEnd - 0.1;
+	}
+
+	#scheduleAudio() {
+		// Only keep newest chunk to prevent drift
+		if (this.#bufferedChunks.length > 1) this.#bufferedChunks = this.#bufferedChunks.slice(-1);
+
+		while (this.#bufferedChunks.length > 0) {
+			const currentTime = this.#audioContext.currentTime;
+			if (this.#nextAudioTime < currentTime) this.#nextAudioTime = currentTime; // Snap to now if fallen behind
+			if (this.#nextAudioTime > currentTime + 0.3) break; // Keep 300ms buffer to absorb network jitter
+
+			const chunk = this.#bufferedChunks.shift();
+			const source = this.#audioContext.createBufferSource();
+			source.buffer = chunk;
+			source.connect(this.#audioGainNode);
+			source.start(this.#nextAudioTime);
+			this.#nextAudioTime += chunk.duration;
+		}
+	}
+}

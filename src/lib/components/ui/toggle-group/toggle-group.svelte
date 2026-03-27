@@ -1,7 +1,7 @@
 <script module>
 	import { getContext, setContext } from "svelte";
-	
-export function setToggleGroupCtx(props) {
+
+	export function setToggleGroupCtx(props) {
 		setContext("toggleGroup", props);
 	}
 

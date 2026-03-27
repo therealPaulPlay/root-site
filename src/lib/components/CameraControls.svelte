@@ -89,19 +89,19 @@
 			>
 				<ToggleGroup.Item value="person" class="gap-1">
 					Person
-					{#if eventDetectionTypes.includes("person")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
+					{#if eventDetectionTypes.includes("person")}<RiCheckLine class="size-4" />{/if}
 				</ToggleGroup.Item>
 				<ToggleGroup.Item value="pet" class="gap-2">
 					Pet
-					{#if eventDetectionTypes.includes("pet")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
+					{#if eventDetectionTypes.includes("pet")}<RiCheckLine class="size-4" />{/if}
 				</ToggleGroup.Item>
 				<ToggleGroup.Item value="vehicle" class="gap-2">
 					Vehicle
-					{#if eventDetectionTypes.includes("vehicle")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
+					{#if eventDetectionTypes.includes("vehicle")}<RiCheckLine class="size-4" />{/if}
 				</ToggleGroup.Item>
 				<ToggleGroup.Item value="motion" class="gap-2">
 					Other motion
-					{#if eventDetectionTypes.includes("motion")}<RiCheckLine class="size-4 text-muted-foreground" />{/if}
+					{#if eventDetectionTypes.includes("motion")}<RiCheckLine class="size-4" />{/if}
 				</ToggleGroup.Item>
 			</ToggleGroup.Root>
 		</div>

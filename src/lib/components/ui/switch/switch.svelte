@@ -11,7 +11,7 @@
 	bind:checked
 	data-slot="switch"
 	class={cn(
-		"peer inline-flex h-7 w-14 shrink-0 items-center border transition-all duration-150 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-accent",
+		"peer inline-flex h-7 w-14 shrink-0 items-center border transition-all duration-150 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=unchecked]:bg-accent",
 		className
 	)}
 	onCheckedChange={() => {
@@ -23,7 +23,7 @@
 	<SwitchPrimitive.Thumb
 		data-slot="switch-thumb"
 		class={cn(
-			"pointer-events-none block size-5.5 border bg-background ring-0 transition-transform duration-150 data-[state=checked]:translate-x-[calc(100%+8px)] data-[state=unchecked]:translate-x-[2px]"
+			"pointer-events-none block size-5.5 border bg-background ring-0 transition-transform duration-150 data-[state=checked]:translate-x-[calc(100%+8px)] data-[state=checked]:border-background data-[state=unchecked]:translate-x-[2px]"
 		)}
 	/>
 </SwitchPrimitive.Root>

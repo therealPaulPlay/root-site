@@ -1,12 +1,11 @@
 <script>
 	import { page } from "$app/state";
-	import { onMount, onDestroy } from "svelte";
+	import { onMount } from "svelte";
 	import { on } from "svelte/events";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { getProduct, removeProduct } from "$lib/utils/pairedProductsStorage";
-	import { RelayComm } from "$lib/utils/relaycomm";
-	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config";
+	import { createRelayInstance } from "$lib/utils/createRelayInstance";
 	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
 	import StreamPlayer from "$lib/components/StreamPlayer.svelte";
@@ -18,6 +17,7 @@
 	import { slide } from "svelte/transition";
 	import { SvelteSet } from "svelte/reactivity";
 	import { MediaSourceManager } from "$lib/utils/mediaSourceManager";
+	import { StreamManager } from "$lib/utils/streamManager.svelte.js";
 	import { LoadingState } from "$lib/utils/loadingState.svelte.js";
 	import { getFCMToken } from "$lib/utils/pushNotifications.js";
 	import { Capacitor } from "@capacitor/core";
@@ -25,12 +25,10 @@
 	const productId = page.params.productId;
 
 	const loading = new LoadingState();
-	loading.set("stream", true); // Init with stream loading
 
 	let product = $state(null);
 	let relayCommInstance;
-	let streamEnded = $state(false);
-	let streamHeartbeatInterval;
+	let streamHandle = $state(null);
 
 	// Events
 	let events = $state([]);
@@ -100,18 +98,8 @@
 		};
 	}
 
-	// Video streaming
+	// Stream
 	let streamVideoElement = $state();
-	let streamManager = null;
-	let streamVideoStarted = false;
-	let streamInitReceived = false;
-
-	// Audio streaming
-	let audioContext;
-	let audioGainNode;
-	let audioMuted = $state(true);
-	let nextAudioTime = 0;
-	let audioStarted = $state(false);
 	let audioUnlockEl = $state(null);
 
 	// Track event tab scroll position reactively
@@ -122,13 +110,7 @@
 		});
 	});
 
-	// Mute/unmute via gain node
-	$effect(() => {
-		const muted = audioMuted;
-		if (audioGainNode) audioGainNode.gain.value = muted ? 0 : 1;
-	});
-
-	onMount(async () => {
+	onMount(() => {
 		product = getProduct(productId);
 		if (!product) {
 			toast.error("Product not found!");
@@ -136,62 +118,49 @@
 			return;
 		}
 
-		const relayDomain = localStorage.getItem("relayDomain") || OFFICIAL_RELAY_DOMAIN;
-		const deviceId = localStorage.getItem("deviceId");
-		if (!deviceId) return toast.error("No device ID set!");
+		relayCommInstance = createRelayInstance();
+		relayCommInstance
+			.connect()
+			.then(() => {
+				// Set up message handlers
+				relayCommInstance.on("getEventsResult", handleEventsResult);
+				relayCommInstance.on("getThumbnailResult", handleThumbnailResult);
+				relayCommInstance.on("getRecordingResult", handleRecordingResult);
+				relayCommInstance.on("getMicrophoneResult", handleGetMicrophoneResult);
+				relayCommInstance.on("setMicrophoneResult", handleSetMicrophoneResult);
+				relayCommInstance.on("getRecordingSoundResult", handleGetRecordingSoundResult);
+				relayCommInstance.on("setRecordingSoundResult", handleSetRecordingSoundResult);
+				relayCommInstance.on("getEventDetectionConfigResult", handleGetEventDetectionConfigResult);
+				relayCommInstance.on("setEventDetectionEnabledResult", handleSetEventDetectionEnabledResult);
+				relayCommInstance.on("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
+				relayCommInstance.on("getNotificationsResult", handleGetNotificationsResult);
+				relayCommInstance.on("setNotificationsResult", handleSetNotificationsResult);
+				relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
+				relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
+				relayCommInstance.on("getHealthResult", handleHealthResult);
+				relayCommInstance.on("getUpdateStatusResult", handleUpdateStatusResult);
+				relayCommInstance.on("startUpdateResult", handleStartUpdateResult);
+				relayCommInstance.on("setVersionDevResult", handleSetVersionDevResult);
+				relayCommInstance.on("restartResult", handleRestartResult);
+				relayCommInstance.on("resetResult", handleResetResult);
 
-		try {
-			relayCommInstance = new RelayComm(relayDomain, deviceId);
-			await relayCommInstance.connect();
-
-			// Set up message handlers
-			relayCommInstance.on("getEventsResult", handleEventsResult);
-			relayCommInstance.on("getThumbnailResult", handleThumbnailResult);
-			relayCommInstance.on("getRecordingResult", handleRecordingResult);
-			relayCommInstance.on("getMicrophoneResult", handleGetMicrophoneResult);
-			relayCommInstance.on("setMicrophoneResult", handleSetMicrophoneResult);
-			relayCommInstance.on("getRecordingSoundResult", handleGetRecordingSoundResult);
-			relayCommInstance.on("setRecordingSoundResult", handleSetRecordingSoundResult);
-			relayCommInstance.on("getEventDetectionConfigResult", handleGetEventDetectionConfigResult);
-			relayCommInstance.on("setEventDetectionEnabledResult", handleSetEventDetectionEnabledResult);
-			relayCommInstance.on("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
-			relayCommInstance.on("getNotificationsResult", handleGetNotificationsResult);
-			relayCommInstance.on("setNotificationsResult", handleSetNotificationsResult);
-			relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
-			relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
-			relayCommInstance.on("getHealthResult", handleHealthResult);
-			relayCommInstance.on("getUpdateStatusResult", handleUpdateStatusResult);
-			relayCommInstance.on("startUpdateResult", handleStartUpdateResult);
-			relayCommInstance.on("setVersionDevResult", handleSetVersionDevResult);
-			relayCommInstance.on("restartResult", handleRestartResult);
-			relayCommInstance.on("resetResult", handleResetResult);
-			relayCommInstance.on("startStreamResult", handleStartStreamResult);
-			relayCommInstance.on("continueStreamResult", (msg) => {
-				if (!msg.payload.success) toast.error(msg.payload.error || "Stream heartbeat failed");
+				// Load events immediately (default tab), update status (shows tab bar), start stream
+				loadEvents();
+				loadUpdateStatus();
+				startProductStream();
+			})
+			.catch((error) => {
+				toast.error("Failed to connect to relay: " + error.message);
+				console.error("Failed to connect to relay:", error);
 			});
-			relayCommInstance.on("streamVideoChunkResult", handleStreamVideoChunk);
-			relayCommInstance.on("streamAudioChunkResult", handleStreamAudioChunk);
 
-			// Handle tab visibility changes
-			if (typeof window !== "undefined") document.addEventListener("visibilitychange", handleVisibilityChange);
-
-			// Load events immediately (default tab), update status (shows tab bar), start stream
-			loadEvents();
-			loadUpdateStatus();
-			startStream();
-		} catch (error) {
-			toast.error("Failed to connect to relay: " + error.message);
-			console.error("Failed to connect to relay:", error);
-		}
-	});
-
-	onDestroy(() => {
-		endStream();
-		cleanupRecording();
-		clearTimeout(thumbnailDrainTimeout);
-		if (typeof window !== "undefined") document.removeEventListener("visibilitychange", handleVisibilityChange);
-		if (relayCommInstance) relayCommInstance.disconnect();
-		for (const url of Object.values(eventThumbnails)) URL.revokeObjectURL(url);
+		return () => {
+			cleanupRecording();
+			clearTimeout(thumbnailDrainTimeout);
+			streamHandle?.cleanup();
+			for (const url of Object.values(eventThumbnails)) URL.revokeObjectURL(url);
+			relayCommInstance?.disconnect();
+		};
 	});
 
 	// Cleanup recording when dialog closes - set eventId to null to ignore remaining chunks
@@ -396,158 +365,16 @@
 		recordingVideoElement.src = createBlobUrl(chunks, "video/mp4");
 	}
 
-	// Streaming handlers
-	function setupMediaSource() {
-		streamManager = new MediaSourceManager({
-			isLive: true,
-			onChunkAppended: () => {
-				// Start playback once we have actual playable data in the buffer
-				if (!streamVideoStarted && streamVideoElement?.buffered.length > 0) {
-					streamVideoStarted = true;
-					loading.set("stream", false);
-					streamVideoElement.play().catch(console.error);
-				}
+	// Streaming
+	function startProductStream() {
+		streamHandle?.cleanup();
+		streamHandle = new StreamManager(productId, relayCommInstance, {
+			onError: (error) => {
+				toast.error("Stream ended: " + error?.message);
+				console.error("Stream ended:", error);
 			}
 		});
-		streamVideoElement.src = streamManager.setup();
-	}
-
-	function startStream() {
-		loading.set("stream", true);
-		streamEnded = false;
-		relayCommInstance.send(productId, "startStream").catch((error) => {
-			onStreamEnded(error);
-		});
-	}
-
-	function endStream() {
-		if (streamHeartbeatInterval) {
-			clearInterval(streamHeartbeatInterval);
-			streamHeartbeatInterval = null;
-		}
-		if (streamManager) {
-			streamManager.cleanup();
-			streamManager = null;
-		}
-		if (streamVideoElement) {
-			streamVideoElement.src = "";
-			streamVideoElement.load();
-		}
-		if (audioContext) {
-			audioContext.close();
-			audioContext = null;
-		}
-		bufferedChunks = [];
-		nextAudioTime = 0;
-		audioStarted = false;
-		streamVideoStarted = false;
-		streamInitReceived = false;
-		streamEnded = true;
-		loading.set("stream", false);
-	}
-
-	function onStreamEnded(error) {
-		if (!loading.is("stream")) toast.error("Stream ended: " + error?.message); // Only toast if the stream was previously running, and not in the loading state
-		console.error("Stream ended: ", error);
-		endStream();
-	}
-
-	function startStreamHeartbeat() {
-		streamHeartbeatInterval = setInterval(() => {
-			relayCommInstance.send(productId, "continueStream").catch((error) => {
-				console.error("Failed to send heartbeat:", error);
-			});
-		}, 2000);
-	}
-
-	function handleStartStreamResult(msg) {
-		if (!msg.payload.success) {
-			toast.error("Failed to start stream: " + msg.payload.error || "Unknown error");
-			return;
-		}
-
-		if (!streamManager) setupMediaSource();
-		if (!streamHeartbeatInterval) startStreamHeartbeat();
-	}
-
-	function handleStreamVideoChunk(msg) {
-		if (!msg.payload.success) {
-			onStreamEnded(new Error(msg.payload.error));
-			return;
-		}
-
-		if (!streamInitReceived && msg.payload.chunkIndex !== 0) return;
-		if (msg.payload.chunkIndex === 0) streamInitReceived = true;
-		if (streamVideoElement?.error) return;
-
-		streamManager?.appendChunk(msg.payload.chunk);
-		correctVideoDrift();
-	}
-
-	function correctVideoDrift() {
-		if (!streamVideoElement || !streamVideoStarted || streamVideoElement.buffered.length === 0) return;
-
-		const bufferEnd = streamVideoElement.buffered.end(streamVideoElement.buffered.length - 1);
-		const currentTime = streamVideoElement.currentTime;
-		const drift = bufferEnd - currentTime;
-
-		// If video is more than 500ms behind the buffer end, seek forward to catch up (100ms behind to avoid edge issues)
-		if (drift > 0.5) streamVideoElement.currentTime = bufferEnd - 0.1;
-	}
-
-	function handleVisibilityChange() {
-		if (document.hidden) endStream();
-		else relayCommInstance.onConnected(() => startStream());
-	}
-
-	// Audio streaming functions
-	function setupAudioContext() {
-		audioUnlockEl?.play()?.catch(() => {}); // Unlock iOS audio session
-		audioContext = new AudioContext();
-		audioGainNode = audioContext.createGain();
-		audioGainNode.gain.value = audioMuted ? 0 : 1;
-		audioGainNode.connect(audioContext.destination);
-		nextAudioTime = audioContext.currentTime;
-	}
-
-	let bufferedChunks = [];
-
-	function handleStreamAudioChunk(msg) {
-		if (!msg.payload.success) return console.error("Audio stream error:", msg.payload.error);
-		if (!audioStarted) audioStarted = true; // Set audio started when first chunk arrives
-		if (!audioContext) return;
-
-		// Decode PCM data from chunk field (slice creates aligned copy for Int16Array)
-		const pcmData = new Int16Array(msg.payload.chunk.slice().buffer);
-
-		// Convert Int16 PCM to Float32
-		const float32Data = new Float32Array(pcmData.length);
-		for (let i = 0; i < pcmData.length; i++) {
-			float32Data[i] = pcmData[i] / 32768.0;
-		}
-
-		// Create audio buffer (48kHz mono)
-		const audioBuffer = audioContext.createBuffer(1, float32Data.length, 48000);
-		audioBuffer.getChannelData(0).set(float32Data);
-		bufferedChunks.push(audioBuffer);
-		scheduleAudio();
-	}
-
-	function scheduleAudio() {
-		if (bufferedChunks.length > 1) bufferedChunks = bufferedChunks.slice(-1); // Only keep newest chunk to prevent drift
-
-		while (bufferedChunks.length > 0) {
-			const currentTime = audioContext.currentTime;
-			if (nextAudioTime < currentTime) nextAudioTime = currentTime; // Snap to now if fallen behind (e.g. not enough chunks for a while)
-			if (nextAudioTime > currentTime + 0.3) break; // Keep 300ms buffer to absorb network jitter
-
-			const chunk = bufferedChunks.shift();
-			const source = audioContext.createBufferSource();
-			source.buffer = chunk;
-			source.connect(audioGainNode);
-			source.start(nextAudioTime);
-			nextAudioTime += chunk.duration;
-		}
+		if (streamVideoElement) streamHandle.bindVideo(streamVideoElement);
 	}
 
 	function loadMicrophone() {
@@ -586,10 +413,6 @@
 			return;
 		}
 		micEnabled = msg.payload.enabled;
-
-		// Restart stream to apply microphone changes
-		endStream();
-		startStream();
 	}
 
 	function loadRecordingSound() {
@@ -924,6 +747,13 @@
 	}
 </script>
 
+<svelte:document
+	onvisibilitychange={() => {
+		if (document.hidden) streamHandle?.cleanup();
+		else relayCommInstance?.onConnected(() => startProductStream());
+	}}
+/>
+
 <audio
 	bind:this={audioUnlockEl}
 	src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
@@ -936,13 +766,15 @@
 		</Button>
 	</div>
 	<StreamPlayer
-		bind:audioMuted
 		bind:videoElement={streamVideoElement}
-		{loading}
-		{streamEnded}
-		showMuteButton={audioStarted}
+		streamLoading={streamHandle?.loading ?? true}
+		streamEnded={streamHandle?.ended ?? false}
+		showMuteButton={streamHandle?.audioActive ?? false}
+		audioMuted={streamHandle?.audioMuted ?? true}
 		onAudioToggle={() => {
-			if (!audioContext) setupAudioContext(); // Set up audio context on user input for working playback
+			if (!streamHandle) return;
+			streamHandle.setupAudio(audioUnlockEl);
+			streamHandle.audioMuted = !streamHandle.audioMuted;
 		}}
 	/>
 	<div class="w-full basis-full overflow-hidden border-t">
@@ -1040,7 +872,6 @@
 						{toggleNotifications}
 						{toggleEventDetection}
 						{updateEventDetectionTypes}
-						{loadDevices}
 						{removeDevice}
 						{restartProduct}
 						{resetProduct}
@@ -1066,8 +897,6 @@
 						{loading}
 						bind:devDialogOpen
 						bind:updateDialogOpen
-						{loadHealth}
-						{loadUpdateStatus}
 						{health}
 						model={product?.model}
 						{updateStatus}
