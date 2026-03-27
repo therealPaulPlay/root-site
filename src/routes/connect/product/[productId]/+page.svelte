@@ -37,7 +37,6 @@
 	let recordingAudioElement = $state();
 	let recordingVideoElement = $state();
 	let recordingAudioUrl = $state(null);
-	let recordingHasAudio = $state(false);
 	let recordingChunks = $state({ video: [], audio: [] });
 	let recordingTotalChunks = $state({ video: 0, audio: 0 });
 	let recordingManager = null;
@@ -245,7 +244,6 @@
 		loading.set("recording", true);
 		recordingDuration = event.duration || 0;
 		cleanupRecording();
-		recordingHasAudio = false;
 		recordingChunks = { video: [], audio: [] };
 		recordingTotalChunks = { video: 0, audio: 0 };
 		currentRecordingEventId = event.id;
@@ -269,8 +267,6 @@
 		const eventId = msg.payload.eventId || msg.payload.metadata?.eventId;
 		if (eventId && eventId !== currentRecordingEventId) return;
 
-		// Set audio state from initial response (before any chunks arrive)
-		if (msg.payload.hasAudio !== undefined) recordingHasAudio = msg.payload.hasAudio;
 		if (!msg.payload.chunk) return; // Initial response lacks chunk, only contains metadata
 
 		const { fileType, chunkIndex, totalChunks, chunk } = msg.payload;
@@ -840,7 +836,7 @@
 						{eventThumbnails}
 						{loadingThumbnails}
 						{thumbnailQueue}
-						{recordingHasAudio}
+						scrollElement={eventListScrollElement}
 						bind:viewRecordingDialog
 						bind:recordingAudioElement
 						bind:recordingVideoElement

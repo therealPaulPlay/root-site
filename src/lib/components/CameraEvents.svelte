@@ -26,13 +26,14 @@
 	import CameraDetectionDialog from "./CameraDetectionDialog.svelte";
 	import { page } from "$app/state";
 	import { tick } from "svelte";
+	import { formatDate, formatTime } from "$lib/utils/formatDateTime";
 
-	const groupEventsThreshold = 5 * 60 * 1000; // 5 minutes
 	let highlightEventId = $derived(page.url.searchParams.get("event-id"));
 
 	let {
 		events = [],
 		loading,
+		scrollElement,
 		eventThumbnails = {},
 		loadingThumbnails = [],
 		thumbnailQueue = new SvelteSet(),
@@ -68,6 +69,12 @@
 		lastHandledEventId = highlightEventId;
 		highlightedEventId = highlightEventId;
 
+		// Ensure the target date group is loaded
+		const targetDayIndex = Object.entries(groupedEvents).findIndex(([_dateKey, clusters]) =>
+			clusters.some((c) => c.events.some((e) => e.id === highlightEventId))
+		);
+		if (targetDayIndex >= visibleDayCount) visibleDayCount = targetDayIndex + 1;
+
 		// Expand the cluster if the event is collapsed inside a stack
 		for (const clusters of Object.values(groupedEvents)) {
 			for (const cluster of clusters) {
@@ -79,7 +86,9 @@
 		}
 
 		tick().then(() => {
-			eventElements[highlightEventId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+			const el = eventElements[highlightEventId];
+			if (el && scrollElement)
+				scrollElement.scrollTop = el.offsetTop - scrollElement.clientHeight / 2 + el.clientHeight / 2;
 			setTimeout(() => (highlightedEventId = null), 1500);
 		});
 	});
@@ -138,13 +147,6 @@
 		scrubTo(e.clientX);
 	}
 
-	function formatTime(seconds) {
-		if (!seconds || !isFinite(seconds)) return "0:00";
-		const m = Math.floor(seconds / 60);
-		const s = Math.floor(seconds % 60);
-		return `${m}:${s.toString().padStart(2, "0")}`;
-	}
-
 	// Event filtering
 	const hasDateFilter = $derived(dateRangeValue?.start && dateRangeValue?.end);
 	const hasTypeFilter = $derived(selectedTypes.length > 0);
@@ -162,6 +164,8 @@
 		})
 	);
 
+	const GROUP_EVENTS_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+
 	// Group by date, then cluster consecutive events within groupEventsThreshold
 	const groupedEvents = $derived.by(() => {
 		const byDate = filteredEvents.reduce((groups, event) => {
@@ -171,6 +175,7 @@
 		}, {});
 
 		const result = {};
+
 		for (const [dateKey, dateEvents] of Object.entries(byDate)) {
 			const clusters = [];
 			let current = [dateEvents[0]];
@@ -178,7 +183,7 @@
 			for (let i = 1; i < dateEvents.length; i++) {
 				const prev = new SvelteDate(dateEvents[i - 1]?.timestamp).getTime();
 				const curr = new SvelteDate(dateEvents[i]?.timestamp).getTime();
-				if (Math.abs(curr - prev) <= groupEventsThreshold) current.push(dateEvents[i]);
+				if (Math.abs(curr - prev) <= GROUP_EVENTS_THRESHOLD) current.push(dateEvents[i]);
 				else {
 					clusters.push(current);
 					current = [dateEvents[i]];
@@ -190,14 +195,32 @@
 		return result;
 	});
 
-	function formatDate(date) {
-		const d = new SvelteDate(date);
-		const today = new SvelteDate();
-		const yesterday = new SvelteDate();
-		yesterday.setDate(yesterday.getDate() - 1);
-		if (d.toDateString() === today.toDateString()) return "Today";
-		if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
-		return d.toLocaleDateString();
+	// Pagination -------------------------------------------------------------------
+
+	// Show 7 more date groups (= one week) each time the sentinel is visible
+	const DAYS_PER_PAGE = 7;
+	let visibleDayCount = $state(DAYS_PER_PAGE);
+
+	// Only show the first visibleDayCount date groups
+	const visibleDateEntries = $derived(Object.entries(groupedEvents).slice(0, visibleDayCount));
+	const hasMoreDays = $derived(visibleDayCount < Object.entries(groupedEvents).length);
+
+	// Reset visible count when filters change
+	$effect(() => {
+		dateRangeValue;
+		selectedTypes;
+		visibleDayCount = DAYS_PER_PAGE;
+	});
+
+	function observeLoadMore(element) {
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				if (entry.isIntersecting && hasMoreDays) visibleDayCount += DAYS_PER_PAGE;
+			},
+			{ rootMargin: "0px 0px 400px 0px" }
+		);
+		observer.observe(element);
+		return () => observer.disconnect();
 	}
 </script>
 
@@ -318,7 +341,7 @@
 		</div>
 	{/snippet}
 
-	{#each Object.entries(groupedEvents) as [dateKey, clusters]}
+	{#each visibleDateEntries as [dateKey, clusters]}
 		<!-- Date header -->
 		<div class="smooth-mask-b sticky -top-6 z-10 flex items-center gap-4 bg-background py-4">
 			<span class="shrink-0 text-sm text-muted-foreground">{dateKey}</span>
@@ -369,6 +392,11 @@
 			{/each}
 		</div>
 	{/each}
+	{#if hasMoreDays}
+		<div {@attach observeLoadMore} class="flex justify-center p-6">
+			<Spinner class="size-6" />
+		</div>
+	{/if}
 {/if}
 
 <!-- Recording Viewer Dialog -->
