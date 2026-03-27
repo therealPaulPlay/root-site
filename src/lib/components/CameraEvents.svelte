@@ -22,7 +22,7 @@
 	import { buttonVariants } from "./ui/button";
 	import Button from "./ui/button/button.svelte";
 	import Separator from "./ui/separator/separator.svelte";
-	import { SvelteSet } from "svelte/reactivity";
+	import { SvelteDate, SvelteSet } from "svelte/reactivity";
 	import CameraDetectionDialog from "./CameraDetectionDialog.svelte";
 	import { page } from "$app/state";
 	import { tick } from "svelte";
@@ -33,7 +33,6 @@
 	let {
 		events = [],
 		loading,
-		recordingHasAudio = false,
 		eventThumbnails = {},
 		loadingThumbnails = [],
 		thumbnailQueue = new SvelteSet(),
@@ -125,8 +124,6 @@
 		else recordingVideoElement.pause();
 	}
 
-	let scrubPointerId = null;
-
 	function scrubTo(clientX) {
 		if (!recordingVideoElement || !videoDuration || !scrubBarEl) return;
 		const rect = scrubBarEl.getBoundingClientRect();
@@ -137,7 +134,6 @@
 	}
 
 	function startScrubDrag(e) {
-		scrubPointerId = e.pointerId;
 		e.currentTarget.setPointerCapture(e.pointerId);
 		scrubTo(e.clientX);
 	}
@@ -156,7 +152,7 @@
 	const filteredEvents = $derived(
 		events.filter((event) => {
 			if (hasDateFilter) {
-				const eventDate = new Date(event.timestamp).setHours(0, 0, 0, 0);
+				const eventDate = new SvelteDate(event.timestamp).setHours(0, 0, 0, 0);
 				const startDate = dateRangeValue.start.toDate(getLocalTimeZone()).getTime();
 				const endDate = dateRangeValue.end.toDate(getLocalTimeZone()).getTime();
 				if (eventDate < startDate || eventDate > endDate) return false;
@@ -180,8 +176,8 @@
 			let current = [dateEvents[0]];
 
 			for (let i = 1; i < dateEvents.length; i++) {
-				const prev = new Date(dateEvents[i - 1]?.timestamp).getTime();
-				const curr = new Date(dateEvents[i]?.timestamp).getTime();
+				const prev = new SvelteDate(dateEvents[i - 1]?.timestamp).getTime();
+				const curr = new SvelteDate(dateEvents[i]?.timestamp).getTime();
 				if (Math.abs(curr - prev) <= groupEventsThreshold) current.push(dateEvents[i]);
 				else {
 					clusters.push(current);
@@ -195,9 +191,9 @@
 	});
 
 	function formatDate(date) {
-		const d = new Date(date);
-		const today = new Date();
-		const yesterday = new Date();
+		const d = new SvelteDate(date);
+		const today = new SvelteDate();
+		const yesterday = new SvelteDate();
 		yesterday.setDate(yesterday.getDate() - 1);
 		if (d.toDateString() === today.toDateString()) return "Today";
 		if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
@@ -395,7 +391,6 @@
 					{/if}
 				</div>
 			{/if}
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div
 				class="relative h-full w-full {loading.is('recording') || !recordingVideoElement?.src ? 'invisible' : ''}"
 				role="button"
@@ -451,7 +446,6 @@
 				></video>
 			</div>
 			<!-- Custom controls (native controls break ManagedMediaSource on iOS) -->
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div
 				class="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/50 to-transparent p-4 pb-3 text-white transition-opacity duration-150 {controlsVisible &&
 				!loading.is('recording') &&

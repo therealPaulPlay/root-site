@@ -1,21 +1,13 @@
 <script>
 	import { cn } from "$lib/utils.js";
 
-	let {
-		ref = $bindable(null),
-		class: className,
-		children,
-		...restProps
-	} = $props();
+	let { ref = $bindable(null), class: className, children, ...restProps } = $props();
 </script>
 
 <div
 	bind:this={ref}
 	data-slot="card"
-	class={cn(
-		"bg-card text-card-foreground flex flex-col gap-6 border py-6 flex-1",
-		className
-	)}
+	class={cn("flex flex-1 flex-col gap-6 border bg-card py-6 text-card-foreground", className)}
 	{...restProps}
 >
 	{@render children?.()}

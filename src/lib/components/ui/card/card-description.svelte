@@ -1,18 +1,13 @@
 <script>
 	import { cn } from "$lib/utils.js";
 
-	let {
-		ref = $bindable(null),
-		class: className,
-		children,
-		...restProps
-	} = $props();
+	let { ref = $bindable(null), class: className, children, ...restProps } = $props();
 </script>
 
 <p
 	bind:this={ref}
 	data-slot="card-description"
-	class={cn("text-muted-foreground text-sm max-w-lg", className)}
+	class={cn("max-w-lg text-sm text-muted-foreground", className)}
 	{...restProps}
 >
 	{@render children?.()}

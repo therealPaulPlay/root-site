@@ -1,6 +1,12 @@
 <script>
 	import { Toaster as Sonner } from "svelte-sonner";
-	import { RiAlertLine, RiCheckboxCircleLine, RiErrorWarningLine, RiInformationLine, RiLoader4Line } from "svelte-remixicon";
+	import {
+		RiAlertLine,
+		RiCheckboxCircleLine,
+		RiErrorWarningLine,
+		RiInformationLine,
+		RiLoader4Line
+	} from "svelte-remixicon";
 	import { theme } from "$lib/utils/theme.svelte.js";
 
 	let { ...restProps } = $props();

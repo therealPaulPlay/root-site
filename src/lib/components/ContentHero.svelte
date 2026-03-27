@@ -14,7 +14,7 @@
 		{/if}
 	</div>
 	<div class="flex w-full border-y">
-		<div class=" mx-auto flex w-3xl flex-wrap items-center justify-between gap-4 p-6 lg:px-8 px-6">
+		<div class=" mx-auto flex w-3xl flex-wrap items-center justify-between gap-4 p-6 px-6 lg:px-8">
 			<div class="flex gap-4">
 				<Label><RiHourglassLine /> {duration}</Label>
 				<Label><RiUserLine />By {author}</Label>

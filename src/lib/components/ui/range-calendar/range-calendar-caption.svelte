@@ -12,7 +12,7 @@
 		month,
 		locale,
 		placeholder = $bindable(),
-		monthIndex = 0,
+		monthIndex = 0
 	} = $props();
 
 	function formatYear(date) {

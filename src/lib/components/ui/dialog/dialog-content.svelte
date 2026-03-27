@@ -28,7 +28,7 @@
 		{@render children?.()}
 		{#if showCloseButton}
 			<DialogPrimitive.Close
-				class="absolute end-0 top-0 opacity-70 z-100 hover:opacity-100 active:opacity-100 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-6 p-4"
+				class="absolute end-0 top-0 z-100 p-4 opacity-70 hover:opacity-100 focus:outline-hidden active:opacity-100 disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-6"
 			>
 				<RiCloseLine />
 				<span class="sr-only">Close</span>

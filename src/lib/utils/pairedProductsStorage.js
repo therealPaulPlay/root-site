@@ -11,7 +11,7 @@ function syncToNative(products) {
 	const minimal = products.map((p) => ({
 		id: p.id,
 		productPublicKey: p.productPublicKey,
-		devicePrivateKey: p.devicePrivateKey,
+		devicePrivateKey: p.devicePrivateKey
 	}));
 	NativeStorage?.sync({ products: JSON.stringify(minimal) }).catch((error) =>
 		console.error("Failed to sync products to native storage:", error)
@@ -42,7 +42,9 @@ export function saveProduct(product) {
 		!product.keyCreatedAt ||
 		!product.model
 	) {
-		throw new Error("Product must have id, name, productPublicKey, devicePublicKey, devicePrivateKey, keyCreatedAt, and model");
+		throw new Error(
+			"Product must have id, name, productPublicKey, devicePublicKey, devicePrivateKey, keyCreatedAt, and model"
+		);
 	}
 
 	const products = getAllProducts();

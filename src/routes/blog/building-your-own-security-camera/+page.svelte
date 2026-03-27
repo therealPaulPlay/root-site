@@ -2,7 +2,6 @@
 	import ContentContainer from "$lib/components/ContentContainer.svelte";
 	import ContentHero from "$lib/components/ContentHero.svelte";
 	import ContentImage from "$lib/components/ContentImage.svelte";
-	import ContentNote from "$lib/components/ContentNote.svelte";
 	import ContentProductPromotion from "$lib/components/ContentProductPromotion.svelte";
 	import FirmwareDownloadButton from "$lib/components/FirmwareDownloadButton.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";

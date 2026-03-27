@@ -15,7 +15,6 @@
 	let refreshing = $state(false);
 	let done = $state(false);
 	let pulling = $state(false);
-	let blockTopOverscroll = $state(false);
 
 	// Input tracking
 	let touchStartY = 0;

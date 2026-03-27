@@ -51,7 +51,7 @@
 					{#if image.filename.includes("auto")}
 						<Label class="bg-accent px-1">Recommended</Label>
 					{/if}
-					<RiDownloadLine class="size-4 ml-auto" />
+					<RiDownloadLine class="ml-auto size-4" />
 				</Button>
 			{/each}
 		</div>

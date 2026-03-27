@@ -10,8 +10,9 @@
 		"build:app-icons": "npx @capacitor/assets generate --ios --android --assetPath ./app-icons",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"format": "prettier --write .",
-		"lint": "prettier --check .",
+		"format": "prettier --write src/",
+		"lint": "npx eslint src/",
+		"lint:fix": "npx eslint --fix src/",
 		"generate-sitemap": "node ./scripts/generate-sitemap.js"
 	},
 	"devDependencies": {
@@ -47,7 +48,11 @@
 		"@capacitor/haptics": "^8.0.0",
 		"@capacitor/keyboard": "^8.0.1",
 		"@capacitor/push-notifications": "^8.0.2",
+		"@eslint/js": "^10.0.1",
 		"cbor-x": "^1.6.0",
+		"eslint-plugin-svelte": "^3.16.0",
+		"eslint-plugin-unused-imports": "^4.4.1",
+		"globals": "^17.4.0",
 		"overfade": "^0.0.11",
 		"svelte-qrcode": "^1.0.1"
 	}

@@ -10,7 +10,7 @@
 
 <div
 	data-slot="carousel-content"
-	class="overflow-hidden sm:mask-x-from-97% mask-x-from-93% mask-x-to-100% px-10 sm:px-6 gap-4"
+	class="gap-4 overflow-hidden mask-x-from-93% mask-x-to-100% px-10 sm:mask-x-from-97% sm:px-6"
 	use:emblaCarouselSvelte={{
 		options: {
 			container: "[data-embla-container]",

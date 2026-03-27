@@ -1,9 +1,9 @@
-export function decryptTextEffect(text, { speed = 40, scrambleSpeed = 60, cursor = '▋' } = {}) {
+export function decryptTextEffect(text, { speed = 40, scrambleSpeed = 60, cursor = "▋" } = {}) {
 	return (node) => {
 		let revealed = -1;
 		let trailChar = null;
 
-		const trails = ['_', '‥', '<', '%', '/']; // ‥ is a single two-dot character (U+2025)
+		const trails = ["_", "‥", "<", "%", "/"]; // ‥ is a single two-dot character (U+2025)
 		const randomTrail = () => trails[Math.floor(Math.random() * trails.length)];
 
 		function shuffle(arr) {
@@ -16,13 +16,13 @@ export function decryptTextEffect(text, { speed = 40, scrambleSpeed = 60, cursor
 		}
 
 		function update() {
-			let output = '';
+			let output = "";
 			let position = 0;
 
 			for (const segment of text.split(/(?=[ ,.])|(?<=[ ,.])/)) {
 				const revealedCount = Math.max(0, Math.min(segment.length, revealed - position));
 				const shuffled = shuffle([...segment]);
-				output += segment.slice(0, revealedCount) + shuffled.slice(0, segment.length - revealedCount).join('');
+				output += segment.slice(0, revealedCount) + shuffled.slice(0, segment.length - revealedCount).join("");
 				position += segment.length;
 			}
 
@@ -46,7 +46,7 @@ export function decryptTextEffect(text, { speed = 40, scrambleSpeed = 60, cursor
 				return;
 			}
 
-			while (revealed < text.length && ' .'.includes(text[revealed])) {
+			while (revealed < text.length && " .".includes(text[revealed])) {
 				revealed++;
 			}
 			revealed++;

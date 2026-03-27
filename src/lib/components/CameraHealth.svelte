@@ -16,8 +16,6 @@
 		healthTab = "",
 		devDialogOpen = $bindable(false),
 		updateDialogOpen = $bindable(false),
-		loadHealth = () => {},
-		loadUpdateStatus = () => {},
 		startUpdate = () => {},
 		setVersionDev = () => {}
 	} = $props();

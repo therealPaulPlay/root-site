@@ -76,11 +76,7 @@ export class Encryption {
 		const params = { name: "AES-GCM", iv: nonce };
 		if (aad) params.additionalData = aad; // If AAD is provided, add it to params
 
-		const ciphertext = await crypto.subtle.encrypt(
-			params,
-			this.#key,
-			data
-		);
+		const ciphertext = await crypto.subtle.encrypt(params, this.#key, data);
 
 		const result = new Uint8Array(nonce.length + ciphertext.byteLength);
 		result.set(nonce);
@@ -93,11 +89,7 @@ export class Encryption {
 		const params = { name: "AES-GCM", iv: ciphertext.slice(0, 12) };
 		if (aad) params.additionalData = aad; // If AAD is provided, add it to params
 
-		const plaintext = await crypto.subtle.decrypt(
-			params,
-			this.#key,
-			ciphertext.slice(12)
-		);
+		const plaintext = await crypto.subtle.decrypt(params, this.#key, ciphertext.slice(12));
 
 		return new Uint8Array(plaintext);
 	}

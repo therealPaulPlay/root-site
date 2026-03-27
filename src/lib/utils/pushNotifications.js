@@ -15,6 +15,7 @@ export async function getFCMToken() {
 		return null;
 	}
 
+	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve) => {
 		const timeout = setTimeout(() => {
 			toast.error("Push registration timed out.");
@@ -36,7 +37,7 @@ export async function getFCMToken() {
 
 // Listen for notification taps (when user clicks a notification)
 export function onNotificationTap(callback) {
-	if (!isNative()) return () => {};
+	if (!isNative()) return () => { };
 
 	const listener = PushNotifications.addListener("pushNotificationActionPerformed", (notification) => {
 		const data = notification.notification?.data || {};

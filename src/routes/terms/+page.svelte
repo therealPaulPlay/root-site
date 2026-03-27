@@ -2,14 +2,14 @@
 	<title>Terms of Use</title>
 </svelte:head>
 
-<section class="-z-1 h-60 md:h-80 w-full lg:h-120 xl:h-svh">
+<section class="-z-1 h-60 w-full md:h-80 lg:h-120 xl:h-svh">
 	<img alt="privacy shield" src="/images/legal/rules.jpg" class="h-full w-full object-cover" />
 </section>
 
 <section
 	class="right-0 max-w-xl border-t bg-background xl:absolute xl:mt-15 xl:mr-15 xl:h-[calc(100svh-7.5rem)] xl:border-b xl:border-l"
 >
-	<div class="of-top of-bottom of-length-2 max-h-full lg:p-8 p-6 max-xl:pb-16 xl:overflow-y-auto">
+	<div class="of-top of-bottom of-length-2 max-h-full p-6 max-xl:pb-16 lg:p-8 xl:overflow-y-auto">
 		<h1 class="text-4xl">Terms of Use</h1>
 		<br />
 		<p>By using our products and services, you agree to these terms.</p>
@@ -33,14 +33,14 @@
 		</p>
 		<br />
 		<p>
-			Improper installation may result in the device falling, potentially causing injury or property damage — follow
-			all installation guidelines and ensure secure mounting.
+			Improper installation may result in the device falling, potentially causing injury or property damage — follow all
+			installation guidelines and ensure secure mounting.
 		</p>
 		<br />
 		<p>
-			Our products use infrared LEDs for night vision which may cause interference with other infrared-sensitive
-			devices or equipment in the vicinity. Some of our products may contain small parts — keep packaging and
-			components away from young children to avoid choking hazards.
+			Our products use infrared LEDs for night vision which may cause interference with other infrared-sensitive devices
+			or equipment in the vicinity. Some of our products may contain small parts — keep packaging and components away
+			from young children to avoid choking hazards.
 		</p>
 		<br /><br />
 
@@ -67,9 +67,8 @@
 			Our warranty covers defects in materials and workmanship under normal use for the period specified with your
 			product. The warranty does not cover damage from misuse, abuse, accidents, drops, liquid exposure, unauthorized
 			modifications, use in environments exceeding 60°C, or use outside specified operating conditions. For products not
-			explicitly labeled as outdoor-rated,
-			water and moisture damage is not covered under warranty. Warranty claims require proof of purchase and are
-			subject to our inspection and approval.
+			explicitly labeled as outdoor-rated, water and moisture damage is not covered under warranty. Warranty claims
+			require proof of purchase and are subject to our inspection and approval.
 		</p>
 		<br /><br />
 

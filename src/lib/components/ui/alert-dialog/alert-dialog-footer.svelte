@@ -6,7 +6,7 @@
 <div
 	bind:this={ref}
 	data-slot="alert-dialog-footer"
-	class={cn("mt-4 flex gap-2 flex-row justify-end", className)}
+	class={cn("mt-4 flex flex-row justify-end gap-2", className)}
 	{...restProps}
 >
 	{@render children?.()}

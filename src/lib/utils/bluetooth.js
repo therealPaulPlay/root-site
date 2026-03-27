@@ -33,7 +33,6 @@ async function ensureInitialized() {
 
 export class Bluetooth {
 	#deviceId = null;
-	#deviceName = null;
 	#intentionalDisconnect = false;
 
 	async scan() {
@@ -43,9 +42,7 @@ export class Bluetooth {
 			services: [SERVICE_UUID], // Filter by service UUID
 			optionalServices: [SERVICE_UUID]
 		});
-
 		this.#deviceId = device.deviceId;
-		this.#deviceName = device.name;
 
 		return {
 			id: device.deviceId,
@@ -58,10 +55,9 @@ export class Bluetooth {
 		this.#intentionalDisconnect = false; // Reset to false
 		if (!this.isConnected()) throw new Error("No device selected. Call scan() first");
 
-		await BleClient.connect(this.#deviceId, (deviceId) => {
+		await BleClient.connect(this.#deviceId, (_deviceId) => {
 			// On disconnect...
 			this.#deviceId = null;
-			this.#deviceName = null;
 			if (!this.#intentionalDisconnect) toast.info("Bluetooth device disconnected.");
 		});
 	}
@@ -71,7 +67,6 @@ export class Bluetooth {
 		this.#intentionalDisconnect = true;
 		if (this.isConnected()) await BleClient.disconnect(this.#deviceId);
 		this.#deviceId = null;
-		this.#deviceName = null;
 	}
 
 	isConnected() {
@@ -90,9 +85,9 @@ export class Bluetooth {
 		let response;
 		try {
 			response = decode(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
-		} catch (e) {
-			console.error("Failed to decode BLE response (read):", e);
-			throw new Error("Invalid CBOR response from device");
+		} catch (error) {
+			console.error("Failed to decode BLE response (read):", error);
+			throw new Error("Invalid CBOR response from device", { cause: error });
 		}
 
 		if (!response.success) throw new Error(response.error || "No error provided");

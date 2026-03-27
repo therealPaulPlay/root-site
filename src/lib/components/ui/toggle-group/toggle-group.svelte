@@ -1,8 +1,7 @@
 <script module>
 	import { getContext, setContext } from "svelte";
-	import { toggleVariants } from "$lib/components/ui/toggle/index.js";
-
-	export function setToggleGroupCtx(props) {
+	
+export function setToggleGroupCtx(props) {
 		setContext("toggleGroup", props);
 	}
 
@@ -26,9 +25,15 @@
 	} = $props();
 
 	setToggleGroupCtx({
-		get variant() { return variant; },
-		get size() { return size; },
-		get spacing() { return spacing; },
+		get variant() {
+			return variant;
+		},
+		get size() {
+			return size;
+		},
+		get spacing() {
+			return spacing;
+		}
 	});
 </script>
 
@@ -37,16 +42,13 @@ Discriminated Unions + Destructing (required for bindable) do not
 get along, so we shut typescript up by casting `value` to `never`.
 -->
 <ToggleGroupPrimitive.Root
-	bind:value={value}
+	bind:value
 	bind:ref
 	data-slot="toggle-group"
 	data-variant={variant}
 	data-size={size}
 	data-spacing={spacing}
 	style={`--gap: ${spacing}`}
-	class={cn(
-		"group/toggle-group flex w-fit items-center gap-[--spacing(var(--gap))] rounded-md",
-		className
-	)}
+	class={cn("group/toggle-group flex w-fit items-center gap-[--spacing(var(--gap))] rounded-md", className)}
 	{...restProps}
 />

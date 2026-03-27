@@ -17,14 +17,18 @@
 		api: undefined,
 		scrollPrev,
 		scrollNext,
+		// eslint-disable-next-line
 		// svelte-ignore state_referenced_locally
 		orientation,
 		canScrollNext: false,
 		canScrollPrev: false,
+		// eslint-disable-next-line
 		// svelte-ignore state_referenced_locally
 		handleKeyDown,
+		// eslint-disable-next-line
 		// svelte-ignore state_referenced_locally
 		options: opts,
+		// eslint-disable-next-line
 		// svelte-ignore state_referenced_locally
 		plugins,
 		onInit,

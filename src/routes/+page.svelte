@@ -1,17 +1,15 @@
 <script>
-	import { onMount, onDestroy } from "svelte";
+	import { onMount } from "svelte";
 	import {
 		RiDeviceLine,
 		RiTimeLine,
 		RiComputerLine,
 		RiCpuLine,
 		RiTranslate2,
-		RiCamera2Fill,
 		RiCamera2Line,
 		RiServerLine,
 		RiSmartphoneLine
 	} from "svelte-remixicon";
-	import { blur } from "svelte/transition";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { decryptTextEffect } from "$lib/utils/decryptTextEffect.js";
 	import * as Carousel from "$lib/components/ui/carousel";
@@ -194,7 +192,6 @@
 />
 
 <section class="relative mb-20 flex h-135 w-full items-center justify-center border-b xl:h-155">
-	<!-- svelte-ignore a11y_media_has_caption -->
 	<video
 		loop
 		playsinline
@@ -234,7 +231,7 @@
 </section>
 
 <section class="mb-20 flex border-y max-lg:flex-wrap">
-	<div class="min-w-2/3 space-y-4 p-6 max-lg:border-b max-lg:border-dashed max-lg:w-full lg:border-r lg:p-8">
+	<div class="min-w-2/3 space-y-4 p-6 max-lg:w-full max-lg:border-b max-lg:border-dashed lg:border-r lg:p-8">
 		<h3 class="text-3xl">Keeping you safe.</h3>
 		<p class="max-w-150">
 			Privacy protects everyone. It’s a basic human right, <span class="bg-accent"
@@ -333,7 +330,7 @@
 			{/each}
 		</div>
 	</div>
-	<div class="min-w-2/3 space-y-4 p-6 max-lg:border-b max-lg:border-dashed max-lg:w-full lg:border-l lg:p-8">
+	<div class="min-w-2/3 space-y-4 p-6 max-lg:w-full max-lg:border-b max-lg:border-dashed lg:border-l lg:p-8">
 		<h3 class="text-3xl">Why it matters.</h3>
 		<p class="max-w-150">
 			Large tech corporations collect huge amounts of user information <span class="bg-accent"
@@ -376,7 +373,7 @@
 
 <section class="relative mb-20 flex w-full items-center justify-center overflow-hidden border-y py-30">
 	<div class="absolute -inset-2.5 -z-1 bg-foreground select-none">
-		{#each binaryEffectArray as row, index}
+		{#each binaryEffectArray, index}
 			<p class="w-full text-lg font-thin text-background" style:opacity={0.5 - (1 / binaryEffectLineCount) * index}>
 				{binaryEffectString?.slice(Math.floor(Math.random() * 100))}
 			</p>
@@ -433,7 +430,7 @@
 	</div>
 
 	<!-- Text content (right side) -->
-	<div class="min-w-1/2 space-y-4 p-6 max-xl:border-b max-xl:border-dashed lg:p-8 xl:border-l max-xl:w-full">
+	<div class="min-w-1/2 space-y-4 p-6 max-xl:w-full max-xl:border-b max-xl:border-dashed lg:p-8 xl:border-l">
 		<h3 class="text-3xl">A secure architecture.</h3>
 		<p class="max-w-130">
 			All data is end-to-end encrypted with forward secrecy to ensure <span class="bg-accent"

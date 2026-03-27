@@ -14,8 +14,7 @@ let preference = $state(getInitialPreference());
 let userPrefersDark = new MediaQuery("prefers-color-scheme: dark");
 
 let isDark = $derived(
-	preference === ThemePreference.DARK ||
-		(preference === ThemePreference.SYSTEM && userPrefersDark.current)
+	preference === ThemePreference.DARK || (preference === ThemePreference.SYSTEM && userPrefersDark.current)
 );
 
 if (browser) {
@@ -46,5 +45,5 @@ export const theme = {
 	},
 	get current() {
 		return isDark ? "dark" : "light";
-	},
+	}
 };

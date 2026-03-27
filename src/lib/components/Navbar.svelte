@@ -2,7 +2,7 @@
 	import { page } from "$app/state";
 	import { slide } from "svelte/transition";
 	import Button, { buttonVariants } from "./ui/button/button.svelte";
-	import { RiCircleFill, RiCloseLargeLine, RiCornerDownRightLine, RiMenuLine } from "svelte-remixicon";
+	import { RiCloseLargeLine, RiCornerDownRightLine, RiMenuLine } from "svelte-remixicon";
 	import { afterNavigate } from "$app/navigation";
 	import { handlePointerMove, resetPointerMove } from "$lib/utils/trackPointer";
 	import { Capacitor } from "@capacitor/core";
@@ -111,7 +111,9 @@
 		</div>
 		<div class="relative min-h-160 border-y">
 			<div class="absolute inset-0 overflow-hidden">
-				<div class="absolute -inset-50 flex -rotate-25 flex-col gap-2 bg-background text-neutral-300 dark:text-neutral-700 select-none">
+				<div
+					class="absolute -inset-50 flex -rotate-25 flex-col gap-2 bg-background text-neutral-300 select-none dark:text-neutral-700"
+				>
 					{#each Array(30) as _, i}
 						{@const words = ["REPAIRABILITY", "OPEN SOURCE", "SECURITY", "PRIVACY", "ROOT ACCESS", "FULL OWNERSHIP"]}
 						{@const word = words[i % words.length]}

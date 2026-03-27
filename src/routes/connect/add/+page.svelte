@@ -233,7 +233,7 @@
 							try {
 								await bluetoothInstance.connect();
 							} catch (error) {
-								throw new Error("Error connecting to bluetooth device: " + error.message);
+								throw new Error("Error connecting to bluetooth device: " + error.message, { cause: error });
 							}
 
 							// Get pairing code
@@ -241,7 +241,7 @@
 								const result = await bluetoothInstance.read("getCode");
 								pairingCode = result.code;
 							} catch (error) {
-								throw new Error("Error getting pairing code: " + error.message);
+								throw new Error("Error getting pairing code: " + error.message, { cause: error });
 							}
 
 							// Get product ID to check if already paired
@@ -253,7 +253,7 @@
 								const existingProduct = getProduct(currentProductId);
 								if (existingProduct) alreadyPairedDialogOpen = true;
 							} catch (error) {
-								throw new Error("Error getting product ID: " + error.message);
+								throw new Error("Error getting product ID: " + error.message, { cause: error });
 							}
 
 							// Set success

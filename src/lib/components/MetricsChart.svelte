@@ -1,4 +1,5 @@
 <script>
+	import { SvelteSet } from "svelte/reactivity";
 	import Label from "./ui/label/label.svelte";
 
 	let { metrics = [], hoveredTimestamp = $bindable(null) } = $props();
@@ -70,7 +71,7 @@
 		if (enabledKeys.has(key)) {
 			if (enabledKeys.size > 1) enabledKeys.delete(key);
 		} else enabledKeys.add(key);
-		enabledKeys = new Set(enabledKeys);
+		enabledKeys = new SvelteSet(enabledKeys);
 	}
 
 	function formatTime(timestamp) {
@@ -90,7 +91,9 @@
 				<span class="inline-block size-2" style="background: {s.color}"></span>
 				<Label>{s.label}</Label>
 				{#if hoveredPoint && enabledKeys.has(s.key)}
-					<Label class="text-muted-foreground tabular-nums">{(hoveredPoint[s.key] || 0).toFixed(1).padStart(4, '\u00A0')}{s.unit}</Label>
+					<Label class="text-muted-foreground tabular-nums"
+						>{(hoveredPoint[s.key] || 0).toFixed(1).padStart(4, "\u00A0")}{s.unit}</Label
+					>
 				{/if}
 			</button>
 		{/each}
@@ -167,7 +170,7 @@
 		{/if}
 	</svg>
 
-	<Label class="mt-1 text-muted-foreground block text-center">
+	<Label class="mt-1 block text-center text-muted-foreground">
 		{hoveredTimestamp ? formatTime(hoveredTimestamp) : "\u00A0"}
 	</Label>
 </div>

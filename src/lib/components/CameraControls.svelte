@@ -1,5 +1,5 @@
 <script>
-	import Button, { buttonVariants } from "./ui/button/button.svelte";
+	import { buttonVariants } from "./ui/button/button.svelte";
 	import Label from "./ui/label/label.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
@@ -19,7 +19,6 @@
 		toggleNotifications = () => {},
 		toggleEventDetection = () => {},
 		updateEventDetectionTypes = () => {},
-		loadDevices = () => {},
 		removeDevice = () => {},
 		restartProduct = () => {},
 		resetProduct = () => {},
@@ -126,8 +125,6 @@
 							: ''}"
 					>
 						<div class="flex flex-1 items-center gap-1 truncate">
-							<!-- svelte-ignore a11y_click_events_have_key_events -->
-							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 							<button
 								class="text-sm font-medium hover:underline active:underline"
 								onclick={() =>

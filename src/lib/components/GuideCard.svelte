@@ -11,6 +11,6 @@
 		<Card.Description>{subtitle}</Card.Description>
 	</Card.Header>
 	<Card.Footer>
-        <Button variant="outline" {href}>Read <RiArrowRightLine /></Button>
+		<Button variant="outline" {href}>Read <RiArrowRightLine /></Button>
 	</Card.Footer>
 </Card.Root>

@@ -4,13 +4,7 @@
 	import { buttonVariants } from "$lib/components/ui/button/index.js";
 	import { cn } from "$lib/utils.js";
 
-	let {
-		ref = $bindable(null),
-		class: className,
-		children,
-		variant = "ghost",
-		...restProps
-	} = $props();
+	let { ref = $bindable(null), class: className, children, variant = "ghost", ...restProps } = $props();
 </script>
 
 {#snippet Fallback()}
