@@ -87,8 +87,11 @@
 
 		tick().then(() => {
 			const el = eventElements[highlightEventId];
-			if (el && scrollElement)
-				scrollElement.scrollTop = el.offsetTop - scrollElement.clientHeight / 2 + el.clientHeight / 2;
+			if (el && scrollElement) {
+				const elRect = el.getBoundingClientRect();
+				const scrollRect = scrollElement.getBoundingClientRect();
+				scrollElement.scrollTop += elRect.top - scrollRect.top - scrollElement.clientHeight / 2 + el.clientHeight / 2;
+			}
 			setTimeout(() => (highlightedEventId = null), 1500);
 		});
 	});

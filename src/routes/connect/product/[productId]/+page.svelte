@@ -72,10 +72,13 @@
 	let tabsLoaded = $state({ [TABS.EVENTS]: false, [TABS.CONTROLS]: false, [TABS.HEALTH]: false });
 
 	// Switch to events tab and reload when navigating from a notification tap
+	let lastHandledEventIdParam = null;
 	$effect(() => {
-		if (!page.url.searchParams.get("event-id")) return;
+		const eventId = page.url.searchParams.get("event-id");
+		if (!eventId || eventId === lastHandledEventIdParam) return;
+		lastHandledEventIdParam = eventId;
 		activeTab = TABS.EVENTS;
-		if (relayCommInstance) relayCommInstance.onConnected(() => loadEvents());
+		if (!events.some((e) => e.id === eventId) && relayCommInstance) relayCommInstance.onConnected(() => loadEvents());
 	});
 
 	// Thumbnail IntersectionObserver
