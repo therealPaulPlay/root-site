@@ -7,15 +7,15 @@ import { getProduct } from "./pairedProductsStorage.js";
 export class Encryption {
 	#key;
 
-	static async initForProduct(productId) {
+	static async initForProduct(productId, usePrevious = false) {
 		const product = getProduct(productId);
 		if (!product) throw new Error("Product not found");
 
+		const privateKey = usePrevious ? product.previousDevicePrivateKey : product.devicePrivateKey;
+		if (!privateKey) throw new Error(usePrevious ? "No previous key available" : "No device key available");
+
 		const encryption = new Encryption();
-		encryption.#key = await Encryption.#deriveKey(
-			decodeKey(product.devicePrivateKey),
-			decodeKey(product.productPublicKey)
-		);
+		encryption.#key = await Encryption.#deriveKey(decodeKey(privateKey), decodeKey(product.productPublicKey));
 		return encryption;
 	}
 

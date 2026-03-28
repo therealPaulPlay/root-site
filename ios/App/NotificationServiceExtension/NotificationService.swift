@@ -38,11 +38,21 @@ class NotificationService: UNNotificationServiceExtension {
             if let error { log.error("Download failed: \(error.localizedDescription)") }
             guard let encryptedData = data, error == nil else { return }
 
-            guard let decrypted = Self.decrypt(
+            // Try current key, fall back to previous key
+            // Previous is needed if the product lost connection or otherwise failed during key renewal
+            let decrypted = Self.decrypt(
                 ciphertext: encryptedData,
                 devicePrivateKeyBase64: keys.devicePrivateKey,
                 productPublicKeyBase64: keys.productPublicKey
-            ) else {
+            ) ?? keys.previousDevicePrivateKey.flatMap {
+                Self.decrypt(
+                    ciphertext: encryptedData,
+                    devicePrivateKeyBase64: $0,
+                    productPublicKeyBase64: keys.productPublicKey
+                )
+            }
+
+            guard let decrypted else {
                 log.error("Decryption failed (\(encryptedData.count) bytes)")
                 return
             }
@@ -68,6 +78,7 @@ class NotificationService: UNNotificationServiceExtension {
     private struct ProductKeys {
         let productPublicKey: String
         let devicePrivateKey: String
+        let previousDevicePrivateKey: String?
     }
 
     private func getProductKeys(productId: String) -> ProductKeys? {
@@ -80,7 +91,11 @@ class NotificationService: UNNotificationServiceExtension {
               let privateKey = product["devicePrivateKey"] as? String else {
             return nil
         }
-        return ProductKeys(productPublicKey: publicKey, devicePrivateKey: privateKey)
+        return ProductKeys(
+            productPublicKey: publicKey,
+            devicePrivateKey: privateKey,
+            previousDevicePrivateKey: product["previousDevicePrivateKey"] as? String
+        )
     }
 
     // MARK: - Decryption (P-256 ECDH + HKDF + AES-256-GCM)

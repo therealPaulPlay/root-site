@@ -60,12 +60,15 @@ public class CustomMessagingService extends FirebaseMessagingService {
             if (json == null) return null;
 
             JSONArray products = new JSONArray(json);
-            String privKeyB64 = null, pubKeyB64 = null;
+            String privKeyB64 = null, pubKeyB64 = null, prevPrivKeyB64 = null;
             for (int i = 0; i < products.length(); i++) {
                 JSONObject p = products.getJSONObject(i);
                 if (productId.equals(p.getString("id"))) {
                     privKeyB64 = p.getString("devicePrivateKey");
                     pubKeyB64 = p.getString("productPublicKey");
+                    if (!p.isNull("previousDevicePrivateKey")) {
+                        prevPrivKeyB64 = p.getString("previousDevicePrivateKey");
+                    }
                     break;
                 }
             }
@@ -81,8 +84,12 @@ public class CustomMessagingService extends FirebaseMessagingService {
                 encrypted = buf.toByteArray();
             }
 
-            // Decrypt
+            // Try current key, fall back to previous key
+            // Previous key is needed if the product lost connection or otherwise failed during key renewal
             byte[] decrypted = decryptAesGcm(encrypted, privKeyB64, pubKeyB64);
+            if (decrypted == null && prevPrivKeyB64 != null) {
+                decrypted = decryptAesGcm(encrypted, prevPrivKeyB64, pubKeyB64);
+            }
             if (decrypted == null) return null;
             return BitmapFactory.decodeByteArray(decrypted, 0, decrypted.length);
         } catch (Exception e) {
@@ -90,7 +97,15 @@ public class CustomMessagingService extends FirebaseMessagingService {
         }
     }
 
-    private byte[] decryptAesGcm(byte[] ciphertext, String privKeyB64, String pubKeyB64) throws Exception {
+    private byte[] decryptAesGcm(byte[] ciphertext, String privKeyB64, String pubKeyB64) {
+        try {
+            return decryptAesGcmInner(ciphertext, privKeyB64, pubKeyB64);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private byte[] decryptAesGcmInner(byte[] ciphertext, String privKeyB64, String pubKeyB64) throws Exception {
         KeyFactory kf = KeyFactory.getInstance("EC");
         ECPrivateKey privKey = (ECPrivateKey) kf.generatePrivate(
             new PKCS8EncodedKeySpec(Base64.decode(privKeyB64, Base64.DEFAULT)));

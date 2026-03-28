@@ -5,15 +5,16 @@ import { getProduct, saveProduct } from "./pairedProductsStorage.js";
 
 export const RELAY_REQUEST_TIMEOUT = 10_000;
 const KEY_RENEWAL_MSG_TYPES = ["renewKey", "renewKeyAck"];
-const ERR_INTENTIONAL_DISCONNECT = "Intentional disconnect";
+const ERR_INTENTIONAL_DISCONNECT = "INTENTIONAL_DISCONNECT";
+const ERR_DECRYPTION_FAILED = "DECRYPTION_FAILED";
 
 export class RelayComm {
 	#ws = null;
 	#encryptions = new Map();
-	#prevEncryptions = new Map(); // productId -> previous encryption (temporary during key renewal)
 	#renewalPromises = new Map(); // productId -> Promise (for ongoing renewals)
 	#handlers = new Map();
 	#pendingRequestTimeouts = new Map(); // requestId -> timeout handle
+	#surfaceDecryptionError = new Set(); // Controls retry gating in #send and error suppression + promise resolution deferral in #handleMessage
 	#reconnectTimeout;
 	#connectionLostToastTimeout;
 	#reconnectAttempt = 0;
@@ -156,27 +157,20 @@ export class RelayComm {
 				);
 			}
 
-			// Step 2: Store old encryption temporarily for in-flight chunks
-			const oldEncryption = this.#encryptions.get(productId);
-			if (oldEncryption) {
-				this.#prevEncryptions.set(productId, oldEncryption);
-				setTimeout(() => this.#prevEncryptions.delete(productId), 30_000);
-			}
-
-			// Step 3: Switch to NEW key locally
+			// Step 2: Commit new key optimistically, persist old key for divergence recovery
 			const product = getProduct(productId);
+			product.previousDevicePrivateKey = product.devicePrivateKey;
 			product.devicePrivateKey = encodeKey(newKeypair.privateKey);
 			product.keyCreatedAt = Date.now();
 			saveProduct(product);
-			this.#encryptions.delete(productId); // Clear cache so next call uses new key
+			this.#encryptions.delete(productId); // Clear cache so next call derives from new key
 
-			// Step 4: Send ACK (encrypted with NEW key), wait for confirmation
-			const ackResult = await this.#send(productId, "renewKeyAck", { ack: true });
-
-			if (!ackResult.payload.success) {
-				throw new Error(
-					`Key renewal ACK for product ${productId} failed: ` + (ackResult.payload.error || "Unknown error")
-				);
+			// Step 3: Send ACK (encrypted with NEW key), await so no messages are sent before the product switches keys
+			// Non-fatal if it fails — mismatch will be detected and reverted on the next firmware-side decryption failure
+			try {
+				await this.#send(productId, "renewKeyAck", { ack: true });
+			} catch {
+				console.warn(`Key renewal ACK for product ${productId} not confirmed (will reconcile on next message).`);
 			}
 
 			console.log(`Key renewed for product: ${productId}`);
@@ -187,20 +181,26 @@ export class RelayComm {
 	}
 
 	async #handleMessage(msg) {
-		// Decrypt and decode payload (encrypted CBOR -> decrypted bytes -> CBOR decode)
-		// Unencrypted error payloads are already CBOR objects, encrypted ones are Uint8Array
-		if (msg.payload instanceof Uint8Array) msg.payload = await this.#decryptPayload(msg);
+		// Payload should be CBOR bytes — decrypt first if encrypted, then decode
+		if (!(msg.payload instanceof Uint8Array)) {
+			console.warn("Received non-CBOR payload, ignoring.");
+			return;
+		}
+		msg.payload = decode(await this.#decryptPayload(msg) ?? msg.payload);
 
-		// Route to handlers
-		const handlers = this.#handlers.get(msg.type);
-		if (handlers) {
-			handlers.forEach((handler) => {
-				try {
-					handler(msg);
-				} catch (err) {
-					console.error(`Error in handler for '${msg.type}':`, err);
-				}
-			});
+		// Suppress decryption errors unless explicitly marked to surface (after retry or no previous key)
+		const suppressDecryptionError = msg.payload?.errorCode === ERR_DECRYPTION_FAILED && !this.#surfaceDecryptionError.has(msg.requestId);
+		if (!suppressDecryptionError) {
+			const handlers = this.#handlers.get(msg.type);
+			if (handlers) {
+				handlers.forEach((handler) => {
+					try {
+						handler(msg);
+					} catch (err) {
+						console.error(`Error in handler for '${msg.type}':`, err);
+					}
+				});
+			}
 		}
 
 		// Clear pending request timeout and resolve promise with the message
@@ -216,20 +216,16 @@ export class RelayComm {
 		const encryption = await this.#getEncryption(msg.originId);
 		const aad = await computeAAD(msg.type, msg.originId, msg.targetId);
 		try {
-			const decrypted = await encryption.decrypt(msg.payload, aad);
-			return decode(decrypted);
-		} catch (decryptError) {
-			// Retry with old key if available (for in-flight chunks during key renewal)
-			const prevEncryption = this.#prevEncryptions.get(msg.originId);
-			if (prevEncryption) {
-				try {
-					const decrypted = await prevEncryption.decrypt(msg.payload, aad);
-					return decode(decrypted);
-				} catch {
-					throw decryptError; // Both keys failed, re-throw original error
-				}
-			} else {
-				throw decryptError;
+			return await encryption.decrypt(msg.payload, aad);
+		} catch {
+			// Retry with previous key if available (for in-flight messages after key renewal)
+			try {
+				console.warn("Failed to decrypt, retrying with previous key.");
+				const prevEncryption = await Encryption.initForProduct(msg.originId, true);
+				return await prevEncryption.decrypt(msg.payload, aad);
+			} catch {
+				console.warn("Failed to decrypt with previous key.");
+				return null; // Not encrypted (e.g. unencrypted error response) or both keys failed
 			}
 		}
 	}
@@ -244,6 +240,17 @@ export class RelayComm {
 			}); // Discard resolve value + intentional errors
 		promise.requestId = inner.requestId;
 		return promise;
+	}
+
+	#revertToPreviousKey(productId) {
+		const product = getProduct(productId);
+		if (!product?.previousDevicePrivateKey) return;
+		console.warn(`Product ${productId} reports decryption failure, reverting to previous key.`);
+		product.devicePrivateKey = product.previousDevicePrivateKey;
+		product.previousDevicePrivateKey = null;
+		product.keyCreatedAt = Date.now();
+		saveProduct(product);
+		this.#encryptions.delete(productId);  // Delete cached encryption so that it's re-created using the previous key
 	}
 
 	#send(productId, type, data = {}) {
@@ -263,7 +270,7 @@ export class RelayComm {
 			// Check again after encryption awaits — disconnect() may have been called
 			if (this.#intentionalDisconnect) throw new Error(ERR_INTENTIONAL_DISCONNECT);
 
-			return new Promise((resolve, reject) => {
+			const msg = await new Promise((resolve, reject) => {
 				const timeout = setTimeout(() => {
 					this.#pendingRequestTimeouts.delete(requestId);
 					reject(new Error(`Request ${type} to product ${productId} timed out`));
@@ -281,6 +288,16 @@ export class RelayComm {
 					})
 				);
 			});
+
+			// On decryption failure: revert to previous key if available, then retry once
+			if (msg?.payload?.errorCode === ERR_DECRYPTION_FAILED && !this.#surfaceDecryptionError.has(requestId)) {
+				this.#revertToPreviousKey(productId);
+				const retry = this.#send(productId, type, data);
+				this.#surfaceDecryptionError.add(retry.requestId);
+				return retry.finally(() => this.#surfaceDecryptionError.delete(retry.requestId));
+			}
+
+			return msg;
 		})();
 
 		promise.requestId = requestId;
@@ -322,6 +339,7 @@ export class RelayComm {
 			reject(new Error(ERR_INTENTIONAL_DISCONNECT));
 		});
 		this.#pendingRequestTimeouts.clear();
+		this.#surfaceDecryptionError.clear();
 		this.#onConnectQueue = [];
 	}
 }
