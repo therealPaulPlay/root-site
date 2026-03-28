@@ -22,7 +22,7 @@
 
 	let logsContainer = $state();
 	let hoveredTimestamp = $state(null);
-	let initialScrollDone = $state(false);
+	let prevLogs = $state(null);
 
 	// Index of the single nearest log to the hovered timestamp (within 2s)
 	const highlightedLogIndex = $derived.by(() => {
@@ -39,11 +39,11 @@
 		return closestDist <= 30 * 1000 ? closest : -1;
 	});
 
-	// Scroll to bottom on initial load
+	// Scroll to bottom whenever logs data changes
 	$effect(() => {
-		if (logsContainer && health?.logs?.length && activeTab === healthTab && !initialScrollDone) {
+		if (logsContainer && health?.logs?.length && activeTab === healthTab && health?.logs !== prevLogs) {
+			prevLogs = health?.logs;
 			logsContainer.scrollTop = logsContainer.scrollHeight;
-			initialScrollDone = true;
 		}
 	});
 
