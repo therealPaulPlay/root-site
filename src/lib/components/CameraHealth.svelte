@@ -105,7 +105,7 @@
 					</div>
 				{/if}
 				{#if updateStatus.error}
-					<div class="border p-4 text-center text-muted-foreground">
+					<div class="border p-4 text-center text-muted-foreground select-text">
 						Error: {updateStatus.error}
 					</div>
 				{/if}
