@@ -197,8 +197,8 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Switch to dev version?</AlertDialog.Title>
 			<AlertDialog.Description
-				>This sets the firmware version to dev and checks for updates. Currently, this does not install a different
-				firmware, it just allows for re-installing the same firmware.</AlertDialog.Description
+				>This sets the firmware version to dev and checks for updates. This allows for installing in-dev updates. The
+				dev flag reverts after a reboot, but the firmware does not.</AlertDialog.Description
 			>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
