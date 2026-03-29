@@ -71,7 +71,7 @@
 	let currentWifiSSID = $state();
 	let showWifiPassword = $state(false);
 	let wifiPasswordInput = $state();
-	let wifiCountryCode = $state();
+	let wifiCountryCode = $state(""); // Has to be "", not null, to match the default <option> value
 	let relayDomainInput = $state(OFFICIAL_RELAY_DOMAIN);
 	let currentRelayDomain = $state();
 	let pendingWifiNetwork = $state(null);
@@ -413,7 +413,7 @@
 										onclick={() => {
 											pendingWifiNetwork = network;
 											wifiPasswordInput = null;
-											wifiCountryCode = null;
+											wifiCountryCode = "";
 											wifiConnectDialogOpen = true;
 										}}
 										class="flex w-full items-center justify-between gap-2 border-b p-2 hover:bg-accent/50 active:bg-accent/50 {network.ssid ===
@@ -455,9 +455,7 @@
 
 			{#if step == 6}
 				{#if !relayConfigured}
-					<p class="max-w-3xl">
-						Please set a relay domain. Custom relay servers give extra flexibility for advanced users.
-					</p>
+					<p class="max-w-3xl">Please set a relay domain. Advanced users can use a custom relay server.</p>
 				{:else}
 					<p class="max-w-3xl">The relay domain is configured. It can be adjusted below.</p>
 				{/if}
