@@ -87,6 +87,12 @@
 						<span>{updateStatus.status}</span>
 					</div>
 				{/if}
+				{#if updateStatus.currentSlot}
+					<div class="flex justify-between">
+						<span class="text-muted-foreground">Slot</span>
+						<span>{updateStatus.currentSlot}</span>
+					</div>
+				{/if}
 				{#if updateStatus.availableVersion}
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">Available</span>

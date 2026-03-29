@@ -697,12 +697,9 @@
 			toast.error("Failed to load update status: " + msg.payload.error || "Unknown error");
 			return;
 		}
-		updateStatus = {
-			status: msg.payload.status,
-			currentVersion: msg.payload.currentVersion,
-			availableVersion: msg.payload.availableVersion,
-			error: msg.payload.error
-		};
+		// eslint-disable-next-line no-unused-vars
+		const { success, ...status } = msg.payload;
+		updateStatus = status;
 	}
 
 	function startUpdate() {
