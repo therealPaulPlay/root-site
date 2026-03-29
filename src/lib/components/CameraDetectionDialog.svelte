@@ -36,7 +36,7 @@
 		</Dialog.Header>
 		{#if event}
 			<div
-				class="relative flex w-full items-center justify-center overflow-hidden border bg-foreground"
+				class="relative flex w-full items-center justify-center overflow-hidden border bg-muted"
 				style:aspect-ratio="{imgW || 16}/{imgH || 9}"
 			>
 				{#if thumbnailSrc}
@@ -69,13 +69,13 @@
 						{/each}
 					{:else}
 						<p
-							class="absolute inset-0 h-full w-full content-center bg-foreground/50 p-8 text-center text-sm text-background"
+							class="absolute inset-0 h-full w-full content-center bg-muted-foreground p-8 text-center text-sm text-background"
 						>
 							No detection data available.
 						</p>
 					{/if}
 				{:else}
-					<RiFileUnknowLine class="size-8 text-background" />
+					<RiFileUnknowLine class="size-8" />
 				{/if}
 			</div>
 		{/if}

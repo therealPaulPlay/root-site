@@ -326,11 +326,11 @@
 				</div>
 			</div>
 			<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted" {@attach observeThumbnail(event.id)}>
-				{#if eventThumbnails[event.id]}
+				{#if eventThumbnails[event.id] && eventThumbnails[event.id] !== "error"}
 					<img src={eventThumbnails[event.id]} alt="Event thumbnail" class="h-full w-full object-cover" />
 				{:else}
 					<div class="flex h-full w-full items-center justify-center">
-						{#if loadingThumbnails.has(event.id) || thumbnailQueue.includes(event.id)}
+						{#if !eventThumbnails[event.id] && (loadingThumbnails.has(event.id) || thumbnailQueue.includes(event.id))}
 							<Spinner class="size-4" />
 						{:else}
 							<RiErrorWarningLine class="size-4" />
@@ -528,7 +528,7 @@
 <CameraDetectionDialog
 	bind:open={detectionDialogOpen}
 	event={detectionEvent}
-	thumbnailSrc={detectionEvent ? eventThumbnails[detectionEvent.id] : null}
+	thumbnailSrc={detectionEvent && eventThumbnails[detectionEvent.id] !== "error" ? eventThumbnails[detectionEvent.id] : null}
 />
 
 <style>

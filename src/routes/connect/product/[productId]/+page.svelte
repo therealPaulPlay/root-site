@@ -160,7 +160,7 @@
 			cleanupRecording();
 			clearTimeout(thumbnailDrainTimeout);
 			streamHandle?.cleanup();
-			for (const url of Object.values(eventThumbnails)) URL.revokeObjectURL(url);
+			for (const url of Object.values(eventThumbnails)) if (url !== "error") URL.revokeObjectURL(url);
 			relayCommInstance?.disconnect();
 		};
 	});
@@ -225,7 +225,10 @@
 			const id = thumbnailQueue.shift();
 			thumbnailsThisSecond++;
 			loadingThumbnails.add(id);
-			relayCommInstance.send(productId, "getThumbnail", { id }).catch(() => loadingThumbnails.delete(id));
+			relayCommInstance.send(productId, "getThumbnail", { id }).catch(() => {
+				loadingThumbnails.delete(id);
+				eventThumbnails[id] = "error";
+			});
 		}
 	}
 
@@ -235,9 +238,12 @@
 	}
 
 	function handleThumbnailResult(msg) {
-		if (!msg.payload.success) return toast.error("Failed to get thumbnail: " + msg.payload.error || "Unknown error");
-		eventThumbnails[msg.payload.eventId] = URL.createObjectURL(new Blob([msg.payload.data], { type: "image/jpeg" }));
 		loadingThumbnails.delete(msg.payload.eventId);
+		if (!msg.payload.success) {
+			eventThumbnails[msg.payload.eventId] = "error";
+			return;
+		}
+		eventThumbnails[msg.payload.eventId] = URL.createObjectURL(new Blob([msg.payload.data], { type: "image/jpeg" }));
 	}
 
 	let recordingDuration = 0;
