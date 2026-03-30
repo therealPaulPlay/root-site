@@ -632,7 +632,7 @@
 			return;
 		}
 		restartDialogOpen = false;
-		toast.success("Restarting!");
+		toast.success("Restarting.");
 		setTimeout(() => {
 			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
 		}, 1000);
@@ -654,7 +654,7 @@
 			return;
 		}
 		resetDialogOpen = false;
-		toast.success("Reset initiated!");
+		toast.success("Reset initiated.");
 		removeProduct(msg.originId); // Remove product, since factory resetting will remove all paired devices
 		setTimeout(() => {
 			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
@@ -724,7 +724,7 @@
 			return;
 		}
 		updateDialogOpen = false;
-		toast.success("Update started!");
+		toast.success("Update started.");
 		loadUpdateStatus();
 	}
 
@@ -744,7 +744,7 @@
 			return;
 		}
 		devDialogOpen = false;
-		toast.success("Version set to dev!");
+		toast.success("Version set to dev.");
 		loadUpdateStatus();
 	}
 </script>
