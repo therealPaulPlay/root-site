@@ -352,16 +352,18 @@
 		onRefresh={() => {
 			if (relayCommInstance && products.length) relayCommInstance.onConnected(refreshAll);
 		}}
-		class="of-top of-bottom -mt-px gap-8 space-y-8 pb-8"
+		class="of-top of-bottom -mt-px space-y-10 pb-10"
 	>
 		{#if products.length}
 			{#each products as product}
 				{@render productItem(product)}
 			{/each}
 		{:else}
-			<Label class="mx-auto my-auto overflow-hidden text-nowrap"
-				>Click "<RiVideoAddLine class="-mx-1.25 size-4!" />" to connect a camera.</Label
-			>
+			<div class="flex h-full w-full items-center justify-center">
+				<Label class="min-w-fit overflow-hidden text-nowrap"
+					>Click "<RiVideoAddLine class="-mx-1.25 size-4!" />" to connect a camera.</Label
+				>
+			</div>
 		{/if}
 	</PullToRefresh>
 </div>

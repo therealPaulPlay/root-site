@@ -49,6 +49,7 @@
 	let eventDetectionEnabled = $state(false);
 	let eventDetectionTypes = $state([]);
 	let notificationsEnabled = $state(false);
+	let notificationCooldown = $state(0);
 
 	// Dialog open states (closed on success)
 	let restartDialogOpen = $state(false);
@@ -137,6 +138,7 @@
 				relayCommInstance.on("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
 				relayCommInstance.on("getNotificationsResult", handleGetNotificationsResult);
 				relayCommInstance.on("setNotificationsResult", handleSetNotificationsResult);
+				relayCommInstance.on("setNotificationCooldownResult", handleSetNotificationCooldownResult);
 				relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
 				relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
 				relayCommInstance.on("getHealthResult", handleHealthResult);
@@ -498,12 +500,16 @@
 		eventDetectionEnabled = msg.payload.enabled;
 	}
 
+	let previousEventDetectionTypes = [];
+	
 	function updateEventDetectionTypes() {
 		loading.set("eventDetectionTypes", true);
+		previousEventDetectionTypes = [...eventDetectionTypes];
 		relayCommInstance
 			.send(productId, "setEventDetectionTypes", { enabledTypes: eventDetectionTypes })
 			.catch((error) => {
-				toast.error("Failed to update event detection types: " + error.message || "Unknown error");
+				eventDetectionTypes = previousEventDetectionTypes;
+				toast.error("Failed to update event detection types: " + error.message);
 				console.error("Failed to update event detection types:", error);
 				loading.set("eventDetectionTypes", false);
 			});
@@ -512,6 +518,7 @@
 	function handleSetEventDetectionTypesResult(msg) {
 		loading.set("eventDetectionTypes", false);
 		if (!msg.payload.success) {
+			eventDetectionTypes = previousEventDetectionTypes;
 			toast.error("Failed to set event detection types: " + msg.payload.error || "Unknown error");
 			return;
 		}
@@ -534,6 +541,7 @@
 			return;
 		}
 		notificationsEnabled = msg.payload.enabled;
+		notificationCooldown = msg.payload.cooldownMinutes;
 	}
 
 	async function toggleNotifications() {
@@ -575,6 +583,29 @@
 			return;
 		}
 		notificationsEnabled = msg.payload.enabled;
+	}
+
+	let previousCooldown = 0;
+
+	function updateNotificationCooldown() {
+		loading.set("notificationCooldown", true);
+		previousCooldown = notificationCooldown;
+		relayCommInstance.send(productId, "setNotificationCooldown", { cooldownMinutes: notificationCooldown }).catch((error) => {
+			notificationCooldown = previousCooldown;
+			toast.error("Failed to update notification cooldown: " + error.message);
+			console.error("Failed to update notification cooldown:", error);
+			loading.set("notificationCooldown", false);
+		});
+	}
+
+	function handleSetNotificationCooldownResult(msg) {
+		loading.set("notificationCooldown", false);
+		if (!msg.payload.success) {
+			notificationCooldown = previousCooldown;
+			toast.error("Failed to update notification cooldown: " + msg.payload.error || "Unknown error");
+			return;
+		}
+		notificationCooldown = msg.payload.cooldownMinutes;
 	}
 
 	function loadDevices() {
@@ -872,6 +903,7 @@
 						{toggleMicrophone}
 						{toggleRecordingSound}
 						{toggleNotifications}
+						{updateNotificationCooldown}
 						{toggleEventDetection}
 						{updateEventDetectionTypes}
 						{removeDevice}
@@ -882,6 +914,7 @@
 						bind:eventDetectionEnabled
 						bind:eventDetectionTypes
 						bind:notificationsEnabled
+						bind:notificationCooldown
 						{devices}
 					/>
 				</PullToRefresh>

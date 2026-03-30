@@ -4,10 +4,14 @@
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
+	import * as Slider from "$lib/components/ui/slider";
 	import { RiCheckLine, RiCloseLine, RiFileShredLine, RiRestartLine } from "svelte-remixicon";
 	import Switch from "./ui/switch/switch.svelte";
 	import { toast } from "svelte-sonner";
 	import { vibrate } from "$lib/utils/haptics";
+
+	const COOLDOWN_STEPS = [0, 1, 5, 10, 30];
+	let cooldownSliderValue = $derived([Math.max(0, COOLDOWN_STEPS.indexOf(notificationCooldown))]);
 
 	let {
 		loading,
@@ -17,6 +21,7 @@
 		toggleMicrophone = () => {},
 		toggleRecordingSound = () => {},
 		toggleNotifications = () => {},
+		updateNotificationCooldown = () => {},
 		toggleEventDetection = () => {},
 		updateEventDetectionTypes = () => {},
 		removeDevice = () => {},
@@ -27,21 +32,60 @@
 		eventDetectionEnabled = $bindable(),
 		eventDetectionTypes = $bindable([]),
 		notificationsEnabled = $bindable(),
+		notificationCooldown = $bindable(0),
 		devices = []
 	} = $props();
 </script>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between gap-4 border p-4">
-		<div class="pr-6">
-			<Label class="text-base">Push notifications</Label>
-			<p class="text-sm text-muted-foreground">Get notified when events are detected.</p>
+	<div class="space-y-4 border p-4">
+		<div class="flex items-center justify-between gap-4">
+			<div class="pr-6">
+				<Label class="text-base">Push notifications</Label>
+				<p class="text-sm text-muted-foreground">Get notified when events are detected.</p>
+			</div>
+			<Switch
+				onCheckedChange={toggleNotifications}
+				disabled={loading.is("notifications")}
+				bind:checked={notificationsEnabled}
+			/>
 		</div>
-		<Switch
-			onCheckedChange={toggleNotifications}
-			disabled={loading.is("notifications")}
-			bind:checked={notificationsEnabled}
-		/>
+		<div class="space-y-4" class:opacity-50={!notificationsEnabled} class:pointer-events-none={!notificationsEnabled}>
+			<Label class="text-sm">Cooldown</Label>
+			<div class="px-2.5">
+				<Slider.Root
+					min={0}
+					max={COOLDOWN_STEPS.length - 1}
+					step={1}
+					thumbPositioning="exact"
+					bind:value={cooldownSliderValue}
+					onValueChange={() => vibrate.light()}
+					onValueCommit={(value) => {
+						const newValue = COOLDOWN_STEPS[value[0]];
+						if (newValue !== notificationCooldown) {
+							notificationCooldown = newValue;
+							updateNotificationCooldown();
+						}
+					}}
+				/>
+			</div>
+			<div class="relative h-4">
+				{#each COOLDOWN_STEPS as step, i}
+					<span
+						class="absolute text-xs text-muted-foreground text-nowrap {i === 0
+							? ''
+							: i === COOLDOWN_STEPS.length - 1
+								? '-translate-x-full'
+								: '-translate-x-1/2'}"
+						style="left: {i === 0 || i === COOLDOWN_STEPS.length - 1
+							? `${(i / (COOLDOWN_STEPS.length - 1)) * 100}%`
+							: `calc(0.625rem + ${(i / (COOLDOWN_STEPS.length - 1)) * 100}% - ${(i / (COOLDOWN_STEPS.length - 1)) * 1.25}rem)`}"
+					>
+						{step === 0 ? "off" : step + " min"}
+					</span>
+				{/each}
+			</div>
+		</div>
 	</div>
 
 	<div class="flex items-center justify-between gap-4 border p-4">

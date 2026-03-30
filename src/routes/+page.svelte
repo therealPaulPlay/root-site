@@ -155,7 +155,7 @@
 
 	const privacyIssueArticleSnippets = [
 		{
-			text: "Eufy failed to encrypt a portion of video streams and made private home footage accessible to other unauthenticated users.",
+			text: "Eufy failed to encrypt a portion of video streams and made private home footage accessible to unauthenticated users.",
 			source:
 				"https://ag.ny.gov/press-release/2025/attorney-general-james-secures-450000-companies-selling-home-security-cameras?utm_source=chatgpt.com",
 			sourceName: "NY AG"
