@@ -81,7 +81,7 @@
 							? `${(i / (COOLDOWN_STEPS.length - 1)) * 100}%`
 							: `calc(0.625rem + ${(i / (COOLDOWN_STEPS.length - 1)) * 100}% - ${(i / (COOLDOWN_STEPS.length - 1)) * 1.25}rem)`}"
 					>
-						{step === 0 ? "off" : step + " min"}
+						{step === 0 ? "Off" : step + " min"}
 					</span>
 				{/each}
 			</div>
