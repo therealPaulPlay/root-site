@@ -504,9 +504,9 @@
 						if (scrubBarEl?.hasPointerCapture(e.pointerId)) scrubTo(e.clientX);
 					}}
 				>
-					<div class="relative h-2 w-full bg-white/25">
+					<div class="relative h-2 w-full bg-background/25 dark:bg-foreground/25">
 						<div
-							class="pointer-events-none absolute inset-y-0 left-0 bg-white"
+							class="pointer-events-none absolute inset-y-0 left-0 bg-background dark:bg-foreground"
 							style:width={(videoDuration ? (videoCurrentTime / videoDuration) * 100 : 0) + "%"}
 						></div>
 					</div>
