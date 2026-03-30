@@ -34,7 +34,6 @@
 	let renameDialogOpen = $state({});
 	let removeDialogOpen = $state({});
 	let renameValue = $state({});
-	let idForProductVisible = $state();
 
 	let offScreenTimers = {};
 	let visibleProducts = new SvelteSet();
@@ -248,7 +247,6 @@
 			/>
 		</div>
 		<div class="flex grow overflow-hidden">
-			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<div class="flex grow flex-col overflow-hidden p-4">
 				<span class="inline-flex items-center gap-1 overflow-hidden text-nowrap"
 					><h3 class="truncate text-xl">{product.name}</h3>
@@ -325,7 +323,7 @@
 						</AlertDialog.Content>
 					</AlertDialog.Root>
 				</span>
-				<span class="mt-0.5 mb-6 inline-flex items-center gap-2 text-nowrap">
+				<span class="mt-0.5 mb-2 inline-flex items-center gap-2 text-nowrap">
 					<span
 						class="inline-flex items-center gap-1 overflow-hidden bg-accent px-1 text-xs uppercase transition"
 						class:opacity-0={!updateStatuses[product.id]?.status || updateStatuses[product.id]?.status == "up-to-date"}
@@ -334,17 +332,6 @@
 						<p class="truncate">{updateStatuses[product.id]?.status?.replaceAll("-", " ") || "N/A"}</p>
 					</span>
 				</span>
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<p
-					class="mt-auto w-fit max-w-full overflow-hidden text-xs text-nowrap text-muted-foreground"
-					class:truncate={idForProductVisible === product.id}
-					onclick={() =>
-						idForProductVisible === product.id ? (idForProductVisible = null) : (idForProductVisible = product.id)}
-				>
-					ID: <span class={"select-text" + (idForProductVisible == product.id ? "" : " bg-accent text-transparent")}
-						>{product.id}</span
-					>
-				</p>
 			</div>
 			<div class="flex h-full flex-col border-l">
 				<Button
@@ -365,7 +352,7 @@
 		onRefresh={() => {
 			if (relayCommInstance && products.length) relayCommInstance.onConnected(refreshAll);
 		}}
-		class="of-top of-bottom -mt-px flex flex-col items-center justify-start gap-8 pb-30"
+		class="of-top of-bottom -mt-px gap-8 space-y-8 pb-8"
 	>
 		{#if products.length}
 			{#each products as product}

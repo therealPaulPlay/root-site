@@ -14,6 +14,7 @@
 		updateStatus,
 		activeTab,
 		healthTab = "",
+		productId,
 		devDialogOpen = $bindable(false),
 		updateDialogOpen = $bindable(false),
 		startUpdate = () => {},
@@ -69,10 +70,6 @@
 		<div class="space-y-4 border p-4">
 			<Label class="text-base">Firmware</Label>
 			<div class="space-y-2 text-sm">
-				<div class="flex justify-between">
-					<span class="text-muted-foreground">Model</span>
-					<span>{model || "N/A"}</span>
-				</div>
 				{#if updateStatus.currentVersion}
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">Version</span>
@@ -157,6 +154,20 @@
 						<span>{Math.floor(health.uptimeSeconds / 3600)}h {Math.floor((health.uptimeSeconds % 3600) / 60)}m</span>
 					</div>
 				{/if}
+			</div>
+		</div>
+
+		<div class="space-y-4 border p-4">
+			<Label class="text-base">Product</Label>
+			<div class="space-y-2 text-sm">
+				<div class="flex justify-between">
+					<span class="text-muted-foreground">Model</span>
+					<span>{model || "N/A"}</span>
+				</div>
+				<div class="flex justify-between gap-4">
+					<span class="text-muted-foreground">ID</span>
+					<span class="text-end select-text text-xs leading-5">{productId || "N/A"}</span>
+				</div>
 			</div>
 		</div>
 

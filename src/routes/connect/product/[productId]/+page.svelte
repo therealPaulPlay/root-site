@@ -903,6 +903,7 @@
 						model={product?.model}
 						{updateStatus}
 						{activeTab}
+						{productId}
 						healthTab={TABS.HEALTH}
 						{startUpdate}
 						{setVersionDev}
