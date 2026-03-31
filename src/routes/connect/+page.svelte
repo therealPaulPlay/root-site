@@ -5,14 +5,7 @@
 	import { getAllProducts, removeProduct, saveProduct } from "$lib/utils/pairedProductsStorage";
 	import { createRelayInstance } from "$lib/utils/createRelayInstance";
 	import { onMount } from "svelte";
-	import {
-		RiArrowRightSLine,
-		RiDeleteBinLine,
-		RiDownload2Line,
-		RiEdit2Line,
-		RiSettings3Line,
-		RiVideoAddLine
-	} from "svelte-remixicon";
+	import { RiDeleteBinLine, RiDownload2Line, RiEdit2Line, RiSettings3Line, RiVideoAddLine } from "svelte-remixicon";
 	import { toast } from "svelte-sonner";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
@@ -21,6 +14,7 @@
 	import { StreamManager } from "$lib/utils/streamManager.svelte.js";
 	import { LoadingState } from "$lib/utils/loadingState.svelte.js";
 	import { SvelteSet } from "svelte/reactivity";
+	import { goto } from "$app/navigation";
 
 	const loading = new LoadingState();
 
@@ -234,11 +228,24 @@
 	{@const isRenameDialogOpen = renameDialogOpen[product.id] ?? false}
 	{@const isRemoveDialogOpen = removeDialogOpen[product.id] ?? false}
 	{@const stream = streamHandles[product.id]}
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
-		class="relative flex h-fit min-h-32 w-full shrink-0 border-y max-lg:flex-wrap"
+		class="relative flex h-fit min-h-32 w-full shrink-0 border-y max-lg:flex-wrap [&:not(:has(button:hover,button:active))]:hover:bg-muted [&:not(:has(button:hover,button:active))]:active:bg-muted"
+		role="button"
+		tabindex="0"
+		onclick={() => {
+			goto("/connect/product/" + product.id);
+		}}
 		{@attach observeProduct(product.id)}
 	>
-		<div class="w-full overflow-hidden max-lg:border-b lg:w-1/3 lg:border-r">
+		<div class="relative overflow-hidden max-lg:w-full max-lg:border-b lg:w-1/3 lg:border-r">
+			<span
+				class="absolute top-4 z-1 inline-flex h-fit items-center gap-1 overflow-hidden border bg-background px-2 py-1 text-xs uppercase transition max-lg:right-4 lg:left-4"
+				class:opacity-0={!updateStatuses[product.id]?.status || updateStatuses[product.id]?.status == "up-to-date"}
+			>
+				<RiDownload2Line class="size-3! shrink-0" />
+				<p class="truncate">{updateStatuses[product.id]?.status?.replaceAll("-", " ") || "N/A"}</p>
+			</span>
 			<StreamPlayer
 				bind:videoElement={streamVideoElements[product.id]}
 				streamLoading={stream?.loading ?? true}
@@ -246,101 +253,86 @@
 				showControls={false}
 			/>
 		</div>
-		<div class="flex grow overflow-hidden">
-			<div class="flex grow flex-col overflow-hidden p-4">
-				<span class="inline-flex items-center gap-1 overflow-hidden text-nowrap"
-					><h3 class="truncate text-xl">{product.name}</h3>
-					<AlertDialog.Root
-						open={isRenameDialogOpen}
-						onOpenChange={(open) => {
-							renameDialogOpen[product.id] = open;
-						}}
-					>
-						<AlertDialog.Trigger
-							class="{buttonVariants({ variant: 'ghost' })} ml-1 h-fit! px-1!"
-							onclick={() => {
-								renameValue[product.id] = product.name;
-							}}
-						>
-							<RiEdit2Line />
-						</AlertDialog.Trigger>
-						<AlertDialog.Content>
-							<AlertDialog.Header>
-								<AlertDialog.Title>Edit name</AlertDialog.Title>
-							</AlertDialog.Header>
-							<div class="flex flex-col gap-4">
-								<div class="space-y-1">
-									<Label for="product-name" class="text-sm font-medium">Name</Label>
-									<Input
-										type="text"
-										id="product-name"
-										bind:value={renameValue[product.id]}
-										placeholder="New name"
-										onkeydown={(e) => {
-											if (e.key === "Enter") handleRename(product);
-										}}
-									/>
-								</div>
-								<AlertDialog.Footer>
-									<AlertDialog.Cancel disabled={loading.is(`rename-${product.id}`)}>Cancel</AlertDialog.Cancel>
-									<AlertDialog.Action
-										disabled={loading.is(`rename-${product.id}`) || product.name === renameValue[product.id]?.trim()}
-										onclick={() => handleRename(product)}
-									>
-										{#if loading.is(`rename-${product.id}`)}<Spinner />{/if}
-										Rename
-									</AlertDialog.Action>
-								</AlertDialog.Footer>
-							</div>
-						</AlertDialog.Content>
-					</AlertDialog.Root>
-					<AlertDialog.Root
-						open={isRemoveDialogOpen}
-						onOpenChange={(open) => {
-							removeDialogOpen[product.id] = open;
-						}}
-					>
-						<AlertDialog.Trigger class="{buttonVariants({ variant: 'ghost' })} h-fit! px-1!">
-							<RiDeleteBinLine />
-						</AlertDialog.Trigger>
-						<AlertDialog.Content>
-							<AlertDialog.Header>
-								<AlertDialog.Title>Remove?</AlertDialog.Title>
-								<AlertDialog.Description
-									>Unpair "{product.name}" and remove it from this device.</AlertDialog.Description
-								>
-							</AlertDialog.Header>
-							<AlertDialog.Footer>
-								<AlertDialog.Cancel disabled={loading.is(`remove-${product.id}`)}>Cancel</AlertDialog.Cancel>
-								<AlertDialog.Action
-									disabled={loading.is(`remove-${product.id}`)}
-									onclick={() => removeProductAndRemoveDevice(product.id)}
-								>
-									{#if loading.is(`remove-${product.id}`)}<Spinner />{/if}
-									Remove
-								</AlertDialog.Action>
-							</AlertDialog.Footer>
-						</AlertDialog.Content>
-					</AlertDialog.Root>
-				</span>
-				<span class="mt-0.5 mb-2 inline-flex items-center gap-2 text-nowrap">
-					<span
-						class="inline-flex items-center gap-1 overflow-hidden bg-accent px-1 text-xs uppercase transition"
-						class:opacity-0={!updateStatuses[product.id]?.status || updateStatuses[product.id]?.status == "up-to-date"}
-					>
-						<RiDownload2Line class="size-3! shrink-0" />
-						<p class="truncate">{updateStatuses[product.id]?.status?.replaceAll("-", " ") || "N/A"}</p>
-					</span>
-				</span>
-			</div>
-			<div class="flex h-full flex-col border-l">
-				<Button
-					variant="ghost"
-					class="grow"
-					href={"/connect/product/" + product.id}
-					disabled={!updateStatuses[product.id]}><RiArrowRightSLine class="size-8" /></Button
+		<div class="flex h-fit grow overflow-hidden p-4 text-nowrap max-lg:items-center">
+			<h3 class="mr-1 truncate text-xl">{product.name}</h3>
+			<AlertDialog.Root
+				open={isRenameDialogOpen}
+				onOpenChange={(open) => {
+					renameDialogOpen[product.id] = open;
+				}}
+			>
+				<AlertDialog.Trigger
+					class="{buttonVariants({
+						variant: 'ghost'
+					})} h-fit! px-1.5! py-1.25! hover:bg-muted active:bg-muted max-lg:ml-auto"
+					onclick={(event) => {
+						event.stopPropagation();
+						renameValue[product.id] = product.name;
+					}}
 				>
-			</div>
+					<RiEdit2Line />
+				</AlertDialog.Trigger>
+				<AlertDialog.Content>
+					<AlertDialog.Header>
+						<AlertDialog.Title>Edit name</AlertDialog.Title>
+					</AlertDialog.Header>
+					<div class="flex flex-col gap-4">
+						<div class="space-y-1">
+							<Label for="product-name" class="text-sm font-medium">Name</Label>
+							<Input
+								type="text"
+								id="product-name"
+								bind:value={renameValue[product.id]}
+								placeholder="New name"
+								onkeydown={(e) => {
+									if (e.key === "Enter") handleRename(product);
+								}}
+							/>
+						</div>
+						<AlertDialog.Footer>
+							<AlertDialog.Cancel disabled={loading.is(`rename-${product.id}`)}>Cancel</AlertDialog.Cancel>
+							<AlertDialog.Action
+								disabled={loading.is(`rename-${product.id}`) || product.name === renameValue[product.id]?.trim()}
+								onclick={() => handleRename(product)}
+							>
+								{#if loading.is(`rename-${product.id}`)}<Spinner />{/if}
+								Rename
+							</AlertDialog.Action>
+						</AlertDialog.Footer>
+					</div>
+				</AlertDialog.Content>
+			</AlertDialog.Root>
+			<AlertDialog.Root
+				open={isRemoveDialogOpen}
+				onOpenChange={(open) => {
+					removeDialogOpen[product.id] = open;
+				}}
+			>
+				<AlertDialog.Trigger
+					class="{buttonVariants({
+						variant: 'ghost'
+					})} h-fit! px-1.5! py-1.25! hover:bg-muted active:bg-muted"
+					onclick={(event) => event.stopPropagation()}
+				>
+					<RiDeleteBinLine />
+				</AlertDialog.Trigger>
+				<AlertDialog.Content>
+					<AlertDialog.Header>
+						<AlertDialog.Title>Remove?</AlertDialog.Title>
+						<AlertDialog.Description>Unpair "{product.name}" and remove it from this device.</AlertDialog.Description>
+					</AlertDialog.Header>
+					<AlertDialog.Footer>
+						<AlertDialog.Cancel disabled={loading.is(`remove-${product.id}`)}>Cancel</AlertDialog.Cancel>
+						<AlertDialog.Action
+							disabled={loading.is(`remove-${product.id}`)}
+							onclick={() => removeProductAndRemoveDevice(product.id)}
+						>
+							{#if loading.is(`remove-${product.id}`)}<Spinner />{/if}
+							Remove
+						</AlertDialog.Action>
+					</AlertDialog.Footer>
+				</AlertDialog.Content>
+			</AlertDialog.Root>
 		</div>
 	</div>
 {/snippet}
