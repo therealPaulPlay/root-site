@@ -241,7 +241,10 @@
 <svelte:document
 	onvisibilitychange={() => {
 		if (document.hidden) stopAllStreams();
-		else if (relayCommInstance && products.length) relayCommInstance.onConnected(refreshAll);
+		else if (relayCommInstance && products.length) {
+			streamSnapshots = {}; // Clear immediately to prevent flash of snapshot
+			relayCommInstance.onConnected(refreshAll);
+		}
 	}}
 />
 
