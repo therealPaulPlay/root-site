@@ -12,6 +12,7 @@
 	import { goto, onNavigate } from "$app/navigation";
 	import { browser } from "$app/environment";
 	import { page } from "$app/state";
+	import { setContext } from "svelte";
 
 	let { children } = $props();
 	let isNative = Capacitor.isNativePlatform();
@@ -41,6 +42,9 @@
 		});
 	});
 
+	let articleEl = $state(null);
+	setContext("articleEl", () => articleEl);
+
 	let isIframed = browser && window.self !== window.top;
 	if (isIframed) document.documentElement.style.setProperty("--safe-area-top", "0px");
 	if (isNative && browser) document.documentElement.classList.add("native");
@@ -48,16 +52,15 @@
 	onMount(init); // Overfade
 	onMount(initializeBackGestureHandler); // Back gesture support for going back (Android)
 
-	// Handle notification taps - navigate to the product page
+	// Handle notification taps - navigate to /connect with product and event query params
 	let removeNotificationTapListener;
 
 	onMount(() => {
 		removeNotificationTapListener = onNotificationTap((data) => {
 			if (data.productId) {
-				const params = data.eventId ? `?event-id=${data.eventId}` : "";
-				const target = `/connect/product/${data.productId}${params}`;
-				const isSamePage = page.url.pathname === `/connect/product/${data.productId}`;
-				goto(target, { replaceState: isSamePage });
+				const params = `product-id=${data.productId}${data.eventId ? `&event-id=${data.eventId}` : ""}`;
+				const target = `/connect?${params}`;
+				goto(target, { replaceState: page.url.pathname === "/connect" });
 			}
 		});
 	});
@@ -86,7 +89,7 @@
 
 <main class="items-start-safe relative container mx-auto flex">
 	<Navbar />
-	<article class="no-scrollbar safe-min-h-svh relative flex w-full flex-col overflow-x-hidden sm:border-x">
+	<article bind:this={articleEl} class="no-scrollbar safe-min-h-svh relative flex w-full flex-col overflow-x-hidden sm:border-x">
 		<div style="view-transition-name: content" class="flex min-h-0 flex-1 flex-col">
 			{@render children?.()}
 		</div>

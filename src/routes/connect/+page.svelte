@@ -14,12 +14,18 @@
 	import { StreamManager } from "$lib/utils/streamManager.svelte.js";
 	import { LoadingState } from "$lib/utils/loadingState.svelte.js";
 	import { SvelteSet } from "svelte/reactivity";
-	import { goto } from "$app/navigation";
+	import CameraView from "$lib/components/CameraView.svelte";
+	import { page } from "$app/state";
+	import { snapshotVideoSrc } from "$lib/utils/snapshotVideo";
+	import { fade } from "svelte/transition";
 
 	const loading = new LoadingState();
 
 	let products = $state([]);
-	let relayCommInstance;
+	let relayCommInstance = $state(null);
+	let activeProductId = $state(null);
+	let highlightEventId = $state(null);
+	let cameraViewOpen = $derived(Boolean(activeProductId));
 
 	let updateStatuses = $state({});
 	let streamHandles = $state({});
@@ -29,30 +35,40 @@
 	let removeDialogOpen = $state({});
 	let renameValue = $state({});
 
-	let offScreenTimers = {};
+	let streamSnapshots = $state({});
+	let failedStreams = new SvelteSet();
 	let visibleProducts = new SvelteSet();
 	let activeRequestIds = new SvelteSet();
 	let statusLoadedProducts = new SvelteSet();
 
 	function startProductStream(productId) {
-		if (streamHandles[productId] || !relayCommInstance || !visibleProducts.has(productId)) return;
+		if (
+			streamHandles[productId] ||
+			failedStreams.has(productId) ||
+			!relayCommInstance ||
+			!visibleProducts.has(productId)
+		)
+			return;
 		streamHandles[productId] = new StreamManager(productId, relayCommInstance, {
-			onError: (error) => console.error(`Stream error for product ${productId}:`, error)
+			onError: (error) => {
+				console.error(`Stream error for product ${productId}:`, error);
+				failedStreams.add(productId);
+			}
 		});
 		if (streamVideoElements[productId]) streamHandles[productId].bindVideo(streamVideoElements[productId]);
 	}
 
 	function stopProductStream(productId) {
+		if (streamVideoElements[productId]) streamSnapshots[productId] = snapshotVideoSrc(streamVideoElements[productId]);
 		streamHandles[productId]?.cleanup();
-		delete streamHandles[productId];
-		clearTimeout(offScreenTimers[productId]);
-		delete offScreenTimers[productId];
+		// Keep the handle if the stream failed so StreamPlayer shows the error icon
+		if (!failedStreams.has(productId)) delete streamHandles[productId];
 	}
 
-	function stopAllStreams() {
-		for (const productId of Object.keys(streamHandles)) stopProductStream(productId);
-		for (const timer of Object.values(offScreenTimers)) clearTimeout(timer);
-		offScreenTimers = {};
+	function stopAllStreams(excludeId = null) {
+		for (const productId of Object.keys(streamHandles)) {
+			if (productId != excludeId) stopProductStream(productId); // Intentionally matching strings or number
+		}
 	}
 
 	// Observe product visibility and start/stop streams accordingly
@@ -61,17 +77,14 @@
 			const observer = new IntersectionObserver(([entry]) => {
 				if (entry.isIntersecting) {
 					visibleProducts.add(productId);
-					clearTimeout(offScreenTimers[productId]);
-					delete offScreenTimers[productId];
 					relayCommInstance?.onConnected(() => {
 						startProductStream(productId);
 						loadUpdateStatus(productId);
 					});
 				} else {
+					if (activeProductId === productId) return; // If this product's stream is currently visible in CameraView, keep it active
 					visibleProducts.delete(productId);
-					// Stop stream after 5s off-screen
-					if (!offScreenTimers[productId])
-						offScreenTimers[productId] = setTimeout(() => stopProductStream(productId), 5000);
+					stopProductStream(productId);
 				}
 			});
 			observer.observe(element);
@@ -129,6 +142,25 @@
 		delete renameDialogOpen[msg.originId];
 	}
 
+	// Auto-open CameraView from notification tap query params
+	let lastHandledQuery = null;
+	let queryActionTimeout;
+	$effect(() => {
+		const paramProductId = page.url.searchParams.get("product-id");
+		const query = page.url.search;
+		if (!paramProductId || query === lastHandledQuery || !products.length) return;
+		if (!products.some((p) => p.id === paramProductId)) return;
+		lastHandledQuery = query;
+		const eventId = page.url.searchParams.get("event-id");
+		// Delay to let the page settle after hydration
+		clearTimeout(queryActionTimeout);
+		queryActionTimeout = setTimeout(() => {
+			activeProductId = paramProductId;
+			highlightEventId = eventId;
+		}, 250);
+		return () => clearTimeout(queryActionTimeout);
+	});
+
 	onMount(() => {
 		products = getAllProducts();
 
@@ -137,11 +169,6 @@
 			relayCommInstance
 				.connect()
 				.then(() => {
-					for (const productId of visibleProducts) {
-						startProductStream(productId);
-						loadUpdateStatus(productId);
-					}
-
 					relayCommInstance.on("getUpdateStatusResult", handleGetUpdateStatusResult);
 					relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
 					relayCommInstance.on("setProductAliasResult", handleSetProductAliasResult);
@@ -192,8 +219,11 @@
 	function refreshAll() {
 		stopAllStreams();
 
-		// Update status
+		// Reset state
 		updateStatuses = {};
+		streamHandles = {};
+		streamSnapshots = {};
+		failedStreams.clear();
 		activeRequestIds.clear();
 		statusLoadedProducts.clear();
 		for (const productId of visibleProducts) loadUpdateStatus(productId);
@@ -230,31 +260,38 @@
 	{@const stream = streamHandles[product.id]}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
-		class="relative flex h-fit min-h-32 w-full shrink-0 border-y max-lg:flex-wrap [&:not(:has(button:hover,button:active))]:hover:bg-muted [&:not(:has(button:hover,button:active))]:active:bg-muted"
+		class="relative flex h-fit min-h-32 w-full shrink-0 border-y max-lg:flex-wrap {updateStatuses[product.id]
+			? '[&:not(:has(button:hover,button:active))]:hover:bg-muted [&:not(:has(button:hover,button:active))]:active:bg-muted'
+			: ''}"
 		role="button"
 		tabindex="0"
 		onclick={() => {
-			goto("/connect/product/" + product.id);
+			if (!updateStatuses[product.id]) return;
+			stopAllStreams(product.id); // Stop all streams when camera view gets opened except for this one
+			activeProductId = product.id;
 		}}
 		{@attach observeProduct(product.id)}
 	>
 		<div class="relative overflow-hidden max-lg:w-full max-lg:border-b lg:w-1/3 lg:border-r">
-			<span
-				class="absolute top-4 z-1 inline-flex h-fit items-center gap-1 overflow-hidden border bg-background px-2 py-1 text-xs uppercase transition max-lg:right-4 lg:left-4"
-				class:opacity-0={!updateStatuses[product.id]?.status || updateStatuses[product.id]?.status == "up-to-date"}
-			>
-				<RiDownload2Line class="size-3! shrink-0" />
-				<p class="truncate">{updateStatuses[product.id]?.status?.replaceAll("-", " ") || "N/A"}</p>
-			</span>
+			{#if updateStatuses[product.id]?.status && updateStatuses[product.id]?.status !== "up-to-date"}
+				<span
+					transition:fade={{ duration: 150 }}
+					class="absolute top-4 z-1 inline-flex h-fit items-center gap-1 overflow-hidden border bg-background px-2 py-1 text-xs uppercase max-lg:right-4 lg:left-4"
+				>
+					<RiDownload2Line class="size-3! shrink-0" />
+					<p class="truncate">{updateStatuses[product.id]?.status?.replaceAll("-", " ")}</p>
+				</span>
+			{/if}
 			<StreamPlayer
 				bind:videoElement={streamVideoElements[product.id]}
+				snapshotSrc={streamSnapshots[product.id]}
 				streamLoading={stream?.loading ?? true}
 				streamEnded={stream?.ended ?? false}
 				showControls={false}
 			/>
 		</div>
 		<div class="flex h-fit grow overflow-hidden p-4 text-nowrap max-lg:items-center">
-			<h3 class="mr-1 truncate text-xl">{product.name}</h3>
+			<h3 class="mr-1 truncate text-xl" class:opacity-50={!updateStatuses[product.id]}>{product.name}</h3>
 			<AlertDialog.Root
 				open={isRenameDialogOpen}
 				onOpenChange={(open) => {
@@ -264,7 +301,8 @@
 				<AlertDialog.Trigger
 					class="{buttonVariants({
 						variant: 'ghost'
-					})} h-fit! px-1.5! py-1.25! hover:bg-muted active:bg-muted max-lg:ml-auto"
+					})} h-fit! px-1.5! py-1.25! max-lg:ml-auto"
+					disabled={!updateStatuses[product.id]}
 					onclick={(event) => {
 						event.stopPropagation();
 						renameValue[product.id] = product.name;
@@ -311,7 +349,7 @@
 				<AlertDialog.Trigger
 					class="{buttonVariants({
 						variant: 'ghost'
-					})} h-fit! px-1.5! py-1.25! hover:bg-muted active:bg-muted"
+					})} h-fit! px-1.5! py-1.25!"
 					onclick={(event) => event.stopPropagation()}
 				>
 					<RiDeleteBinLine />
@@ -359,3 +397,27 @@
 		{/if}
 	</PullToRefresh>
 </div>
+
+{#if activeProductId}
+	{@const activeProduct = products.find((p) => p.id === activeProductId)}
+	{#if activeProduct}
+		<CameraView
+			productId={activeProductId}
+			product={activeProduct}
+			{relayCommInstance}
+			streamHandle={streamHandles[activeProductId]}
+			videoElement={streamVideoElements[activeProductId]}
+			{highlightEventId}
+			open={cameraViewOpen}
+			onClose={() => {
+				activeProductId = null;
+				highlightEventId = null;
+				// Restart streams for visible products
+				for (const id of visibleProducts) startProductStream(id);
+			}}
+			onProductRemoved={() => {
+				products = getAllProducts();
+			}}
+		/>
+	{/if}
+{/if}

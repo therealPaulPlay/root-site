@@ -24,11 +24,8 @@
 	import Separator from "./ui/separator/separator.svelte";
 	import { SvelteDate, SvelteSet } from "svelte/reactivity";
 	import CameraDetectionDialog from "./CameraDetectionDialog.svelte";
-	import { page } from "$app/state";
 	import { tick } from "svelte";
 	import { formatDate, formatTime } from "$lib/utils/formatDateTime";
-
-	let highlightEventId = $derived(page.url.searchParams.get("event-id"));
 
 	let {
 		events = [],
@@ -44,7 +41,8 @@
 		recordingVideoElement = $bindable(),
 		recordingAudioUrl,
 		onShareRecording = () => {},
-		onVideoError = () => {}
+		onVideoError = () => {},
+		highlightEventId = null
 	} = $props();
 
 	// Events list state

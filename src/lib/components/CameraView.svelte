@@ -1,34 +1,41 @@
 <script>
-	import { page } from "$app/state";
-	import { onMount } from "svelte";
+	import { getContext, onMount } from "svelte";
 	import { on } from "svelte/events";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Tabs from "$lib/components/ui/tabs";
-	import { getProduct, removeProduct } from "$lib/utils/pairedProductsStorage";
-	import { createRelayInstance } from "$lib/utils/createRelayInstance";
-	import { goto } from "$app/navigation";
+	import * as Drawer from "$lib/components/ui/drawer";
+	import { removeProduct } from "$lib/utils/pairedProductsStorage";
 	import { toast } from "svelte-sonner";
-	import StreamPlayer from "$lib/components/StreamPlayer.svelte";
 	import CameraControls from "$lib/components/CameraControls.svelte";
 	import CameraHealth from "$lib/components/CameraHealth.svelte";
 	import CameraEvents from "$lib/components/CameraEvents.svelte";
 	import PullToRefresh from "$lib/components/PullToRefresh.svelte";
-	import { RiArrowLeftLine, RiDownload2Line, RiErrorWarningLine } from "svelte-remixicon";
+	import StreamPlayer from "$lib/components/StreamPlayer.svelte";
+	import { RiCloseLine, RiDownload2Line, RiErrorWarningLine } from "svelte-remixicon";
 	import { slide } from "svelte/transition";
 	import { SvelteSet } from "svelte/reactivity";
 	import { MediaSourceManager } from "$lib/utils/mediaSourceManager";
-	import { StreamManager } from "$lib/utils/streamManager.svelte.js";
 	import { LoadingState } from "$lib/utils/loadingState.svelte.js";
 	import { getFCMToken } from "$lib/utils/pushNotifications.js";
 	import { Capacitor } from "@capacitor/core";
+	import { snapshotVideo } from "$lib/utils/snapshotVideo";
+	import { innerWidth } from "svelte/reactivity/window";
 
-	const productId = page.params.productId;
+	let {
+		productId,
+		product,
+		relayCommInstance,
+		streamHandle,
+		videoElement,
+		highlightEventId = null,
+		open = $bindable(false),
+		onClose = () => {},
+		onProductRemoved = () => {}
+	} = $props();
+
+	const getArticleEl = getContext("articleEl");
 
 	const loading = new LoadingState();
-
-	let product = $state(null);
-	let relayCommInstance;
-	let streamHandle = $state(null);
 
 	// Events
 	let events = $state([]);
@@ -51,7 +58,7 @@
 	let notificationsEnabled = $state(false);
 	let notificationCooldown = $state(0);
 
-	// Dialog open states (closed on success)
+	// Dialog open states
 	let restartDialogOpen = $state(false);
 	let resetDialogOpen = $state(false);
 	let removeDeviceDialogOpen = $state({});
@@ -72,15 +79,19 @@
 	let activeTab = $state(TABS.EVENTS);
 	let tabsLoaded = $state({ [TABS.EVENTS]: false, [TABS.CONTROLS]: false, [TABS.HEALTH]: false });
 
-	// Switch to events tab and reload when navigating from a notification tap
-	let lastHandledEventIdParam = null;
+	// Switch to events tab and reload when opened from a notification tap
+	let lastHandledEventId = null;
 	$effect(() => {
-		const eventId = page.url.searchParams.get("event-id");
-		if (!eventId || eventId === lastHandledEventIdParam) return;
-		lastHandledEventIdParam = eventId;
+		if (!highlightEventId || highlightEventId === lastHandledEventId) return;
+		lastHandledEventId = highlightEventId;
 		activeTab = TABS.EVENTS;
-		if (!events.some((e) => e.id === eventId) && relayCommInstance) relayCommInstance.onConnected(() => loadEvents());
+		if (!events.some((e) => e.id === highlightEventId) && relayCommInstance) relayCommInstance.onConnected(() => loadEvents());
 	});
+
+	// Video element reparenting
+	let videoMountTarget = $state(null);
+	let originalParent = null;
+	let snapshotCanvas = null;
 
 	// Thumbnail IntersectionObserver
 	function observeThumbnail(eventId) {
@@ -94,7 +105,6 @@
 			);
 			observer.observe(element);
 			requestAnimationFrame(() => {
-				// Immediate check since the observer misbehaves during svelte transitions (e.g. slide)
 				if (element.getBoundingClientRect().top < window.innerHeight + 100) queueThumbnail(eventId);
 			});
 			return () => observer.disconnect();
@@ -102,7 +112,6 @@
 	}
 
 	// Stream
-	let streamVideoElement = $state();
 	let audioUnlockEl = $state(null);
 
 	// Track event tab scroll position reactively
@@ -113,61 +122,101 @@
 		});
 	});
 
-	onMount(() => {
-		product = getProduct(productId);
-		if (!product) {
-			toast.error("Product not found!");
-			goto("/connect");
-			return;
+	// Reparent video element into CameraView when container is ready
+	$effect(() => {
+		if (videoElement && videoMountTarget) {
+			originalParent = videoElement.parentElement;
+
+			// Snapshot once the first frame is available so the player element doesn't flash black on close
+			snapshotCanvas = snapshotVideo(videoElement, originalParent);
+			function onLoadedData() {
+				snapshotCanvas?.remove();
+				snapshotCanvas = snapshotVideo(videoElement, originalParent);
+			}
+			videoElement.addEventListener("loadeddata", onLoadedData, { once: true });
+			videoMountTarget.appendChild(videoElement);
+
+			return () => {
+				videoElement?.removeEventListener("loadeddata", onLoadedData);
+				snapshotCanvas?.remove();
+				snapshotCanvas = null;
+				if (originalParent) originalParent.appendChild(videoElement);
+			};
 		}
+	});
 
-		relayCommInstance = createRelayInstance();
-		relayCommInstance
-			.connect()
-			.then(() => {
-				// Set up message handlers
-				relayCommInstance.on("getEventsResult", handleEventsResult);
-				relayCommInstance.on("getThumbnailResult", handleThumbnailResult);
-				relayCommInstance.on("getRecordingResult", handleRecordingResult);
-				relayCommInstance.on("getMicrophoneResult", handleGetMicrophoneResult);
-				relayCommInstance.on("setMicrophoneResult", handleSetMicrophoneResult);
-				relayCommInstance.on("getRecordingSoundResult", handleGetRecordingSoundResult);
-				relayCommInstance.on("setRecordingSoundResult", handleSetRecordingSoundResult);
-				relayCommInstance.on("getEventDetectionConfigResult", handleGetEventDetectionConfigResult);
-				relayCommInstance.on("setEventDetectionEnabledResult", handleSetEventDetectionEnabledResult);
-				relayCommInstance.on("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
-				relayCommInstance.on("getNotificationsResult", handleGetNotificationsResult);
-				relayCommInstance.on("setNotificationsResult", handleSetNotificationsResult);
-				relayCommInstance.on("setNotificationCooldownResult", handleSetNotificationCooldownResult);
-				relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
-				relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
-				relayCommInstance.on("getHealthResult", handleHealthResult);
-				relayCommInstance.on("getUpdateStatusResult", handleUpdateStatusResult);
-				relayCommInstance.on("startUpdateResult", handleStartUpdateResult);
-				relayCommInstance.on("setVersionDevResult", handleSetVersionDevResult);
-				relayCommInstance.on("restartResult", handleRestartResult);
-				relayCommInstance.on("resetResult", handleResetResult);
+	// Listen for drawer close
+	let closeTimer;
+	$effect(() => {
+		if (!open) closeTimer = setTimeout(onClose, 500);
+		return () => clearTimeout(closeTimer);
+	});
 
-				// Load events immediately (default tab), update status (shows tab bar), start stream
-				loadEvents();
-				loadUpdateStatus();
-				startProductStream();
-			})
-			.catch((error) => {
-				toast.error("Failed to connect to relay: " + error.message);
-				console.error("Failed to connect to relay:", error);
-			});
+	onMount(() => {
+		if (!relayCommInstance) return console.warn("No relayComm instance passed to CameraView!");
+		
+		// Register all relay handlers
+		relayCommInstance.on("getEventsResult", handleEventsResult);
+		relayCommInstance.on("getThumbnailResult", handleThumbnailResult);
+		relayCommInstance.on("getRecordingResult", handleRecordingResult);
+		relayCommInstance.on("getMicrophoneResult", handleGetMicrophoneResult);
+		relayCommInstance.on("setMicrophoneResult", handleSetMicrophoneResult);
+		relayCommInstance.on("getRecordingSoundResult", handleGetRecordingSoundResult);
+		relayCommInstance.on("setRecordingSoundResult", handleSetRecordingSoundResult);
+		relayCommInstance.on("getEventDetectionConfigResult", handleGetEventDetectionConfigResult);
+		relayCommInstance.on("setEventDetectionEnabledResult", handleSetEventDetectionEnabledResult);
+		relayCommInstance.on("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
+		relayCommInstance.on("getNotificationsResult", handleGetNotificationsResult);
+		relayCommInstance.on("setNotificationsResult", handleSetNotificationsResult);
+		relayCommInstance.on("setNotificationCooldownResult", handleSetNotificationCooldownResult);
+		relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
+		relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
+		relayCommInstance.on("getHealthResult", handleHealthResult);
+		relayCommInstance.on("getUpdateStatusResult", handleUpdateStatusResult);
+		relayCommInstance.on("startUpdateResult", handleStartUpdateResult);
+		relayCommInstance.on("setVersionDevResult", handleSetVersionDevResult);
+		relayCommInstance.on("restartResult", handleRestartResult);
+		relayCommInstance.on("resetResult", handleResetResult);
+
+		// Load default tab data once connected
+		relayCommInstance.onConnected(() => {
+			loadEvents();
+			loadUpdateStatus();
+		});
 
 		return () => {
+			// Unregister all relay handlers
+			relayCommInstance.off("getEventsResult", handleEventsResult);
+			relayCommInstance.off("getThumbnailResult", handleThumbnailResult);
+			relayCommInstance.off("getRecordingResult", handleRecordingResult);
+			relayCommInstance.off("getMicrophoneResult", handleGetMicrophoneResult);
+			relayCommInstance.off("setMicrophoneResult", handleSetMicrophoneResult);
+			relayCommInstance.off("getRecordingSoundResult", handleGetRecordingSoundResult);
+			relayCommInstance.off("setRecordingSoundResult", handleSetRecordingSoundResult);
+			relayCommInstance.off("getEventDetectionConfigResult", handleGetEventDetectionConfigResult);
+			relayCommInstance.off("setEventDetectionEnabledResult", handleSetEventDetectionEnabledResult);
+			relayCommInstance.off("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
+			relayCommInstance.off("getNotificationsResult", handleGetNotificationsResult);
+			relayCommInstance.off("setNotificationsResult", handleSetNotificationsResult);
+			relayCommInstance.off("setNotificationCooldownResult", handleSetNotificationCooldownResult);
+			relayCommInstance.off("getDevicesResult", handleGetDevicesResult);
+			relayCommInstance.off("removeDeviceResult", handleRemoveDeviceResult);
+			relayCommInstance.off("getHealthResult", handleHealthResult);
+			relayCommInstance.off("getUpdateStatusResult", handleUpdateStatusResult);
+			relayCommInstance.off("startUpdateResult", handleStartUpdateResult);
+			relayCommInstance.off("setVersionDevResult", handleSetVersionDevResult);
+			relayCommInstance.off("restartResult", handleRestartResult);
+			relayCommInstance.off("resetResult", handleResetResult);
+
+			// Cleanup local resources (NOT streamHandle or relayComm — those belong to parent)
+			if (streamHandle) streamHandle.audioMuted = true;
 			cleanupRecording();
 			clearTimeout(thumbnailDrainTimeout);
-			streamHandle?.cleanup();
 			for (const url of Object.values(eventThumbnails)) if (url !== "error") URL.revokeObjectURL(url);
-			relayCommInstance?.disconnect();
 		};
 	});
 
-	// Cleanup recording when dialog closes - set eventId to null to ignore remaining chunks
+	// Cleanup recording when dialog closes
 	$effect(() => {
 		if (!viewRecordingDialog && currentRecordingEventId) {
 			currentRecordingEventId = null;
@@ -274,7 +323,6 @@
 			return;
 		}
 
-		// Filter by current event ID
 		const eventId = msg.payload.eventId || msg.payload.metadata?.eventId;
 		if (eventId && eventId !== currentRecordingEventId) return;
 
@@ -360,7 +408,7 @@
 			"loadedmetadata",
 			() => {
 				recordingVideoElement.pause();
-				recordingVideoElement.dispatchEvent(new Event("pause")); // Ensure onpause fires even if already paused
+				recordingVideoElement.dispatchEvent(new Event("pause")); // Ensure onpause fires even if already paused through reset
 				recordingVideoElement.currentTime = 0;
 				if (recordingAudioElement) {
 					recordingAudioElement.pause();
@@ -372,18 +420,7 @@
 		recordingVideoElement.src = createBlobUrl(chunks, "video/mp4");
 	}
 
-	// Streaming
-	function startProductStream() {
-		streamHandle?.cleanup();
-		streamHandle = new StreamManager(productId, relayCommInstance, {
-			onError: (error) => {
-				toast.error("Stream ended: " + error?.message);
-				console.error("Stream ended:", error);
-			}
-		});
-		if (streamVideoElement) streamHandle.bindVideo(streamVideoElement);
-	}
-
+	// Controls handlers
 	function loadMicrophone() {
 		loading.set("mic", true);
 		relayCommInstance.send(productId, "getMicrophone").catch((error) => {
@@ -501,7 +538,7 @@
 	}
 
 	let previousEventDetectionTypes = [];
-	
+
 	function updateEventDetectionTypes() {
 		loading.set("eventDetectionTypes", true);
 		previousEventDetectionTypes = [...eventDetectionTypes];
@@ -547,12 +584,11 @@
 	async function toggleNotifications() {
 		if (!Capacitor.isNativePlatform()) {
 			setTimeout(() => (notificationsEnabled = false), 250);
-			return toast.error("Push notifications are not available in this environment.");
+			return toast.error("Push notifications are only available in the app.");
 		}
 		loading.set("notifications", true);
 
 		if (notificationsEnabled) {
-			// Enabling: get FCM token first
 			const fcmToken = await getFCMToken();
 			if (!fcmToken) {
 				notificationsEnabled = false;
@@ -590,12 +626,14 @@
 	function updateNotificationCooldown() {
 		loading.set("notificationCooldown", true);
 		previousCooldown = notificationCooldown;
-		relayCommInstance.send(productId, "setNotificationCooldown", { cooldownMinutes: notificationCooldown }).catch((error) => {
-			notificationCooldown = previousCooldown;
-			toast.error("Failed to update notification cooldown: " + error.message);
-			console.error("Failed to update notification cooldown:", error);
-			loading.set("notificationCooldown", false);
-		});
+		relayCommInstance
+			.send(productId, "setNotificationCooldown", { cooldownMinutes: notificationCooldown })
+			.catch((error) => {
+				notificationCooldown = previousCooldown;
+				toast.error("Failed to update notification cooldown: " + error.message);
+				console.error("Failed to update notification cooldown:", error);
+				loading.set("notificationCooldown", false);
+			});
 	}
 
 	function handleSetNotificationCooldownResult(msg) {
@@ -664,9 +702,7 @@
 		}
 		restartDialogOpen = false;
 		toast.success("Restarting.");
-		setTimeout(() => {
-			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
-		}, 1000);
+		open = false; // Close drawer
 	}
 
 	function resetProduct() {
@@ -686,10 +722,9 @@
 		}
 		resetDialogOpen = false;
 		toast.success("Reset initiated.");
-		removeProduct(msg.originId); // Remove product, since factory resetting will remove all paired devices
-		setTimeout(() => {
-			if (page.url.pathname.endsWith("/product/" + productId)) goto("/connect");
-		}, 1000);
+		removeProduct(msg.originId);
+		open = false; // Close drawer & remove product
+		onProductRemoved();
 	}
 
 	// Health handlers
@@ -780,169 +815,176 @@
 	}
 </script>
 
-<svelte:document
-	onvisibilitychange={() => {
-		if (document.hidden) streamHandle?.cleanup();
-		else relayCommInstance?.onConnected(() => startProductStream());
-	}}
-/>
+<Drawer.Root
+	bind:open
+	shouldScaleBackground={false}
+	container={getArticleEl()}
+	modal={Capacitor.isNativePlatform() || innerWidth.current < 640}
+>
+	<Drawer.Content class="top-0! bottom-auto! safe-h-svh" showHandle={false}>
+		<!-- Top bar with close button -->
+		<div class="flex border-b text-xl">
+			<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" onclick={() => (open = false)}>
+				<RiCloseLine class="shape-crisp h-8! w-8!" />
+			</Button>
+		</div>
 
-<audio
-	bind:this={audioUnlockEl}
-	src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
-	class="hidden"
-></audio>
-<div class="safe-h-svh flex w-full flex-col overflow-hidden">
-	<div class="flex border-b text-xl">
-		<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" href="/connect">
-			<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
-		</Button>
-	</div>
-	<StreamPlayer
-		bind:videoElement={streamVideoElement}
-		streamLoading={streamHandle?.loading ?? true}
-		streamEnded={streamHandle?.ended ?? false}
-		showMuteButton={streamHandle?.audioActive ?? false}
-		audioMuted={streamHandle?.audioMuted ?? true}
-		onAudioToggle={() => {
-			if (!streamHandle) return;
-			streamHandle.setupAudio(audioUnlockEl);
-			streamHandle.audioMuted = !streamHandle.audioMuted;
-		}}
-	/>
-	<div class="w-full basis-full overflow-hidden border-t">
-		<Tabs.Root
-			bind:value={activeTab}
-			onValueChange={(v) => {
-				if (!relayCommInstance) return;
-				if (v === TABS.CONTROLS && !tabsLoaded[TABS.CONTROLS]) {
-					tabsLoaded[TABS.CONTROLS] = true;
-					loadMicrophone();
-					loadRecordingSound();
-					loadEventDetectionConfig();
-					loadNotifications();
-					loadDevices();
-				} else if (v === TABS.HEALTH && !tabsLoaded[TABS.HEALTH]) {
-					tabsLoaded[TABS.HEALTH] = true;
-					loadHealth();
-					// Update status is loaded in onMount() already
-				}
+		<!-- Video — StreamPlayer provides loading/ended/controls UI, video element is reparented into videoMountTarget -->
+		<StreamPlayer
+			bind:videoMountTarget
+			streamLoading={streamHandle?.loading ?? true}
+			streamEnded={streamHandle?.ended ?? false}
+			showMuteButton={streamHandle?.audioActive ?? false}
+			audioMuted={streamHandle?.audioMuted ?? true}
+			onAudioToggle={() => {
+				if (!streamHandle) return;
+				streamHandle.setupAudio(audioUnlockEl);
+				streamHandle.audioMuted = !streamHandle.audioMuted;
 			}}
-			class="relative h-full"
-		>
-			<div class="w-full">
-				<Tabs.List class="w-full">
-					<Tabs.Trigger value={TABS.EVENTS}>Events</Tabs.Trigger>
-					<Tabs.Trigger value={TABS.CONTROLS}>Controls</Tabs.Trigger>
-					<Tabs.Trigger value={TABS.HEALTH}>
-						Health
-						{#if updateStatus?.status && updateStatus.status !== "up-to-date"}
-							<span
-								transition:slide={{ axis: "x" }}
-								class="inline-flex bg-muted-foreground/10 p-1"
-								class:animate-pulse={updateStatus.status === "downloading" || updateStatus.status === "installing"}
-							>
-								{#if updateStatus.status === "error"}
-									<RiErrorWarningLine class="size-3" />
-								{:else}
-									<RiDownload2Line class="size-3" />
-								{/if}
-							</span>
-						{/if}
-					</Tabs.Trigger>
-				</Tabs.List>
-			</div>
-			<Tabs.Content value={TABS.EVENTS} class="min-h-0">
-				<PullToRefresh
-					onRefresh={() => {
-						loadEvents();
-						return loading.promise("events");
-					}}
-					bind:scrollEl={eventListScrollElement}
-					class="of-bottom relative mask-t-from-100% p-6 pb-12"
-				>
-					<div
-						class="pointer-events-none absolute top-0 right-0 left-0 h-25 bg-linear-to-b from-background via-background to-background/50"
-						style:opacity={Math.min(1, eventListScrollTop / 30) * 100 + "%"}
-					></div>
-					<CameraEvents
-						{events}
-						{observeThumbnail}
-						{viewRecording}
-						{loading}
-						{eventThumbnails}
-						{loadingThumbnails}
-						{thumbnailQueue}
-						scrollElement={eventListScrollElement}
-						bind:viewRecordingDialog
-						bind:recordingAudioElement
-						bind:recordingVideoElement
-						{recordingAudioUrl}
-						onVideoError={switchRecordingToBlobUrl}
-						onShareRecording={shareRecording}
-					/>
-				</PullToRefresh>
-			</Tabs.Content>
-			<Tabs.Content value={TABS.CONTROLS} class="min-h-0">
-				<PullToRefresh
-					onRefresh={() => {
+		/>
+
+		<!-- Audio unlock element -->
+		<audio
+			bind:this={audioUnlockEl}
+			src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
+			class="hidden"
+		></audio>
+
+		<!-- Tabs — data-vaul-no-drag prevents pull-to-refresh from dragging the drawer -->
+		<div class="w-full basis-full overflow-hidden border-t" data-vaul-no-drag>
+			<Tabs.Root
+				bind:value={activeTab}
+				onValueChange={(v) => {
+					if (!relayCommInstance) return;
+					if (v === TABS.CONTROLS && !tabsLoaded[TABS.CONTROLS]) {
+						tabsLoaded[TABS.CONTROLS] = true;
 						loadMicrophone();
 						loadRecordingSound();
 						loadEventDetectionConfig();
 						loadNotifications();
 						loadDevices();
-						return loading.promise("mic", "sound", "eventDetection", "notifications", "devices");
-					}}
-					class="of-top of-bottom space-y-6 p-6 pb-12"
-				>
-					<CameraControls
-						{loading}
-						bind:restartDialogOpen
-						bind:resetDialogOpen
-						bind:removeDeviceDialogOpen
-						{toggleMicrophone}
-						{toggleRecordingSound}
-						{toggleNotifications}
-						{updateNotificationCooldown}
-						{toggleEventDetection}
-						{updateEventDetectionTypes}
-						{removeDevice}
-						{restartProduct}
-						{resetProduct}
-						bind:micEnabled
-						bind:recordingSoundEnabled
-						bind:eventDetectionEnabled
-						bind:eventDetectionTypes
-						bind:notificationsEnabled
-						bind:notificationCooldown
-						{devices}
-					/>
-				</PullToRefresh>
-			</Tabs.Content>
-			<Tabs.Content value={TABS.HEALTH} class="min-h-0">
-				<PullToRefresh
-					onRefresh={() => {
+					} else if (v === TABS.HEALTH && !tabsLoaded[TABS.HEALTH]) {
+						tabsLoaded[TABS.HEALTH] = true;
 						loadHealth();
-						loadUpdateStatus();
-						return loading.promise("health", "updateStatus");
-					}}
-					class="of-top of-bottom space-y-6 p-6 pb-12"
-				>
-					<CameraHealth
-						{loading}
-						bind:devDialogOpen
-						bind:updateDialogOpen
-						{health}
-						model={product?.model}
-						{updateStatus}
-						{activeTab}
-						{productId}
-						healthTab={TABS.HEALTH}
-						{startUpdate}
-						{setVersionDev}
-					/>
-				</PullToRefresh>
-			</Tabs.Content>
-		</Tabs.Root>
-	</div>
-</div>
+					}
+				}}
+				class="relative h-full"
+			>
+				<div class="w-full">
+					<Tabs.List class="w-full">
+						<Tabs.Trigger value={TABS.EVENTS}>Events</Tabs.Trigger>
+						<Tabs.Trigger value={TABS.CONTROLS}>Controls</Tabs.Trigger>
+						<Tabs.Trigger value={TABS.HEALTH}>
+							Health
+							{#if updateStatus?.status && updateStatus.status !== "up-to-date"}
+								<span
+									transition:slide={{ axis: "x" }}
+									class="inline-flex bg-muted-foreground/10 p-1"
+									class:animate-pulse={updateStatus.status === "downloading" || updateStatus.status === "installing"}
+								>
+									{#if updateStatus.status === "error"}
+										<RiErrorWarningLine class="size-3" />
+									{:else}
+										<RiDownload2Line class="size-3" />
+									{/if}
+								</span>
+							{/if}
+						</Tabs.Trigger>
+					</Tabs.List>
+				</div>
+				<Tabs.Content value={TABS.EVENTS} class="min-h-0">
+					<PullToRefresh
+						onRefresh={() => {
+							loadEvents();
+							return loading.promise("events");
+						}}
+						bind:scrollEl={eventListScrollElement}
+						class="of-bottom relative mask-t-from-100% p-6 pb-12"
+					>
+						<div
+							class="pointer-events-none absolute top-0 right-0 left-0 h-25 bg-linear-to-b from-background via-background to-background/50"
+							style:opacity={Math.min(1, eventListScrollTop / 30) * 100 + "%"}
+						></div>
+						<CameraEvents
+							{events}
+							{observeThumbnail}
+							{viewRecording}
+							{loading}
+							{eventThumbnails}
+							{loadingThumbnails}
+							{thumbnailQueue}
+							{highlightEventId}
+							scrollElement={eventListScrollElement}
+							bind:viewRecordingDialog
+							bind:recordingAudioElement
+							bind:recordingVideoElement
+							{recordingAudioUrl}
+							onVideoError={switchRecordingToBlobUrl}
+							onShareRecording={shareRecording}
+						/>
+					</PullToRefresh>
+				</Tabs.Content>
+				<Tabs.Content value={TABS.CONTROLS} class="min-h-0">
+					<PullToRefresh
+						onRefresh={() => {
+							loadMicrophone();
+							loadRecordingSound();
+							loadEventDetectionConfig();
+							loadNotifications();
+							loadDevices();
+							return loading.promise("mic", "sound", "eventDetection", "notifications", "devices");
+						}}
+						class="of-top of-bottom space-y-6 p-6 pb-12"
+					>
+						<CameraControls
+							{loading}
+							bind:restartDialogOpen
+							bind:resetDialogOpen
+							bind:removeDeviceDialogOpen
+							{toggleMicrophone}
+							{toggleRecordingSound}
+							{toggleNotifications}
+							{updateNotificationCooldown}
+							{toggleEventDetection}
+							{updateEventDetectionTypes}
+							{removeDevice}
+							{restartProduct}
+							{resetProduct}
+							bind:micEnabled
+							bind:recordingSoundEnabled
+							bind:eventDetectionEnabled
+							bind:eventDetectionTypes
+							bind:notificationsEnabled
+							bind:notificationCooldown
+							{devices}
+						/>
+					</PullToRefresh>
+				</Tabs.Content>
+				<Tabs.Content value={TABS.HEALTH} class="min-h-0">
+					<PullToRefresh
+						onRefresh={() => {
+							loadHealth();
+							loadUpdateStatus();
+							return loading.promise("health", "updateStatus");
+						}}
+						class="of-top of-bottom space-y-6 p-6 pb-12"
+					>
+						<CameraHealth
+							{loading}
+							bind:devDialogOpen
+							bind:updateDialogOpen
+							{health}
+							model={product?.model}
+							{updateStatus}
+							{activeTab}
+							{productId}
+							healthTab={TABS.HEALTH}
+							{startUpdate}
+							{setVersionDev}
+						/>
+					</PullToRefresh>
+				</Tabs.Content>
+			</Tabs.Root>
+		</div>
+	</Drawer.Content>
+</Drawer.Root>

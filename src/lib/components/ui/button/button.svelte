@@ -15,7 +15,7 @@
 				secondary:
 					"bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/80 border-transparent",
 				ghost:
-					"hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 active:bg-accent active:text-accent-foreground dark:active:bg-accent/50 border-transparent",
+					"hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground border-transparent",
 				link: "text-primary underline-offset-4 hover:underline active:underline border-0"
 			},
 			size: {
