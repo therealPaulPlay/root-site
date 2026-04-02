@@ -28,6 +28,7 @@
 		streamHandle,
 		videoElement,
 		highlightEventId = null,
+		updateStatus = $bindable(),
 		open = $bindable(false),
 		onClose = () => {},
 		onProductRemoved = () => {}
@@ -70,9 +71,6 @@
 
 	// Health
 	let health = $state(null);
-
-	// Update status
-	let updateStatus = $state(null);
 
 	// Tab lazy loading
 	const TABS = { EVENTS: "events", CONTROLS: "controls", HEALTH: "health" };
@@ -178,11 +176,8 @@
 		relayCommInstance.on("restartResult", handleRestartResult);
 		relayCommInstance.on("resetResult", handleResetResult);
 
-		// Load default tab data once connected
-		relayCommInstance.onConnected(() => {
-			loadEvents();
-			loadUpdateStatus();
-		});
+		// Load events once connected since it's the default tab
+		relayCommInstance.onConnected(() => loadEvents());
 
 		return () => {
 			// Unregister all relay handlers

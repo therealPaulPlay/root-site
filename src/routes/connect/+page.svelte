@@ -110,7 +110,9 @@
 			toast.error(`Failed to get update status for product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
 			return;
 		}
-		updateStatuses[msg.originId] = msg.payload;
+		// eslint-disable-next-line no-unused-vars
+		const { success, ...status } = msg.payload;
+		updateStatuses[msg.originId] = status;
 	}
 
 	function handleRemoveDeviceResult(msg) {
@@ -421,6 +423,7 @@
 			{relayCommInstance}
 			streamHandle={streamHandles[activeProductId]}
 			videoElement={streamVideoElements[activeProductId]}
+			bind:updateStatus={updateStatuses[activeProductId]}
 			{highlightEventId}
 			open={cameraViewOpen}
 			onClose={() => {
