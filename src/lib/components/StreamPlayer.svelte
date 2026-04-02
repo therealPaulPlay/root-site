@@ -99,6 +99,7 @@
 				: 'right-4 bottom-4'} flex gap-2 transition-opacity duration-150"
 			class:opacity-0={!controlsOverlayVisible}
 			class:pointer-events-none={!controlsOverlayVisible}
+			onpointerdown={(e) => e.stopPropagation()}
 			onpointerup={(e) => e.stopPropagation()}
 		>
 			{#if showMuteButton}
