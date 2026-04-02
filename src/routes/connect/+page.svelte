@@ -122,7 +122,7 @@
 		}
 		delete removeDialogOpen[msg.originId];
 		loading.set(`remove-${msg.originId}`, false);
-		stopProductStream(msg.originId);
+		cleanupProductState(msg.originId);
 		removeProduct(msg.originId);
 		products = getAllProducts();
 	}
@@ -210,10 +210,21 @@
 				console.error(`Failed to inform product ${productId} about device removal:`, error);
 				delete removeDialogOpen[productId]; // Close dialog since we remove the product anyway
 				loading.set(`remove-${productId}`, false);
-				stopProductStream(productId);
+				cleanupProductState(productId);
 				removeProduct(productId);
 				products = getAllProducts();
 			});
+	}
+
+	function cleanupProductState(productId) {
+		stopProductStream(productId);
+		delete streamHandles[productId];
+		delete streamSnapshots[productId];
+		delete streamVideoElements[productId];
+		delete updateStatuses[productId];
+		failedStreams.delete(productId);
+		statusLoadedProducts.delete(productId);
+		visibleProducts.delete(productId);
 	}
 
 	function refreshAll() {
