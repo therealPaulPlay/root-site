@@ -58,8 +58,8 @@
 					<Label for="relay-domain" class="text-sm font-medium">Relay domain</Label>
 					<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={OFFICIAL_RELAY_DOMAIN} />
 				</div>
-				<p class="text-xs text-muted-foreground">
-					The relay server domain. Connected products must be configured to use the same domain.
+				<p class="text-xs text-muted-foreground max-w-xs">
+					Connected products must be configured to use the same domain.
 				</p>
 			</div>
 
