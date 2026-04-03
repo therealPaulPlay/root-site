@@ -69,6 +69,18 @@ export class StreamManager {
 		this.#audioGainNode.gain.value = this.#audioMuted ? 0 : 1;
 		this.#audioGainNode.connect(this.#audioContext.destination);
 		this.#nextAudioTime = this.#audioContext.currentTime;
+
+		// Convert any pre-buffered raw PCM to AudioBuffers and start immediately
+		if (this.#bufferedChunks.length > 0) {
+			this.#audioStarted = true;
+			this.#nextAudioTime = this.#audioContext.currentTime;
+			this.#bufferedChunks = this.#bufferedChunks.map((data) => {
+				const buf = this.#audioContext.createBuffer(1, data.length, 48000);
+				buf.getChannelData(0).set(data);
+				return buf;
+			});
+			this.#playAudioChunks();
+		}
 	}
 
 	cleanup() {
@@ -109,6 +121,7 @@ export class StreamManager {
 		this.#bufferedChunks = [];
 		this.#nextAudioTime = 0;
 		this.#audioActive = false;
+		this.#audioStarted = false;
 	}
 
 	// Private --------------------
@@ -128,8 +141,8 @@ export class StreamManager {
 		const manager = new MediaSourceManager({
 			isLive: true,
 			onChunkAppended: () => {
-				// Start playback once we have actual playable data in the buffer
-				if (!this.#videoStarted && this.#videoElement?.buffered.length > 0) {
+				// Buffer ~1s before starting playback
+				if (!this.#videoStarted && this.#videoElement?.buffered.length > 0 && this.#videoElement.buffered.end(0) >= 0.9) {
 					this.#videoStarted = true;
 					this.#loading = false;
 					this.#videoElement.play().catch(console.error);
@@ -173,9 +186,6 @@ export class StreamManager {
 			this.#audioActive = false;
 		}, 3000);
 
-		// If no audio context is set up, ignore
-		if (!this.#audioContext) return;
-
 		// Decode PCM data from chunk field (slice creates aligned copy for Int16Array)
 		const pcmData = new Int16Array(msg.payload.chunk.slice().buffer);
 
@@ -183,6 +193,13 @@ export class StreamManager {
 		const float32Data = new Float32Array(pcmData.length);
 		for (let i = 0; i < pcmData.length; i++) {
 			float32Data[i] = pcmData[i] / 32768.0;
+		}
+
+		// Store raw float data if AudioContext isn't ready yet (keep only latest 2)
+		if (!this.#audioContext) {
+			this.#bufferedChunks.push(float32Data);
+			if (this.#bufferedChunks.length > 2) this.#bufferedChunks.shift();
+			return;
 		}
 
 		// Create audio buffer (48kHz mono)
@@ -209,20 +226,38 @@ export class StreamManager {
 	#correctVideoDrift() {
 		if (!this.#videoElement || !this.#videoStarted || this.#videoElement.buffered.length === 0) return;
 		const bufferEnd = this.#videoElement.buffered.end(this.#videoElement.buffered.length - 1);
-		const drift = bufferEnd - this.#videoElement.currentTime;
-		// If video is more than 500ms behind the buffer end, seek forward to catch up
-		if (drift > 0.5) this.#videoElement.currentTime = bufferEnd - 0.1;
+		const buffer = bufferEnd - this.#videoElement.currentTime;
+
+		// Keep buffer around 1s — seek to correct in either direction
+		if (buffer > 1.2 || buffer < 0.6) this.#videoElement.currentTime = bufferEnd - 1;
 	}
 
+	#audioStarted = false;
+
 	#scheduleAudio() {
-		// Only keep newest chunk to prevent drift
-		if (this.#bufferedChunks.length > 1) this.#bufferedChunks = this.#bufferedChunks.slice(-1);
+		// Wait for 2 chunks (~1s) to arrive, then start scheduling from now
+		if (!this.#audioStarted) {
+			if (this.#bufferedChunks.length < 2) return;
+			this.#audioStarted = true;
+			this.#nextAudioTime = this.#audioContext.currentTime;
+			this.#playAudioChunks();
+			return;
+		}
 
+		const now = this.#audioContext.currentTime;
+		const audioAhead = this.#nextAudioTime - now;
+
+		// Keep audio ~1s ahead
+		if (audioAhead > 1.2 || audioAhead < 0.6) {
+			this.#bufferedChunks = this.#bufferedChunks.slice(-1);
+			this.#nextAudioTime = now + 1;
+		}
+
+		this.#playAudioChunks();
+	}
+
+	#playAudioChunks() {
 		while (this.#bufferedChunks.length > 0) {
-			const currentTime = this.#audioContext.currentTime;
-			if (this.#nextAudioTime < currentTime) this.#nextAudioTime = currentTime; // Snap to now if fallen behind
-			if (this.#nextAudioTime > currentTime + 0.3) break; // Keep 300ms buffer to absorb network jitter
-
 			const chunk = this.#bufferedChunks.shift();
 			const source = this.#audioContext.createBufferSource();
 			source.buffer = chunk;

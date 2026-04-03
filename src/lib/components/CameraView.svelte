@@ -138,7 +138,7 @@
 				videoElement?.removeEventListener("loadeddata", onLoadedData);
 				snapshotCanvas?.remove();
 				snapshotCanvas = null;
-				if (originalParent) originalParent.appendChild(videoElement);
+				if (originalParent && videoElement) originalParent.appendChild(videoElement);
 			};
 		}
 	});
