@@ -126,10 +126,10 @@
 				</div>
 			{/if}
 		</div>
+	{:else if loading.is("updateStatus")}
+		<div class="h-55 animate-shimmer border"></div>
 	{:else}
-		<div class="border p-8 text-center text-sm text-muted-foreground">
-			{loading.is("updateStatus") ? "Update status loading..." : "No update status available."}
-		</div>
+		<div class="border p-8 text-center text-sm text-muted-foreground">No update status available.</div>
 	{/if}
 
 	{#if health}
@@ -196,10 +196,15 @@
 				<MetricsChart metrics={health.metrics} bind:hoveredTimestamp />
 			</div>
 		{/if}
-	{:else}
-		<div class="border p-8 text-center text-sm text-muted-foreground">
-			{loading.is("health") ? "Health data loading..." : "No health data available."}
+	{:else if loading.is("health")}
+		<div class="space-y-6">
+			<div class="h-40 animate-shimmer border"></div>
+			<div class="h-25 animate-shimmer border"></div>
+			<div class="h-75 animate-shimmer border"></div>
+			<div class="h-60 animate-shimmer border"></div>
 		</div>
+	{:else}
+		<div class="border p-8 text-center text-sm text-muted-foreground">No health data available.</div>
 	{/if}
 </div>
 

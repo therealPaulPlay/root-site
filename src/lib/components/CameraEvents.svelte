@@ -17,7 +17,7 @@
 		RiShareLine,
 		RiTimeLine
 	} from "svelte-remixicon";
-	import { slide } from "svelte/transition";
+	import { fade, slide } from "svelte/transition";
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import { buttonVariants } from "./ui/button";
 	import Button from "./ui/button/button.svelte";
@@ -283,9 +283,15 @@
 </div>
 
 {#if events.length === 0}
-	<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">
-		{loading.is("events") ? "Events loading..." : "No events available."}
-	</div>
+	{#if loading.is("events")}
+		<div class="mt-6 divide-y border">
+			{#each { length: 5 } as _}
+				<div class="h-28 animate-shimmer"></div>
+			{/each}
+		</div>
+	{:else}
+		<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">No events available.</div>
+	{/if}
 {:else if Object.keys(groupedEvents).length === 0}
 	<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">No events match the selected filters.</div>
 {:else}
@@ -325,11 +331,16 @@
 			</div>
 			<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted" {@attach observeThumbnail(event.id)}>
 				{#if eventThumbnails[event.id] && eventThumbnails[event.id] !== "error"}
-					<img src={eventThumbnails[event.id]} alt="Event thumbnail" class="h-full w-full object-cover" />
+					<img
+						transition:fade={{ duration: 150 }}
+						src={eventThumbnails[event.id]}
+						alt="Event thumbnail"
+						class="h-full w-full object-cover"
+					/>
 				{:else}
 					<div class="flex h-full w-full items-center justify-center">
 						{#if !eventThumbnails[event.id] && (loadingThumbnails.has(event.id) || thumbnailQueue.includes(event.id))}
-							<Spinner class="size-4" />
+							<div class="h-full w-full animate-shimmer-intense"></div>
 						{:else}
 							<RiErrorWarningLine class="size-4" />
 						{/if}
@@ -526,7 +537,9 @@
 <CameraDetectionDialog
 	bind:open={detectionDialogOpen}
 	event={detectionEvent}
-	thumbnailSrc={detectionEvent && eventThumbnails[detectionEvent.id] !== "error" ? eventThumbnails[detectionEvent.id] : null}
+	thumbnailSrc={detectionEvent && eventThumbnails[detectionEvent.id] !== "error"
+		? eventThumbnails[detectionEvent.id]
+		: null}
 />
 
 <style>

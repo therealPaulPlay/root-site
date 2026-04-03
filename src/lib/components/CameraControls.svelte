@@ -3,12 +3,15 @@
 	import Label from "./ui/label/label.svelte";
 	import Spinner from "./ui/spinner/spinner.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
+	import * as Dialog from "$lib/components/ui/dialog";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import * as Slider from "$lib/components/ui/slider";
 	import { RiCheckLine, RiCloseLine, RiFileShredLine, RiRestartLine } from "svelte-remixicon";
 	import Switch from "./ui/switch/switch.svelte";
-	import { toast } from "svelte-sonner";
 	import { vibrate } from "$lib/utils/haptics";
+
+	let deviceInfoDevice = $state(null);
+	let deviceInfoOpen = $state(false);
 
 	const COOLDOWN_STEPS = [0, 1, 5, 10, 30];
 	let cooldownSliderValue = $derived([Math.max(0, COOLDOWN_STEPS.indexOf(notificationCooldown))]);
@@ -171,10 +174,7 @@
 						<div class="flex flex-1 items-center gap-1 truncate">
 							<button
 								class="text-sm font-medium hover:underline active:underline"
-								onclick={() =>
-									toast.info(
-										"Device ID: " + device.id + ", paired on " + new Date(device.pairedAt)?.toLocaleDateString()
-									)}
+								onclick={() => { deviceInfoDevice = device; deviceInfoOpen = true; }}
 							>
 								{device.name || "N/A"}
 							</button>
@@ -261,3 +261,27 @@
 		</AlertDialog.Content>
 	</AlertDialog.Root>
 </div>
+
+<Dialog.Root bind:open={deviceInfoOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Device info</Dialog.Title>
+		</Dialog.Header>
+		{#if deviceInfoDevice}
+			<div class="space-y-2 text-sm">
+				<div class="flex justify-between">
+					<span class="text-muted-foreground">Name</span>
+					<span>{deviceInfoDevice.name || "N/A"}</span>
+				</div>
+				<div class="flex justify-between">
+					<span class="text-muted-foreground">Paired on</span>
+					<span>{new Date(deviceInfoDevice.pairedAt)?.toLocaleDateString()}</span>
+				</div>
+				<div class="flex justify-between gap-4">
+					<span class="text-muted-foreground">ID</span>
+					<span class="text-end select-text text-xs leading-5">{deviceInfoDevice.id}</span>
+				</div>
+			</div>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>

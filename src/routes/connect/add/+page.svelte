@@ -531,7 +531,7 @@
 					<AlertDialog.Title>Abort?</AlertDialog.Title>
 					<AlertDialog.Description>
 						{#if successfulPair}
-							WARNING: Aborting the setup now will NOT reset the full pairing progress. Finishing the WiFi and Relay
+							Aborting the setup now will not reset the full pairing progress. Finishing the WiFi and Relay
 							setup is highly recommended.
 						{:else}
 							All setup progress will be lost.

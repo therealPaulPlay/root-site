@@ -17,11 +17,11 @@ get along, so we shut typescript up by casting `value` to `never`.
 -->
 <SliderPrimitive.Root
 	bind:ref
-	bind:value={value}
+	bind:value
 	data-slot="slider"
 	{orientation}
 	class={cn(
-		"data-vertical:min-h-40 relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:w-auto data-vertical:flex-col",
+		"relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col",
 		className
 	)}
 	{...restProps}
@@ -31,21 +31,21 @@ get along, so we shut typescript up by casting `value` to `never`.
 			data-slot="slider-track"
 			data-orientation={orientation}
 			class={cn(
-				"bg-muted data-horizontal:h-2 data-horizontal:w-full data-vertical:h-full data-vertical:w-2 bg-muted relative grow overflow-hidden data-horizontal:w-full data-vertical:h-full"
+				"relative grow overflow-hidden bg-muted bg-muted data-horizontal:h-2 data-horizontal:w-full data-horizontal:w-full data-vertical:h-full data-vertical:h-full data-vertical:w-2"
 			)}
 		>
 			<SliderPrimitive.Range
 				data-slot="slider-range"
 				class={cn(
-					"bg-primary absolute select-none data-horizontal:h-full data-vertical:w-full"
+					"absolute bg-primary transition-all duration-150 select-none data-horizontal:h-full data-vertical:w-full"
 				)}
 			/>
 		</span>
-		{#each thumbItems as thumb (thumb)}
+		{#each thumbItems as thumb (thumb.index)}
 			<SliderPrimitive.Thumb
 				data-slot="slider-thumb"
 				index={thumb.index}
-				class="border-ring ring-ring/50 relative size-4 not-dark:border bg-background dark:bg-foreground transition-color after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50"
+				class="relative block size-4 shrink-0 border-ring bg-background ring-ring/50 transition-all duration-150 select-none not-dark:border after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50 dark:bg-foreground"
 			/>
 		{/each}
 	{/snippet}

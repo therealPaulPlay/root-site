@@ -332,6 +332,43 @@
 	}
 }
 
+@utility animate-shimmer {
+	--shimmer-color: var(--muted);
+	background: linear-gradient(
+		90deg,
+		transparent 20%,
+		color-mix(in srgb, var(--shimmer-color) 33%, transparent) 26%,
+		color-mix(in srgb, var(--shimmer-color) 55%, transparent) 31%,
+		color-mix(in srgb, var(--shimmer-color) 74%, transparent) 36%,
+		color-mix(in srgb, var(--shimmer-color) 86%, transparent) 40%,
+		color-mix(in srgb, var(--shimmer-color) 95%, transparent) 45%,
+		var(--shimmer-color) 48%,
+		var(--shimmer-color) 52%,
+		color-mix(in srgb, var(--shimmer-color) 95%, transparent) 55%,
+		color-mix(in srgb, var(--shimmer-color) 86%, transparent) 60%,
+		color-mix(in srgb, var(--shimmer-color) 74%, transparent) 64%,
+		color-mix(in srgb, var(--shimmer-color) 55%, transparent) 69%,
+		color-mix(in srgb, var(--shimmer-color) 33%, transparent) 74%,
+		transparent 80%
+	);
+	background-size: 200% 100%;
+	animation: shimmer 1s linear infinite;
+}
+
+@utility animate-shimmer-intense {
+	@apply animate-shimmer;
+	--shimmer-color: var(--border);
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: 100% 0;
+	}
+	100% {
+		background-position: -100% 0;
+	}
+}
+
 @utility no-scrollbar {
 	-ms-overflow-style: none;
 	scrollbar-width: none;

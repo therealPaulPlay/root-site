@@ -93,17 +93,18 @@
 
 	// Thumbnail IntersectionObserver
 	function observeThumbnail(eventId) {
+		const rootMargin = 100; // Expand intersection area by this
 		return (element) => {
 			const observer = new IntersectionObserver(
 				([entry]) => {
 					if (entry.isIntersecting) queueThumbnail(eventId);
 					else removeThumbnailFromQueue(eventId);
 				},
-				{ rootMargin: "100px" }
+				{ rootMargin: rootMargin + "px" }
 			);
 			observer.observe(element);
 			requestAnimationFrame(() => {
-				if (element.getBoundingClientRect().top < window.innerHeight + 100) queueThumbnail(eventId);
+				if (element.getBoundingClientRect().top < window.innerHeight + rootMargin) queueThumbnail(eventId);
 			});
 			return () => observer.disconnect();
 		};
