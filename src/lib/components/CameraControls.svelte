@@ -18,6 +18,7 @@
 
 	let {
 		loading,
+		eventTypes = [],
 		restartDialogOpen = $bindable(false),
 		resetDialogOpen = $bindable(false),
 		removeDeviceDialogOpen = $bindable({}),
@@ -134,23 +135,18 @@
 				spacing={2}
 				class="of-left of-right no-scrollbar max-w-full overflow-x-auto"
 			>
-				<ToggleGroup.Item value="person" class="gap-1">
-					Person
-					{#if eventDetectionTypes.includes("person")}<RiCheckLine class="size-4" />{/if}
-				</ToggleGroup.Item>
-				<ToggleGroup.Item value="pet" class="gap-2">
-					Pet
-					{#if eventDetectionTypes.includes("pet")}<RiCheckLine class="size-4" />{/if}
-				</ToggleGroup.Item>
-				<ToggleGroup.Item value="vehicle" class="gap-2">
-					Vehicle
-					{#if eventDetectionTypes.includes("vehicle")}<RiCheckLine class="size-4" />{/if}
-				</ToggleGroup.Item>
-				<ToggleGroup.Item value="motion" class="gap-2">
-					Other motion
-					{#if eventDetectionTypes.includes("motion")}<RiCheckLine class="size-4" />{/if}
-				</ToggleGroup.Item>
+				{#each eventTypes as type}
+					<ToggleGroup.Item value={type.value} class="gap-2">
+						{type.label}
+						{#if eventDetectionTypes.includes(type.value)}<RiCheckLine class="size-4" />{/if}
+					</ToggleGroup.Item>
+				{/each}
 			</ToggleGroup.Root>
+			{#if eventTypes.length === 0}
+				<div class="border p-4 text-center text-sm text-muted-foreground">
+					{loading.is("eventDetection") ? "Event types loading..." : "No event types available."}
+				</div>
+			{/if}
 		</div>
 	</div>
 

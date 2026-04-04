@@ -1,7 +1,10 @@
 import { toast } from "svelte-sonner";
-import { encode, decode } from "cbor-x";
+import { Encoder } from "cbor-x";
 import { Encryption, encodeKey, computeAAD } from "./encryption.js";
 import { getProduct, saveProduct } from "./pairedProductsStorage.js";
+
+// int64AsNumber avoids BigInt values that break Date() and other JS APIs
+const cbor = new Encoder({ useRecords: false, mapsAsObjects: true, int64AsNumber: true });
 
 export const RELAY_REQUEST_TIMEOUT = 10_000;
 const KEY_RENEWAL_MSG_TYPES = ["renewKey", "renewKeyAck"];
@@ -81,7 +84,7 @@ export class RelayComm {
 			this.#ws.binaryType = "arraybuffer";
 			this.#ws.onmessage = async (e) => {
 				try {
-					const msg = decode(new Uint8Array(e.data));
+					const msg = cbor.decode(new Uint8Array(e.data));
 					await this.#handleMessage(msg);
 				} catch (err) {
 					console.error("Failed to handle WebSocket message:", err);
@@ -149,7 +152,7 @@ export class RelayComm {
 			const newKeypair = await Encryption.generateKeypair();
 
 			// Step 1: Send renewal request (encrypted with OLD key), wait for camera to confirm
-			const renewResult = await this.#send(productId, "renewKey", { newPublicKey: encodeKey(newKeypair.publicKey) });
+			const renewResult = await this.#send(productId, "renewKey", { newPublicKey: newKeypair.publicKey });
 
 			if (!renewResult.payload.success) {
 				throw new Error(
@@ -183,10 +186,10 @@ export class RelayComm {
 	async #handleMessage(msg) {
 		// Payload should be CBOR bytes — decrypt first if encrypted, then decode
 		if (!(msg.payload instanceof Uint8Array)) {
-			console.warn("Received non-CBOR payload, ignoring.");
+			console.warn("Received non-CBOR payload, ignoring:", msg);
 			return;
 		}
-		msg.payload = decode(await this.#decryptPayload(msg) ?? msg.payload);
+		msg.payload = cbor.decode(await this.#decryptPayload(msg) ?? msg.payload);
 
 		// Suppress decryption errors unless explicitly marked to surface (after retry or no previous key)
 		const suppressDecryptionError = msg.payload?.errorCode === ERR_DECRYPTION_FAILED && !this.#surfaceDecryptionError.has(msg.requestId);
@@ -265,7 +268,7 @@ export class RelayComm {
 
 			const encryption = await this.#getEncryption(productId);
 			const aad = await computeAAD(type, this.deviceId, productId);
-			const encrypted = await encryption.encrypt(encode(data), aad);
+			const encrypted = await encryption.encrypt(cbor.encode(data), aad);
 
 			// Check again after encryption awaits — disconnect() may have been called
 			if (this.#intentionalDisconnect) throw new Error(ERR_INTENTIONAL_DISCONNECT);
@@ -279,7 +282,7 @@ export class RelayComm {
 				this.#pendingRequestTimeouts.set(requestId, { timeout, resolve, reject });
 
 				this.#ws.send(
-					encode({
+					cbor.encode({
 						type,
 						originId: this.deviceId,
 						targetId: productId,

@@ -345,20 +345,20 @@
 								await bluetoothInstance.writeAndRead("pair", {
 									deviceId,
 									deviceName: deviceNameInput.trim(),
-									devicePublicKey: encodeKey(keypair.publicKey)
+									devicePublicKey: keypair.publicKey
 								});
 
 								// Get model name
 								const modelResponse = await bluetoothInstance.read("productModel");
 
-								// Get camera public key
+								// Get camera public key (arrives as Uint8Array via CBOR)
 								const publicKeyResponse = await bluetoothInstance.read("productPublicKey");
 
 								// Save product after successful pairing
 								saveProduct({
 									id: currentProductId,
 									name: "My ROOT " + modelResponse.model?.[0]?.toUpperCase() + modelResponse.model?.slice(1), // Don't change this prefix! It needs to match the firmware ProductAlias
-									productPublicKey: publicKeyResponse.publicKey,
+									productPublicKey: encodeKey(publicKeyResponse.publicKey),
 									devicePublicKey: encodeKey(keypair.publicKey),
 									devicePrivateKey: encodeKey(keypair.privateKey),
 									previousDevicePrivateKey: null,

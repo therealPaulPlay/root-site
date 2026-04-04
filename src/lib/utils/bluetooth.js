@@ -5,7 +5,10 @@
 
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { toast } from "svelte-sonner";
-import { encode, decode } from "cbor-x";
+import { Encoder } from "cbor-x";
+
+// int64AsNumber avoids BigInt values that break Date() and other JS APIs
+const cbor = new Encoder({ useRecords: false, mapsAsObjects: true, int64AsNumber: true });
 
 const SERVICE_UUID = "a07498ca-ad5b-474e-940d-16f1fbe7e8cd";
 const CHAR_UUIDS = {
@@ -84,7 +87,7 @@ export class Bluetooth {
 
 		let response;
 		try {
-			response = decode(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
+			response = cbor.decode(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
 		} catch (error) {
 			console.error("Failed to decode BLE response (read):", error);
 			throw new Error("Invalid CBOR response from device", { cause: error });
@@ -101,7 +104,7 @@ export class Bluetooth {
 		const uuid = CHAR_UUIDS[charName];
 		if (!uuid) throw new Error(`Unknown characteristic: ${charName}`);
 
-		const bytes = encode(data);
+		const bytes = cbor.encode(data);
 		const dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
 		await BleClient.write(this.#deviceId, SERVICE_UUID, uuid, dataView);

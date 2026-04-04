@@ -3,7 +3,6 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { Checkbox } from "$lib/components/ui/checkbox";
 	import Label from "./ui/label/label.svelte";
-	import { getLocalTimeZone } from "@internationalized/date";
 	import {
 		RiArrowDownSLine,
 		RiCalendarFill,
@@ -24,11 +23,12 @@
 	import Separator from "./ui/separator/separator.svelte";
 	import { SvelteDate, SvelteSet } from "svelte/reactivity";
 	import CameraDetectionDialog from "./CameraDetectionDialog.svelte";
-	import { tick } from "svelte";
+	import { onDestroy, tick } from "svelte";
 	import { formatDate, formatTime } from "$lib/utils/formatDateTime";
 
 	let {
 		events = [],
+		eventTypes = [],
 		loading,
 		scrollElement,
 		eventThumbnails = {},
@@ -42,14 +42,17 @@
 		recordingAudioUrl,
 		onShareRecording = () => {},
 		onVideoError = () => {},
-		highlightEventId = null
+		highlightEventId = null,
+		hasMore = false,
+		dateRange = $bindable(),
+		selectedTypes = $bindable([]),
+		onApplyFilter = () => {},
+		onLoadMore = () => {}
 	} = $props();
 
 	// Events list state
 	let dateRangeOpen = $state(false);
 	let typeFilterOpen = $state(false);
-	let dateRangeValue = $state(undefined);
-	let selectedTypes = $state([]);
 	let selectedEvent = $state(null);
 	let viewedEventIds = new SvelteSet();
 	let expandedStacks = new SvelteSet();
@@ -60,38 +63,59 @@
 	let highlightedEventId = $state(null);
 	let lastHandledEventId = null;
 	let eventElements = $state({});
+	let highlightObserver = null;
+
+	let highlightTimeout = null;
 
 	$effect(() => {
 		if (!highlightEventId || highlightEventId === lastHandledEventId || events.length === 0) return;
 		if (!events.some((e) => e.id === highlightEventId)) return;
-		lastHandledEventId = highlightEventId;
-		highlightedEventId = highlightEventId;
-
-		// Ensure the target date group is loaded
-		const targetDayIndex = Object.entries(groupedEvents).findIndex(([_dateKey, clusters]) =>
-			clusters.some((c) => c.events.some((e) => e.id === highlightEventId))
-		);
-		if (targetDayIndex >= visibleDayCount) visibleDayCount = targetDayIndex + 1;
+		const targetId = highlightEventId;
+		lastHandledEventId = targetId;
 
 		// Expand the cluster if the event is collapsed inside a stack
 		for (const clusters of Object.values(groupedEvents)) {
 			for (const cluster of clusters) {
-				if (cluster.events.length > 1 && cluster.events.some((e) => e.id === highlightEventId)) {
+				if (cluster.events.length > 1 && cluster.events.some((e) => e.id === targetId)) {
 					expandedStacks.add(cluster.id);
 					break;
 				}
 			}
 		}
 
+		// Wait for slide transitions to complete before scrolling
 		tick().then(() => {
-			const el = eventElements[highlightEventId];
-			if (el && scrollElement) {
+			highlightTimeout = setTimeout(() => {
+				const el = eventElements[targetId];
+				if (!el || !scrollElement) return;
+
+				// Smooth scroll to event
 				const elRect = el.getBoundingClientRect();
 				const scrollRect = scrollElement.getBoundingClientRect();
-				scrollElement.scrollTop += elRect.top - scrollRect.top - scrollElement.clientHeight / 2 + el.clientHeight / 2;
-			}
-			setTimeout(() => (highlightedEventId = null), 1500);
+				const offset = elRect.top - scrollRect.top - scrollElement.clientHeight / 2 + el.clientHeight / 2;
+				scrollElement.scrollBy({ top: offset, behavior: "smooth" });
+
+				// Start highlight animation once visible, clear after 1.5s
+				highlightObserver?.disconnect();
+				highlightObserver = new IntersectionObserver(
+					([entry]) => {
+						if (entry.isIntersecting) {
+							highlightObserver.disconnect();
+							highlightObserver = null;
+							highlightedEventId = targetId;
+							setTimeout(() => (highlightedEventId = null), 1500);
+						}
+					},
+					{ root: scrollElement }
+				);
+				highlightObserver.observe(el);
+			}, 200);
 		});
+	});
+
+	onDestroy(() => {
+		highlightObserver?.disconnect();
+		clearTimeout(highlightTimeout);
 	});
 
 	// Recording player state
@@ -149,27 +173,14 @@
 	}
 
 	// Event filtering
-	const hasDateFilter = $derived(dateRangeValue?.start && dateRangeValue?.end);
+	const hasDateFilter = $derived(dateRange?.start && dateRange?.end);
 	const hasTypeFilter = $derived(selectedTypes.length > 0);
-	const availableTypes = $derived([...new Set(events.map((e) => e.eventType).filter(Boolean))].sort());
-	const filteredEvents = $derived(
-		events.filter((event) => {
-			if (hasDateFilter) {
-				const eventDate = new SvelteDate(event.timestamp).setHours(0, 0, 0, 0);
-				const startDate = dateRangeValue.start.toDate(getLocalTimeZone()).getTime();
-				const endDate = dateRangeValue.end.toDate(getLocalTimeZone()).getTime();
-				if (eventDate < startDate || eventDate > endDate) return false;
-			}
-			if (hasTypeFilter && !selectedTypes.includes(event.eventType)) return false;
-			return true;
-		})
-	);
 
 	const GROUP_EVENTS_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 
-	// Group by date, then cluster consecutive events within groupEventsThreshold
+	// Group by date, then cluster consecutive events within threshold
 	const groupedEvents = $derived.by(() => {
-		const byDate = filteredEvents.reduce((groups, event) => {
+		const byDate = events.reduce((groups, event) => {
 			const dateKey = formatDate(event.timestamp);
 			(groups[dateKey] ||= []).push(event);
 			return groups;
@@ -196,29 +207,12 @@
 		return result;
 	});
 
-	// Pagination -------------------------------------------------------------------
-
-	// Show 7 more date groups (= one week) each time the sentinel is visible
-	const DAYS_PER_PAGE = 7;
-	let visibleDayCount = $state(DAYS_PER_PAGE);
-
-	// Only show the first visibleDayCount date groups
-	const visibleDateEntries = $derived(Object.entries(groupedEvents).slice(0, visibleDayCount));
-	const hasMoreDays = $derived(visibleDayCount < Object.entries(groupedEvents).length);
-
-	// Reset visible count when filters change
-	$effect(() => {
-		dateRangeValue;
-		selectedTypes;
-		visibleDayCount = DAYS_PER_PAGE;
-	});
-
 	function observeLoadMore(element) {
 		const observer = new IntersectionObserver(
 			([entry]) => {
-				if (entry.isIntersecting && hasMoreDays) visibleDayCount += DAYS_PER_PAGE;
+				if (entry.isIntersecting && hasMore) onLoadMore();
 			},
-			{ rootMargin: "0px 0px 400px 0px" }
+			{ root: scrollElement, rootMargin: "0px 0px 400px 0px" }
 		);
 		observer.observe(element);
 		return () => observer.disconnect();
@@ -227,8 +221,13 @@
 
 <div class="flex flex-wrap items-center justify-end gap-2">
 	<!-- Date range filter -->
-	<Dialog.Root bind:open={dateRangeOpen}>
-		<Dialog.Trigger class="{buttonVariants({ variant: 'outline' })} gap-2">
+	<Dialog.Root
+		bind:open={dateRangeOpen}
+		onOpenChange={(open) => {
+			if (!open) onApplyFilter();
+		}}
+	>
+		<Dialog.Trigger disabled={loading.is("events")} class="{buttonVariants({ variant: 'outline' })} gap-2">
 			{#if !hasDateFilter}
 				<RiCalendarLine class="size-4" />
 			{:else}
@@ -240,8 +239,8 @@
 				<Dialog.Title>Date range</Dialog.Title>
 			</Dialog.Header>
 			<div class="space-y-4">
-				<RangeCalendar.RangeCalendar bind:value={dateRangeValue} class="border" />
-				<Button variant="outline" disabled={!hasDateFilter} class="w-full" onclick={() => (dateRangeValue = undefined)}>
+				<RangeCalendar.RangeCalendar bind:value={dateRange} class="border" />
+				<Button variant="outline" disabled={!hasDateFilter} class="w-full" onclick={() => (dateRange = undefined)}>
 					Clear
 				</Button>
 			</div>
@@ -249,8 +248,13 @@
 	</Dialog.Root>
 
 	<!-- Type filter -->
-	<Dialog.Root bind:open={typeFilterOpen}>
-		<Dialog.Trigger class="{buttonVariants({ variant: 'outline' })} gap-2">
+	<Dialog.Root
+		bind:open={typeFilterOpen}
+		onOpenChange={(open) => {
+			if (!open) onApplyFilter();
+		}}
+	>
+		<Dialog.Trigger disabled={loading.is("events")} class="{buttonVariants({ variant: 'outline' })} gap-2">
 			{#if !hasTypeFilter}
 				<RiFilterLine class="size-4" />
 			{:else}
@@ -262,21 +266,22 @@
 				<Dialog.Title>Type</Dialog.Title>
 			</Dialog.Header>
 			<div class="space-y-3">
-				{#each availableTypes as type}
+				{#each eventTypes as type}
 					<Label class="text-nowrap">
 						<Checkbox
-							checked={selectedTypes.includes(type)}
+							checked={selectedTypes.includes(type.value)}
 							onCheckedChange={() => {
-								if (selectedTypes.includes(type)) selectedTypes = selectedTypes.filter((t) => t !== type);
-								else selectedTypes = [...selectedTypes, type];
+								if (selectedTypes.includes(type.value)) selectedTypes = selectedTypes.filter((t) => t !== type.value);
+								else selectedTypes = [...selectedTypes, type.value];
 							}}
 						/>
-						<p class="truncate">{type}</p>
+						<p class="truncate">{type.label}</p>
 					</Label>
+				{:else}
+					<p class="text-sm text-muted-foreground">
+						{loading.is("eventDetection") ? "Event types loading..." : "No event types available."}
+					</p>
 				{/each}
-				{#if availableTypes.length === 0}
-					<p class="text-sm text-muted-foreground">No types available.</p>
-				{/if}
 			</div>
 		</Dialog.Content>
 	</Dialog.Root>
@@ -292,8 +297,6 @@
 	{:else}
 		<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">No events available.</div>
 	{/if}
-{:else if Object.keys(groupedEvents).length === 0}
-	<div class="mt-6 border p-8 text-center text-sm text-muted-foreground">No events match the selected filters.</div>
 {:else}
 	{#snippet eventItem(event)}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -353,7 +356,7 @@
 		</div>
 	{/snippet}
 
-	{#each visibleDateEntries as [dateKey, clusters]}
+	{#each Object.entries(groupedEvents) as [dateKey, clusters]}
 		<!-- Date header -->
 		<div class="smooth-mask-b sticky -top-6 z-10 flex items-center gap-4 bg-background py-4">
 			<span class="shrink-0 text-sm text-muted-foreground">{dateKey}</span>
@@ -404,7 +407,7 @@
 			{/each}
 		</div>
 	{/each}
-	{#if hasMoreDays}
+	{#if hasMore}
 		<div {@attach observeLoadMore} class="flex justify-center p-6">
 			<Spinner class="size-6" />
 		</div>

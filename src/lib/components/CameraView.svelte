@@ -5,6 +5,7 @@
 	import * as Tabs from "$lib/components/ui/tabs";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import { removeProduct } from "$lib/utils/pairedProductsStorage";
+	import { getLocalTimeZone } from "@internationalized/date";
 	import { toast } from "svelte-sonner";
 	import CameraControls from "$lib/components/CameraControls.svelte";
 	import CameraHealth from "$lib/components/CameraHealth.svelte";
@@ -40,6 +41,10 @@
 
 	// Events
 	let events = $state([]);
+	let eventsNextCursor = $state(0);
+	let eventsDateRange = $state();
+	let eventsSelectedTypes = $state([]);
+	let initialEventsLoaded = false;
 	let eventThumbnails = $state({});
 	let viewRecordingDialog = $state(false);
 	let recordingAudioElement = $state();
@@ -56,6 +61,7 @@
 	let recordingSoundEnabled = $state(false);
 	let eventDetectionEnabled = $state(false);
 	let eventDetectionTypes = $state([]);
+	let eventTypes = $state([]);
 	let notificationsEnabled = $state(false);
 	let notificationCooldown = $state(0);
 
@@ -83,7 +89,11 @@
 		if (!highlightEventId || highlightEventId === lastHandledEventId) return;
 		lastHandledEventId = highlightEventId;
 		activeTab = TABS.EVENTS;
-		if (!events.some((e) => e.id === highlightEventId) && relayCommInstance) relayCommInstance.onConnected(() => loadEvents());
+
+		// If events have already been loaded but the target is missing (stale), reload until required event
+		if (initialEventsLoaded && !events.some((e) => e.id === highlightEventId) && relayCommInstance) {
+			relayCommInstance.onConnected(() => loadEvents(0, { untilEventId: highlightEventId, resetFilter: true }));
+		}
 	});
 
 	// Video element reparenting
@@ -100,7 +110,7 @@
 					if (entry.isIntersecting) queueThumbnail(eventId);
 					else removeThumbnailFromQueue(eventId);
 				},
-				{ rootMargin: rootMargin + "px" }
+				{ root: eventListScrollElement, rootMargin: rootMargin + "px" }
 			);
 			observer.observe(element);
 			requestAnimationFrame(() => {
@@ -153,7 +163,7 @@
 
 	onMount(() => {
 		if (!relayCommInstance) return console.warn("No relayComm instance passed to CameraView!");
-		
+
 		// Register all relay handlers
 		relayCommInstance.on("getEventsResult", handleEventsResult);
 		relayCommInstance.on("getThumbnailResult", handleThumbnailResult);
@@ -177,8 +187,11 @@
 		relayCommInstance.on("restartResult", handleRestartResult);
 		relayCommInstance.on("resetResult", handleResetResult);
 
-		// Load events once connected since it's the default tab
-		relayCommInstance.onConnected(() => loadEvents());
+		// Load events and event types once connected since events is the default tab
+		relayCommInstance.onConnected(() => {
+			loadEvents(0, { untilEventId: highlightEventId }); // highlightedEventId can be undefined
+			loadEventDetectionConfig();
+		});
 
 		return () => {
 			// Unregister all relay handlers
@@ -232,9 +245,44 @@
 	}
 
 	// Events handlers
-	function loadEvents() {
+	function filterKey() {
+		return `${eventsDateRange?.start}|${eventsDateRange?.end}|${eventsSelectedTypes.join()}`;
+	}
+	let lastFilterKey = filterKey();
+
+	function applyFilterIfChanged() {
+		const key = filterKey();
+		if (key === lastFilterKey) return;
+		lastFilterKey = key;
+		loadEvents(0);
+	}
+
+	function buildFilterParams() {
+		const params = {};
+		if (eventsDateRange?.start && eventsDateRange?.end) {
+			params.startTime = BigInt(eventsDateRange.start.toDate(getLocalTimeZone()).getTime());
+			const endDate = eventsDateRange.end.toDate(getLocalTimeZone());
+			endDate.setHours(23, 59, 59, 999);
+			params.endTime = BigInt(endDate.getTime());
+		}
+		if (eventsSelectedTypes.length > 0) params.eventTypes = eventsSelectedTypes;
+		return params;
+	}
+
+	function loadEvents(cursor = 0, { untilEventId, resetFilter } = {}) {
+		if (cursor === 0) {
+			events = [];
+			eventsNextCursor = 0;
+			if (resetFilter) {
+				eventsDateRange = undefined;
+				eventsSelectedTypes = [];
+				lastFilterKey = filterKey();
+			}
+		}
 		loading.set("events", true);
-		relayCommInstance.send(productId, "getEvents").catch((error) => {
+		const params = { limit: 200, cursor, ...buildFilterParams() };
+		if (untilEventId) params.untilEventId = untilEventId;
+		relayCommInstance.send(productId, "getEvents", params).catch((error) => {
 			toast.error("Failed to load events: " + error.message);
 			console.error("Failed to load events:", error);
 			loading.set("events", false);
@@ -247,7 +295,13 @@
 			toast.error("Failed to load events: " + msg.payload.error || "Unknown error");
 			return;
 		}
-		events = msg.payload.events || [];
+		initialEventsLoaded = true;
+		const incoming = msg.payload.events || [];
+		if (eventsNextCursor > 0) events = [...events, ...incoming];
+		else events = incoming;
+
+		// Firmware returns 0 as nextCursor when there are no more pages
+		eventsNextCursor = msg.payload.nextCursor ?? 0;
 	}
 
 	// Thumbnail loading with rate limiting (5/s)
@@ -511,6 +565,7 @@
 		eventDetectionEnabled = msg.payload.enabled;
 		const types = msg.payload.enabledTypes || [];
 		eventDetectionTypes = types.length > 0 ? types : ["person", "pet", "vehicle"];
+		eventTypes = msg.payload.availableEventTypes || [];
 	}
 
 	function toggleEventDetection() {
@@ -817,7 +872,7 @@
 	container={getArticleEl()}
 	modal={Capacitor.isNativePlatform() || innerWidth.current < 640}
 >
-	<Drawer.Content class="top-0! bottom-auto! safe-h-svh" showHandle={false}>
+	<Drawer.Content class="safe-h-svh top-0! bottom-auto!" showHandle={false}>
 		<!-- Top bar with close button -->
 		<div class="flex border-b text-xl">
 			<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" onclick={() => (open = false)}>
@@ -856,7 +911,6 @@
 						tabsLoaded[TABS.CONTROLS] = true;
 						loadMicrophone();
 						loadRecordingSound();
-						loadEventDetectionConfig();
 						loadNotifications();
 						loadDevices();
 					} else if (v === TABS.HEALTH && !tabsLoaded[TABS.HEALTH]) {
@@ -891,7 +945,7 @@
 				<Tabs.Content value={TABS.EVENTS} class="min-h-0">
 					<PullToRefresh
 						onRefresh={() => {
-							loadEvents();
+							loadEvents(0, { resetFilter: true });
 							return loading.promise("events");
 						}}
 						bind:scrollEl={eventListScrollElement}
@@ -903,6 +957,7 @@
 						></div>
 						<CameraEvents
 							{events}
+							{eventTypes}
 							{observeThumbnail}
 							{viewRecording}
 							{loading}
@@ -910,6 +965,11 @@
 							{loadingThumbnails}
 							{thumbnailQueue}
 							{highlightEventId}
+							hasMore={eventsNextCursor !== 0}
+							bind:dateRange={eventsDateRange}
+							bind:selectedTypes={eventsSelectedTypes}
+							onApplyFilter={applyFilterIfChanged}
+							onLoadMore={() => { if (eventsNextCursor !== 0 && !loading.is("events")) loadEvents(eventsNextCursor); }}
 							scrollElement={eventListScrollElement}
 							bind:viewRecordingDialog
 							bind:recordingAudioElement
@@ -934,6 +994,7 @@
 					>
 						<CameraControls
 							{loading}
+							{eventTypes}
 							bind:restartDialogOpen
 							bind:resetDialogOpen
 							bind:removeDeviceDialogOpen
