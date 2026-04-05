@@ -4,7 +4,7 @@ export function snapshotVideo(videoElement, container) {
 	const canvas = Object.assign(document.createElement("canvas"), {
 		width: videoElement.videoWidth,
 		height: videoElement.videoHeight,
-		className: videoElement.className
+		className: "absolute inset-0 h-full w-full object-contain"
 	});
 	canvas.getContext("2d").drawImage(videoElement, 0, 0);
 	container.appendChild(canvas);
