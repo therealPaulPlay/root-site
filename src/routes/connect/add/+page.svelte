@@ -180,8 +180,8 @@
 			in:fly={{ axis: "x", x: 15, duration: 250 }}
 		>
 			{#if pairingCode}
-				<div class="pt-0.5 pl-0.5">
-					<QrCode value={pairingCode} size={250} errorCorrection="H" />
+				<div class="pt-2 pl-2">
+					<QrCode value={pairingCode} size={260} />
 				</div>
 			{:else}
 				<p>No pairing code received.</p>
@@ -531,8 +531,8 @@
 					<AlertDialog.Title>Abort?</AlertDialog.Title>
 					<AlertDialog.Description>
 						{#if successfulPair}
-							Aborting the setup now will not reset the full pairing progress. Finishing the WiFi and Relay
-							setup is highly recommended.
+							Aborting the setup now will not reset the full pairing progress. Finishing the WiFi and Relay setup is
+							highly recommended.
 						{:else}
 							All setup progress will be lost.
 						{/if}
