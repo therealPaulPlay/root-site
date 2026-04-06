@@ -162,6 +162,7 @@
 	async function scanLoop() {
 		while (currentlyScanning && !successfulScan) {
 			scanStatus = null;
+
 			try {
 				await bluetoothInstance.read("scanQR");
 				if (successfulScan) return; // If already successful, exit
@@ -175,6 +176,7 @@
 				scanStatus = "failed";
 				await new Promise((r) => setTimeout(r, 1000));
 			}
+
 			// Yield time for viewfinder updates between scan attempts
 			if (currentlyScanning && !successfulScan) {
 				scanStatus = "retrying";
@@ -204,7 +206,7 @@
 		{/key}
 	{:else if step === 3}
 		<div
-			class="flex max-h-fit min-h-fit shrink-0 w-full items-center justify-center overflow-hidden border-b bg-white! py-10 md:py-12 lg:py-16"
+			class="flex max-h-fit min-h-fit w-full shrink-0 items-center justify-center overflow-hidden border-b bg-white! py-10 md:py-12 lg:py-16"
 			in:fly={{ axis: "x", x: 15, duration: 250 }}
 		>
 			{#if pairingCode}
