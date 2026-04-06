@@ -10,9 +10,9 @@
 		RiErrorWarningLine,
 		RiFilterFill,
 		RiFilterLine,
+		RiHourglass2Fill,
 		RiPauseFill,
 		RiPlayFill,
-		RiSearchAi2Line,
 		RiShareLine,
 		RiTimeLine
 	} from "svelte-remixicon";
@@ -314,21 +314,26 @@
 				viewRecording(event);
 			}}
 		>
-			<div class="flex-1">
-				<p class="mb-2 w-full font-medium">{new Date(event.timestamp).toLocaleTimeString()}</p>
+			<div class="mb-auto flex-1">
+				<button
+					class="mb-2 w-fit text-left font-medium uppercase hover:underline active:underline"
+					onclick={(e) => {
+						e.stopPropagation();
+						detectionEvent = event;
+						detectionDialogOpen = true;
+					}}
+				>
+					{event.eventType || "N/A"}
+				</button>
 				<div class="flex flex-col gap-1">
-					<button
-						class="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground capitalize hover:underline active:underline"
-						onclick={(e) => {
-							e.stopPropagation();
-							detectionEvent = event;
-							detectionDialogOpen = true;
-						}}
-					>
-						<RiSearchAi2Line class="size-4" />{event.eventType || "N/A"}
-					</button>
-					<p class="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground">
-						<RiTimeLine class="size-4" />{event.duration || "N/A"}s
+					<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
+						<RiTimeLine class="size-4" />{new Date(event.timestamp).toLocaleTimeString([], {
+							hour: "2-digit",
+							minute: "2-digit"
+						})}
+					</p>
+					<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
+						<RiHourglass2Fill class="size-4" />{event.duration != null ? Math.round(event.duration) + "s" : "N/A"}
 					</p>
 				</div>
 			</div>
@@ -420,7 +425,12 @@
 		<Dialog.Header>
 			<Dialog.Title>
 				{selectedEvent
-					? formatDate(selectedEvent.timestamp) + ", " + new Date(selectedEvent.timestamp).toLocaleTimeString()
+					? formatDate(selectedEvent.timestamp) +
+						", " +
+						new Date(selectedEvent.timestamp).toLocaleTimeString([], {
+							hour: "2-digit",
+							minute: "2-digit"
+						})
 					: ""}
 			</Dialog.Title>
 		</Dialog.Header>
