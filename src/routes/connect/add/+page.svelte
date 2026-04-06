@@ -16,7 +16,9 @@
 		RiLockUnlockLine,
 		RiRefreshLine,
 		RiEyeLine,
-		RiEyeCloseLine
+		RiEyeCloseLine,
+		RiErrorWarningLine,
+		RiQrScanLine
 	} from "svelte-remixicon";
 	import * as NativeSelect from "$lib/components/ui/native-select/index.js";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
@@ -84,6 +86,7 @@
 	// Busy state
 	let currentlyConnectingViaBle = $state(false);
 	let currentlyScanning = $state(false);
+	let scanStatus = $state(null); // "failed" | "retrying"
 	let currentlyPairing = $state(false);
 	let currentlyConnectingWifi = $state(false);
 	let currentlyLoadingWifi = $state(false);
@@ -112,6 +115,7 @@
 	// Otherwise, it would stay connected and therefore wouldn't show up
 	// inside the BLE menu for selection the second time someone opens it
 	onDestroy(() => {
+		currentlyScanning = false;
 		bluetoothInstance.disconnect().catch((error) => {
 			console.warn("Failed to disconnect bluetooth on page cleanup:", error.message);
 		});
@@ -154,6 +158,30 @@
 			toast.error("Error getting relay status: " + error.message);
 		}
 	}
+
+	async function scanLoop() {
+		while (currentlyScanning && !successfulScan) {
+			scanStatus = null;
+			try {
+				await bluetoothInstance.read("scanQR");
+				if (successfulScan) return; // If already successful, exit
+				successfulScan = true; // Set success
+				currentlyScanning = false;
+				scanStatus = null;
+				vibrate.success();
+				return;
+			} catch {
+				if (!currentlyScanning) return;
+				scanStatus = "failed";
+				await new Promise((r) => setTimeout(r, 1000));
+			}
+			// Yield time for viewfinder updates between scan attempts
+			if (currentlyScanning && !successfulScan) {
+				scanStatus = "retrying";
+				await new Promise((r) => setTimeout(r, 1000));
+			}
+		}
+	}
 </script>
 
 <svelte:head>
@@ -176,7 +204,7 @@
 		{/key}
 	{:else if step === 3}
 		<div
-			class="flex min-h-fit w-full items-center justify-center overflow-hidden border-b bg-white! py-8 md:py-12 lg:py-16"
+			class="flex max-h-fit min-h-fit shrink-0 w-full items-center justify-center overflow-hidden border-b bg-white! py-10 md:py-12 lg:py-16"
 			in:fly={{ axis: "x", x: 15, duration: 250 }}
 		>
 			{#if pairingCode}
@@ -279,35 +307,40 @@
 
 			{#if step == 3}
 				<p class="max-w-3xl">
-					Point your ROOT camera at the QR code from at least half a meter away. Then, click "SCAN CODE".
+					Point your ROOT camera at the QR code from at least half a meter away. Then, click "START SCANNING".
 				</p>
 				<div class="mt-4 space-y-8">
-					<Button
-						class="w-fit"
-						disabled={currentlyScanning || successfulScan}
-						onclick={async () => {
-							try {
-								currentlyScanning = true;
-								await bluetoothInstance.read("scanQR");
-
-								// Set success
-								successfulScan = true;
-								vibrate.success();
-							} catch (error) {
-								toast.error("Error scanning code: " + error.message);
-							} finally {
-								currentlyScanning = false;
-							}
-						}}
-					>
-						{#if currentlyScanning}
-							<Spinner />
+					<div class="flex items-center gap-3">
+						<Button
+							class="w-fit"
+							disabled={successfulScan}
+							onclick={() => {
+								if (currentlyScanning) {
+									currentlyScanning = false;
+									scanStatus = null;
+								} else {
+									scanStatus = null;
+									currentlyScanning = true;
+									scanLoop();
+								}
+							}}
+						>
+							{#if currentlyScanning}
+								<Spinner />
+								Stop scanning
+							{:else}
+								Start scanning
+								{#if successfulScan}
+									<RiCheckLine class="h-4! w-4!" />
+								{/if}
+							{/if}
+						</Button>
+						{#if scanStatus === "failed" && !successfulScan}
+							<Label><RiErrorWarningLine class="size-4!" /> Read failed</Label>
+						{:else if scanStatus === "retrying" && !successfulScan}
+							<Label><RiQrScanLine class="size-4!" /> Retrying...</Label>
 						{/if}
-						Scan code
-						{#if successfulScan}
-							<RiCheckLine class="h-4! w-4!" />
-						{/if}
-					</Button>
+					</div>
 					{#if !successfulScan}
 						<QRViewfinder {bluetoothInstance} />
 					{/if}
