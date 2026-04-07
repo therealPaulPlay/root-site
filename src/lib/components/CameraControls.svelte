@@ -95,7 +95,7 @@
 	<div class="flex items-center justify-between gap-4 border p-4">
 		<div class="pr-6">
 			<Label class="text-base">Microphone</Label>
-			<p class="text-sm text-muted-foreground">Record audio together with video.</p>
+			<p class="text-sm text-muted-foreground">Record and stream audio.</p>
 		</div>
 		<Switch onCheckedChange={toggleMicrophone} disabled={loading.is("mic")} bind:checked={micEnabled} />
 	</div>
