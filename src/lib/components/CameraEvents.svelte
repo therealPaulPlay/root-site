@@ -11,6 +11,7 @@
 		RiFilterFill,
 		RiFilterLine,
 		RiHourglass2Fill,
+		RiInformationLine,
 		RiPauseFill,
 		RiPlayFill,
 		RiShareLine,
@@ -23,6 +24,7 @@
 	import Separator from "./ui/separator/separator.svelte";
 	import { SvelteDate, SvelteSet } from "svelte/reactivity";
 	import CameraDetectionDialog from "./CameraDetectionDialog.svelte";
+	import SwipeAction from "./SwipeAction.svelte";
 	import { onDestroy, tick } from "svelte";
 	import { formatDate, formatTime } from "$lib/utils/formatDateTime";
 
@@ -299,66 +301,67 @@
 	{/if}
 {:else}
 	{#snippet eventItem(event)}
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<div
-			bind:this={eventElements[event.id]}
-			class="relative flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-accent active:bg-accent {highlightedEventId ===
-			event.id
-				? 'animate-highlight'
-				: ''}"
-			role="button"
-			tabindex="0"
+		<SwipeAction
+			icon={RiInformationLine}
 			onclick={() => {
-				selectedEvent = event;
-				viewedEventIds.add(event.id);
-				viewRecording(event);
+				detectionEvent = event;
+				detectionDialogOpen = true;
 			}}
 		>
-			<div class="mb-auto flex-1">
-				<button
-					class="mb-2 w-fit text-left font-medium uppercase hover:underline active:underline"
-					onclick={(e) => {
-						e.stopPropagation();
-						detectionEvent = event;
-						detectionDialogOpen = true;
-					}}
-				>
-					{event.eventType || "N/A"}
-				</button>
-				<div class="flex flex-col gap-1">
-					<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
-						<RiTimeLine class="size-4" />{new Date(event.timestamp).toLocaleTimeString([], {
-							hour: "2-digit",
-							minute: "2-digit"
-						})}
-					</p>
-					<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
-						<RiHourglass2Fill class="size-4" />{event.duration != null ? Math.round(event.duration) + "s" : "N/A"}
-					</p>
-				</div>
-			</div>
-			<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted" {@attach observeThumbnail(event.id)}>
-				{#if eventThumbnails[event.id] && eventThumbnails[event.id] !== "error"}
-					<img
-						transition:fade={{ duration: 150 }}
-						src={eventThumbnails[event.id]}
-						alt="Event thumbnail"
-						class="h-full w-full object-cover"
-					/>
-				{:else}
-					<div class="flex h-full w-full items-center justify-center">
-						{#if !eventThumbnails[event.id] && (loadingThumbnails.has(event.id) || thumbnailQueue.includes(event.id))}
-							<div class="h-full w-full animate-shimmer-intense"></div>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<div
+				bind:this={eventElements[event.id]}
+				class="flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-accent active:bg-accent {highlightedEventId ===
+				event.id
+					? 'animate-highlight'
+					: ''}"
+				role="button"
+				tabindex="0"
+				onclick={() => {
+					selectedEvent = event;
+					viewedEventIds.add(event.id);
+					viewRecording(event);
+				}}
+			>
+					<div class="mb-auto flex-1">
+						<Label class="mb-2">
+							{event.eventType || "N/A"}
+						</Label>
+						<div class="flex flex-col gap-1">
+							<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
+								<RiTimeLine class="size-4" />{new Date(event.timestamp).toLocaleTimeString([], {
+									hour: "2-digit",
+									minute: "2-digit"
+								})}
+							</p>
+							<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
+								<RiHourglass2Fill class="size-4" />{event.duration != null ? Math.round(event.duration) + "s" : "N/A"}
+							</p>
+						</div>
+					</div>
+					<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted" {@attach observeThumbnail(event.id)}>
+						{#if eventThumbnails[event.id] && eventThumbnails[event.id] !== "error"}
+							<img
+								transition:fade={{ duration: 150 }}
+								src={eventThumbnails[event.id]}
+								alt="Event thumbnail"
+								class="h-full w-full object-cover"
+							/>
 						{:else}
-							<RiErrorWarningLine class="size-4" />
+							<div class="flex h-full w-full items-center justify-center">
+								{#if !eventThumbnails[event.id] && (loadingThumbnails.has(event.id) || thumbnailQueue.includes(event.id))}
+									<div class="h-full w-full animate-shimmer-intense"></div>
+								{:else}
+									<RiErrorWarningLine class="size-4" />
+								{/if}
+							</div>
 						{/if}
 					</div>
-				{/if}
-			</div>
-			{#if viewedEventIds.has(event.id)}
-				<div class="absolute top-2 left-2 h-1 w-1 bg-border"></div>
-			{/if}
-		</div>
+					{#if viewedEventIds.has(event.id)}
+						<div class="absolute top-2 left-2 h-1 w-1 bg-border"></div>
+					{/if}
+				</div>
+		</SwipeAction>
 	{/snippet}
 
 	{#each Object.entries(groupedEvents) as [dateKey, clusters]}

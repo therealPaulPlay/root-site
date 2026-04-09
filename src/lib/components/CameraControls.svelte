@@ -6,8 +6,9 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import * as Slider from "$lib/components/ui/slider";
-	import { RiCheckLine, RiCloseLine, RiFileShredLine, RiRestartLine } from "svelte-remixicon";
+	import { RiCheckLine, RiCloseLine, RiFileShredLine, RiInformationLine, RiRestartLine } from "svelte-remixicon";
 	import Switch from "./ui/switch/switch.svelte";
+	import SwipeAction from "./SwipeAction.svelte";
 	import { vibrate } from "$lib/utils/haptics";
 
 	let deviceInfoDevice = $state(null);
@@ -76,7 +77,7 @@
 			<div class="relative h-4">
 				{#each COOLDOWN_STEPS as step, i}
 					<span
-						class="absolute text-xs text-muted-foreground text-nowrap {i === 0
+						class="absolute text-xs text-nowrap text-muted-foreground {i === 0
 							? ''
 							: i === COOLDOWN_STEPS.length - 1
 								? '-translate-x-full'
@@ -161,53 +162,56 @@
 		{:else}
 			<div class="space-y-4">
 				{#each devices as device}
-					<div
-						class="flex items-center justify-between gap-2 border p-3 py-2 {device.id ===
-						localStorage.getItem('deviceId')
-							? 'bg-muted'
-							: ''}"
+					<SwipeAction
+						icon={RiInformationLine}
+						class="border"
+						onclick={() => {
+							deviceInfoDevice = device;
+							deviceInfoOpen = true;
+						}}
 					>
-						<div class="flex flex-1 items-center gap-1 truncate">
-							<button
-								class="text-sm font-medium hover:underline active:underline"
-								onclick={() => { deviceInfoDevice = device; deviceInfoOpen = true; }}
-							>
+						<div
+							class="flex items-center justify-between gap-2 p-3 py-2 {device.id === localStorage.getItem('deviceId')
+								? 'bg-muted'
+								: ''}"
+						>
+							<span class="truncate text-sm font-medium">
 								{device.name || "N/A"}
-							</button>
+							</span>
+							<!-- Removing the user's currently used device is done via the /connect page -->
+							{#if device.id !== localStorage.getItem("deviceId")}
+								<AlertDialog.Root
+									open={removeDeviceDialogOpen[device.id]}
+									onOpenChange={(open) => {
+										removeDeviceDialogOpen[device.id] = open;
+									}}
+								>
+									<AlertDialog.Trigger class="{buttonVariants({ variant: 'ghost', size: 'xs' })} -mr-1">
+										<RiCloseLine class="size-4" />
+									</AlertDialog.Trigger>
+									<AlertDialog.Content>
+										<AlertDialog.Header>
+											<AlertDialog.Title>Remove device?</AlertDialog.Title>
+											<AlertDialog.Description>
+												This will unpair "{device.name || "N/A"}" from this product. The device will no longer be able
+												to access this product.
+											</AlertDialog.Description>
+										</AlertDialog.Header>
+										<AlertDialog.Footer>
+											<AlertDialog.Cancel disabled={loading.is(`remove-${device.id}`)}>Cancel</AlertDialog.Cancel>
+											<AlertDialog.Action
+												disabled={loading.is(`remove-${device.id}`)}
+												onclick={() => removeDevice(device.id)}
+											>
+												{#if loading.is(`remove-${device.id}`)}<Spinner />{/if}
+												Remove
+											</AlertDialog.Action>
+										</AlertDialog.Footer>
+									</AlertDialog.Content>
+								</AlertDialog.Root>
+							{/if}
 						</div>
-						<!-- Removing the user's currently used device is done via the /connect page -->
-						{#if device.id !== localStorage.getItem("deviceId")}
-							<AlertDialog.Root
-								open={removeDeviceDialogOpen[device.id]}
-								onOpenChange={(open) => {
-									removeDeviceDialogOpen[device.id] = open;
-								}}
-							>
-								<AlertDialog.Trigger class="{buttonVariants({ variant: 'ghost', size: 'xs' })} -mr-1">
-									<RiCloseLine class="size-4" />
-								</AlertDialog.Trigger>
-								<AlertDialog.Content>
-									<AlertDialog.Header>
-										<AlertDialog.Title>Remove device?</AlertDialog.Title>
-										<AlertDialog.Description>
-											This will unpair "{device.name || "N/A"}" from this product. The device will no longer be able to
-											access this product.
-										</AlertDialog.Description>
-									</AlertDialog.Header>
-									<AlertDialog.Footer>
-										<AlertDialog.Cancel disabled={loading.is(`remove-${device.id}`)}>Cancel</AlertDialog.Cancel>
-										<AlertDialog.Action
-											disabled={loading.is(`remove-${device.id}`)}
-											onclick={() => removeDevice(device.id)}
-										>
-											{#if loading.is(`remove-${device.id}`)}<Spinner />{/if}
-											Remove
-										</AlertDialog.Action>
-									</AlertDialog.Footer>
-								</AlertDialog.Content>
-							</AlertDialog.Root>
-						{/if}
-					</div>
+					</SwipeAction>
 				{/each}
 			</div>
 		{/if}
@@ -275,7 +279,7 @@
 				</div>
 				<div class="flex justify-between gap-4">
 					<span class="text-muted-foreground">ID</span>
-					<span class="text-end select-text text-xs leading-5">{deviceInfoDevice.id}</span>
+					<span class="text-end text-xs leading-5 select-text">{deviceInfoDevice.id}</span>
 				</div>
 			</div>
 		{/if}
