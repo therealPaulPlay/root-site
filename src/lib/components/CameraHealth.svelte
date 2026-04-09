@@ -177,11 +177,11 @@
 				<div class="relative h-60 overflow-hidden border bg-muted text-xs">
 					<div
 						bind:this={logsContainer}
-						class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto p-4 wrap-break-word"
+						class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto p-4 wrap-break-word select-text"
 					>
 						{#each health.logs as log, i}
-							<div class:bg-border={i === highlightedLogIndex} class="select-text">
-								<span class="text-muted-foreground select-none">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+							<div class:bg-border={i === highlightedLogIndex}>
+								<span class="text-muted-foreground">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
 								{log.msg}
 							</div>
 						{/each}
