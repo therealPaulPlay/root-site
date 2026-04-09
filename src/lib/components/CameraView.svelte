@@ -563,8 +563,7 @@
 			return;
 		}
 		eventDetectionEnabled = msg.payload.enabled;
-		const types = msg.payload.enabledTypes || [];
-		eventDetectionTypes = types.length > 0 ? types : ["person", "pet", "vehicle"];
+		eventDetectionTypes = msg.payload.enabledTypes || [];
 		eventTypes = msg.payload.availableEventTypes || [];
 	}
 
