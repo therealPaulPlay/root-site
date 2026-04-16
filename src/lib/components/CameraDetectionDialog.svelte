@@ -1,6 +1,6 @@
 <script>
 	import * as Dialog from "$lib/components/ui/dialog";
-	import { RiFileUnknowLine } from "svelte-remixicon";
+	import { RiFileUnknowLine, RiVolumeUpLine } from "svelte-remixicon";
 	import Label from "./ui/label/label.svelte";
 
 	let { open = $bindable(false), event = null, thumbnailSrc = null } = $props();
@@ -49,9 +49,9 @@
 							imgH = e.currentTarget.naturalHeight;
 						}}
 					/>
-					{#if imgW && imgH && event.detection?.modelSize}
-						{#each event.detection.boxes ?? [] as box, i}
-							{@const b = modelBoxToPercent(box, event.detection.modelSize)}
+					{#if imgW && imgH && event.videoDetection?.modelSize}
+						{#each event.videoDetection.boxes ?? [] as box, i}
+							{@const b = modelBoxToPercent(box, event.videoDetection.modelSize)}
 							{@const color = COLORS[i % COLORS.length]}
 							<div
 								class="pointer-events-none absolute border-2"
@@ -67,6 +67,11 @@
 								</Label>
 							</div>
 						{/each}
+					{:else if event.audioDetection}
+						<div class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-foreground/50 dark:bg-background/50">
+							<RiVolumeUpLine class="size-10 text-background dark:text-foreground" />
+							<Label class="text-background dark:text-foreground">{event.audioDetection.label}</Label>
+						</div>
 					{:else}
 						<p
 							class="absolute inset-0 h-full w-full content-center bg-muted-foreground p-8 text-center text-sm text-background"
