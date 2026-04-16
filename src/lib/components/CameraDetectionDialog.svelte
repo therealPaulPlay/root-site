@@ -68,8 +68,8 @@
 							</div>
 						{/each}
 					{:else if event.audioDetection}
-						<div class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-foreground/50 dark:bg-background/50">
-							<RiVolumeUpLine class="size-10 text-background dark:text-foreground" />
+						<div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-foreground/50 dark:bg-background/50">
+							<RiVolumeUpLine class="size-8 text-background dark:text-foreground" />
 							<Label class="text-background dark:text-foreground">{event.audioDetection.label}</Label>
 						</div>
 					{:else}
