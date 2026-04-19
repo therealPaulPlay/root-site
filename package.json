@@ -54,6 +54,7 @@
 		"eslint-plugin-svelte": "^3.16.0",
 		"eslint-plugin-unused-imports": "^4.4.1",
 		"globals": "^17.4.0",
+		"mp4box": "^2.3.0",
 		"overfade": "^0.0.11",
 		"svelte-qrcode": "^1.0.1"
 	}

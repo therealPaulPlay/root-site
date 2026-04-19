@@ -20,6 +20,7 @@
 	import { getFCMToken } from "$lib/utils/pushNotifications.js";
 	import { Capacitor } from "@capacitor/core";
 	import { snapshotVideo } from "$lib/utils/snapshotVideo";
+	import { muxVideoAndAudio } from "$lib/utils/muxRecording";
 	import { innerWidth } from "svelte/reactivity/window";
 
 	let {
@@ -52,6 +53,9 @@
 	let recordingAudioUrl = $state(null);
 	let recordingChunks = $state({ video: [], audio: [] });
 	let recordingTotalChunks = $state({ video: 0, audio: 0 });
+	let recordingFullyLoaded = $derived(
+		recordingTotalChunks.video > 0 && recordingChunks.video.filter(Boolean).length === recordingTotalChunks.video
+	);
 	let recordingManager = null;
 	let eventListScrollElement = $state(null);
 	let eventListScrollTop = $state(0);
@@ -421,23 +425,41 @@
 		return URL.createObjectURL(new Blob([combined], { type: mimeType }));
 	}
 
+	function combineChunks(chunks) {
+		const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
+		const combined = new Uint8Array(totalLength);
+		let offset = 0;
+		for (const chunk of chunks) {
+			combined.set(chunk, offset);
+			offset += chunk.length;
+		}
+		return combined;
+	}
+
 	async function shareRecording() {
 		if (!navigator.share) return toast.error("Sharing is not supported in this environment.");
-		const chunks = recordingChunks?.video?.filter(Boolean);
-		if (!chunks?.length) return;
+		const videoChunks = recordingChunks?.video?.filter(Boolean);
+		if (!videoChunks?.length) return;
 		try {
-			const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
-			const combined = new Uint8Array(totalLength);
-			let offset = 0;
-			for (const chunk of chunks) {
-				combined.set(chunk, offset);
-				offset += chunk.length;
+			const videoBytes = combineChunks(videoChunks);
+
+			// recordingAudioUrl is only set once every audio chunk has arrived, so it's our completion signal
+			const audioChunks = recordingAudioUrl ? recordingChunks.audio : null;
+			let fileBytes = videoBytes;
+			if (audioChunks?.length) {
+				try {
+					fileBytes = muxVideoAndAudio(videoBytes, combineChunks(audioChunks));
+				} catch (error) {
+					console.error("Failed to mux audio with video, sharing video only:", error);
+					fileBytes = videoBytes;
+				}
 			}
+
 			const eventTimestamp = events.find((e) => e.id === currentRecordingEventId)?.timestamp;
 			const timestamp = eventTimestamp
 				? new Date(eventTimestamp).toISOString().replace(/[:.]/g, "-")
 				: "default-no-date";
-			const file = new File([combined], `recording-${timestamp}.mp4`, { type: "video/mp4" });
+			const file = new File([fileBytes], `recording-${timestamp}.mp4`, { type: "video/mp4" });
 			await navigator.share({ files: [file] });
 		} catch (error) {
 			if (error.name !== "AbortError") console.error("Share failed:", error);
@@ -968,12 +990,15 @@
 							bind:dateRange={eventsDateRange}
 							bind:selectedTypes={eventsSelectedTypes}
 							onApplyFilter={applyFilterIfChanged}
-							onLoadMore={() => { if (eventsNextCursor !== 0 && !loading.is("events")) loadEvents(eventsNextCursor); }}
+							onLoadMore={() => {
+								if (eventsNextCursor !== 0 && !loading.is("events")) loadEvents(eventsNextCursor);
+							}}
 							scrollElement={eventListScrollElement}
 							bind:viewRecordingDialog
 							bind:recordingAudioElement
 							bind:recordingVideoElement
 							{recordingAudioUrl}
+							{recordingFullyLoaded}
 							onVideoError={switchRecordingToBlobUrl}
 							onShareRecording={shareRecording}
 						/>
