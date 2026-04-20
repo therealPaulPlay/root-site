@@ -2,6 +2,7 @@ package com.paulplay.rootconnect;
 
 import android.content.Intent;
 import android.os.Bundle;
+import androidx.activity.EdgeToEdge;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -9,6 +10,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(NativeStoragePlugin.class);
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
     }
 
     @Override

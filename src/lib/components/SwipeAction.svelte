@@ -10,6 +10,7 @@
 
 	let offset = $state(0);
 	let startX = null;
+	let startY = null;
 	let startOffset = 0;
 	let dragging = $state(false);
 	let didMove = false;
@@ -28,18 +29,27 @@
 	function onPointerDown(e) {
 		if (e.pointerType === "mouse" && e.button !== 0) return;
 		startX = e.clientX;
+		startY = e.clientY;
 		startOffset = offset;
 		dragging = true;
 		didMove = false;
-		e.currentTarget.setPointerCapture(e.pointerId);
 	}
 
 	function onPointerMove(e) {
 		if (!dragging || startX == null) return;
 		const dx = e.clientX - startX;
-		if (Math.abs(dx) > 5) {
-			if (!didMove) closeOthers();
+		const dy = e.clientY - startY;
+		if (!didMove) {
+			if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+			if (Math.abs(dx) <= Math.abs(dy)) {
+				dragging = false;
+				return;
+			}
 			didMove = true;
+			startX = e.clientX;
+			closeOthers();
+			e.currentTarget.setPointerCapture(e.pointerId);
+			return;
 		}
 		offset = Math.max(-actionWidth, Math.min(0, startOffset + dx));
 	}

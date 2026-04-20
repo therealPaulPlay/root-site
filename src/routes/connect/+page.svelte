@@ -392,7 +392,7 @@
 {/snippet}
 
 <!-- Scrollable product view -->
-<div class="mt-[7.5rem] h-[calc(100svh-7.5rem-env(safe-area-inset-top,0px))]" class:border-t={products.length}>
+<div class="mt-[7.5rem] h-[calc(100svh-7.5rem-var(--safe-area-top))]" class:border-t={products.length}>
 	<PullToRefresh
 		disabled={!products.length}
 		onRefresh={() => {

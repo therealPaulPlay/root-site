@@ -79,9 +79,10 @@
 					if (dx > 5 || dy > 5) {
 						touchDirectionLocked = true;
 						touchIsHorizontal = dx > dy;
+						touchStartY = touchY;
 					}
 				}
-				if (touchIsHorizontal) return; // Let horizontal swipes pass through (Swipe-back gesture)
+				if (touchIsHorizontal || !touchDirectionLocked) return; // Wait until locked vertical before pulling
 
 				if (pulling && e.cancelable) e.preventDefault();
 
