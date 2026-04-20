@@ -24,47 +24,62 @@ class NotificationService: UNNotificationServiceExtension {
         }
 
         guard let imageUrl = request.content.userInfo["imageUrl"] as? String,
-              let productId = request.content.userInfo["productId"] as? String,
-              let url = URL(string: imageUrl),
-              let keys = getProductKeys(productId: productId) else {
-            log.error("Missing imageUrl, productId, or keys")
+              let url = URL(string: imageUrl) else {
             contentHandler(content)
             return
         }
 
-        // Download encrypted image, decrypt, and attach
+        let isEncrypted = request.content.userInfo["imageEncrypted"] as? String == "true"
+        let productId = request.content.userInfo["productId"] as? String
+
+        if isEncrypted, productId.flatMap(getProductKeys) == nil {
+            log.error("Encrypted image but missing productId or keys")
+            contentHandler(content)
+            return
+        }
+
         let task = URLSession.shared.dataTask(with: url) { data, _, error in
             defer { contentHandler(content) }
             if let error { log.error("Download failed: \(error.localizedDescription)") }
-            guard let encryptedData = data, error == nil else { return }
+            guard let imageData = data, error == nil else { return }
 
-            // Try current key, fall back to previous key
-            // Previous is needed if the product lost connection or otherwise failed during key renewal
-            let decrypted = Self.decrypt(
-                ciphertext: encryptedData,
-                devicePrivateKeyBase64: keys.devicePrivateKey,
-                productPublicKeyBase64: keys.productPublicKey
-            ) ?? keys.previousDevicePrivateKey.flatMap {
-                Self.decrypt(
-                    ciphertext: encryptedData,
-                    devicePrivateKeyBase64: $0,
-                    productPublicKeyBase64: keys.productPublicKey
-                )
-            }
-
-            guard let decrypted else {
-                log.error("Decryption failed (\(encryptedData.count) bytes)")
-                return
+            let finalData: Data
+            if isEncrypted {
+                guard let productId, let decrypted = self.decryptImage(imageData, productId: productId) else { return }
+                finalData = decrypted
+            } else {
+                finalData = imageData
             }
 
             let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".jpg")
             do {
-                try decrypted.write(to: fileURL)
+                try finalData.write(to: fileURL)
                 let attachment = try UNNotificationAttachment(identifier: "image", url: fileURL)
                 content.attachments = [attachment]
             } catch { log.error("Failed to attach image: \(error.localizedDescription)") }
         }
         task.resume()
+    }
+
+    private func decryptImage(_ ciphertext: Data, productId: String) -> Data? {
+        guard let keys = getProductKeys(productId: productId) else { return nil }
+        // Try current key, fall back to previous key
+        // Previous is needed if the product lost connection or otherwise failed during key renewal
+        let decrypted = Self.decrypt(
+            ciphertext: ciphertext,
+            devicePrivateKeyBase64: keys.devicePrivateKey,
+            productPublicKeyBase64: keys.productPublicKey
+        ) ?? keys.previousDevicePrivateKey.flatMap {
+            Self.decrypt(
+                ciphertext: ciphertext,
+                devicePrivateKeyBase64: $0,
+                productPublicKeyBase64: keys.productPublicKey
+            )
+        }
+        if decrypted == nil {
+            log.error("Decryption failed (\(ciphertext.count) bytes)")
+        }
+        return decrypted
     }
 
     override func serviceExtensionTimeWillExpire() {

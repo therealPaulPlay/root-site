@@ -46,14 +46,36 @@ public class CustomMessagingService extends FirebaseMessagingService {
         String body = data.getOrDefault("body", "");
 
         Bitmap image = null;
-        if (data.get("imageUrl") != null && data.get("productId") != null) {
-            image = fetchAndDecryptImage(data.get("imageUrl"), data.get("productId"));
+        String imageUrl = data.get("imageUrl");
+        if (imageUrl != null) {
+            byte[] bytes = downloadBytes(imageUrl);
+            if (bytes != null) {
+                if ("true".equals(data.get("imageEncrypted"))) {
+                    bytes = decryptImage(bytes, data.get("productId"));
+                }
+                if (bytes != null) {
+                    image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                }
+            }
         }
 
         showNotification(title, body, image, data, msg.getMessageId());
     }
 
-    private Bitmap fetchAndDecryptImage(String imageUrl, String productId) {
+    private byte[] downloadBytes(String url) {
+        try (InputStream in = new URL(url).openStream();
+             ByteArrayOutputStream buf = new ByteArrayOutputStream()) {
+            byte[] chunk = new byte[4096];
+            int n;
+            while ((n = in.read(chunk)) != -1) buf.write(chunk, 0, n);
+            return buf.toByteArray();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private byte[] decryptImage(byte[] encrypted, String productId) {
+        if (productId == null) return null;
         try {
             String json = getSharedPreferences(NativeStoragePlugin.PREFS_NAME, Context.MODE_PRIVATE)
                 .getString(NativeStoragePlugin.STORAGE_KEY, null);
@@ -74,24 +96,13 @@ public class CustomMessagingService extends FirebaseMessagingService {
             }
             if (privKeyB64 == null) return null;
 
-            // Download
-            byte[] encrypted;
-            try (InputStream in = new URL(imageUrl).openStream();
-                 ByteArrayOutputStream buf = new ByteArrayOutputStream()) {
-                byte[] chunk = new byte[4096];
-                int n;
-                while ((n = in.read(chunk)) != -1) buf.write(chunk, 0, n);
-                encrypted = buf.toByteArray();
-            }
-
             // Try current key, fall back to previous key
             // Previous key is needed if the product lost connection or otherwise failed during key renewal
             byte[] decrypted = decryptAesGcm(encrypted, privKeyB64, pubKeyB64);
             if (decrypted == null && prevPrivKeyB64 != null) {
                 decrypted = decryptAesGcm(encrypted, prevPrivKeyB64, pubKeyB64);
             }
-            if (decrypted == null) return null;
-            return BitmapFactory.decodeByteArray(decrypted, 0, decrypted.length);
+            return decrypted;
         } catch (Exception e) {
             return null;
         }
