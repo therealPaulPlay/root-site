@@ -85,7 +85,7 @@
 	// Tab lazy loading
 	const TABS = { EVENTS: "events", CONTROLS: "controls", HEALTH: "health" };
 	let activeTab = $state(TABS.EVENTS);
-	let tabsLoaded = $state({ [TABS.EVENTS]: false, [TABS.CONTROLS]: false, [TABS.HEALTH]: false });
+	let tabsLoaded = $state(Object.fromEntries(Object.values(TABS).map((t) => [t, false])));
 
 	// Switch to events tab and reload when opened from a notification tap
 	let lastHandledEventId = null;
@@ -168,58 +168,17 @@
 	onMount(() => {
 		if (!relayCommInstance) return console.warn("No relayComm instance passed to CameraView!");
 
-		// Register all relay handlers
-		relayCommInstance.on("getEventsResult", handleEventsResult);
-		relayCommInstance.on("getThumbnailResult", handleThumbnailResult);
-		relayCommInstance.on("getRecordingResult", handleRecordingResult);
-		relayCommInstance.on("getMicrophoneResult", handleGetMicrophoneResult);
-		relayCommInstance.on("setMicrophoneResult", handleSetMicrophoneResult);
-		relayCommInstance.on("getRecordingSoundResult", handleGetRecordingSoundResult);
-		relayCommInstance.on("setRecordingSoundResult", handleSetRecordingSoundResult);
-		relayCommInstance.on("getEventDetectionConfigResult", handleGetEventDetectionConfigResult);
-		relayCommInstance.on("setEventDetectionEnabledResult", handleSetEventDetectionEnabledResult);
-		relayCommInstance.on("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
-		relayCommInstance.on("getNotificationsResult", handleGetNotificationsResult);
-		relayCommInstance.on("setNotificationsResult", handleSetNotificationsResult);
-		relayCommInstance.on("setNotificationCooldownResult", handleSetNotificationCooldownResult);
-		relayCommInstance.on("getDevicesResult", handleGetDevicesResult);
-		relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
-		relayCommInstance.on("getHealthResult", handleHealthResult);
-		relayCommInstance.on("getUpdateStatusResult", handleUpdateStatusResult);
-		relayCommInstance.on("startUpdateResult", handleStartUpdateResult);
-		relayCommInstance.on("setVersionDevResult", handleSetVersionDevResult);
-		relayCommInstance.on("restartResult", handleRestartResult);
-		relayCommInstance.on("resetResult", handleResetResult);
+		// getRecording streams chunks back as server pushes after the initial reply
+		relayCommInstance.onPush(productId, "fileChunk", handleRecordingChunk);
 
-		// Load events and event types once connected since events is the default tab
+		// Load events and event detection config once connected (events is the default tab)
 		relayCommInstance.onConnected(() => {
 			loadEvents(0, { untilEventId: highlightEventId }); // highlightedEventId can be undefined
 			loadEventDetectionConfig();
 		});
 
 		return () => {
-			// Unregister all relay handlers
-			relayCommInstance.off("getEventsResult", handleEventsResult);
-			relayCommInstance.off("getThumbnailResult", handleThumbnailResult);
-			relayCommInstance.off("getRecordingResult", handleRecordingResult);
-			relayCommInstance.off("getMicrophoneResult", handleGetMicrophoneResult);
-			relayCommInstance.off("setMicrophoneResult", handleSetMicrophoneResult);
-			relayCommInstance.off("getRecordingSoundResult", handleGetRecordingSoundResult);
-			relayCommInstance.off("setRecordingSoundResult", handleSetRecordingSoundResult);
-			relayCommInstance.off("getEventDetectionConfigResult", handleGetEventDetectionConfigResult);
-			relayCommInstance.off("setEventDetectionEnabledResult", handleSetEventDetectionEnabledResult);
-			relayCommInstance.off("setEventDetectionTypesResult", handleSetEventDetectionTypesResult);
-			relayCommInstance.off("getNotificationsResult", handleGetNotificationsResult);
-			relayCommInstance.off("setNotificationsResult", handleSetNotificationsResult);
-			relayCommInstance.off("setNotificationCooldownResult", handleSetNotificationCooldownResult);
-			relayCommInstance.off("getDevicesResult", handleGetDevicesResult);
-			relayCommInstance.off("removeDeviceResult", handleRemoveDeviceResult);
-			relayCommInstance.off("getHealthResult", handleHealthResult);
-			relayCommInstance.off("getUpdateStatusResult", handleUpdateStatusResult);
-			relayCommInstance.off("startUpdateResult", handleStartUpdateResult);
-			relayCommInstance.off("setVersionDevResult", handleSetVersionDevResult);
-			relayCommInstance.off("restartResult", handleRestartResult);
-			relayCommInstance.off("resetResult", handleResetResult);
+			relayCommInstance.offPush(productId, "fileChunk", handleRecordingChunk);
 
 			// Cleanup local resources (NOT streamHandle or relayComm — those belong to parent)
 			if (streamHandle) streamHandle.audioMuted = true;
@@ -273,9 +232,8 @@
 		return params;
 	}
 
-	function loadEvents(cursor = 0, { untilEventId, resetFilter } = {}) {
+	async function loadEvents(cursor = 0, { untilEventId, resetFilter } = {}) {
 		if (cursor === 0) {
-			events = [];
 			eventsNextCursor = 0;
 			if (resetFilter) {
 				eventsDateRange = undefined;
@@ -286,26 +244,24 @@
 		loading.set("events", true);
 		const params = { limit: 200, cursor, ...buildFilterParams() };
 		if (untilEventId) params.untilEventId = untilEventId;
-		relayCommInstance.send(productId, "getEvents", params).catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "getEvents", params);
+			if (!response.success) {
+				toast.error("Failed to load events: " + (response.error || "Unknown error"));
+				return;
+			}
+			initialEventsLoaded = true;
+			const incoming = response.events || [];
+			if (eventsNextCursor > 0) events = [...events, ...incoming];
+			else events = incoming;
+			// Firmware returns 0 as nextCursor when there are no more pages
+			eventsNextCursor = response.nextCursor ?? 0;
+		} catch (error) {
 			toast.error("Failed to load events: " + error.message);
 			console.error("Failed to load events:", error);
+		} finally {
 			loading.set("events", false);
-		});
-	}
-
-	function handleEventsResult(msg) {
-		loading.set("events", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to load events: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		initialEventsLoaded = true;
-		const incoming = msg.payload.events || [];
-		if (eventsNextCursor > 0) events = [...events, ...incoming];
-		else events = incoming;
-
-		// Firmware returns 0 as nextCursor when there are no more pages
-		eventsNextCursor = msg.payload.nextCursor ?? 0;
 	}
 
 	// Thumbnail loading with rate limiting (5/s)
@@ -330,10 +286,24 @@
 			const id = thumbnailQueue.shift();
 			thumbnailsThisSecond++;
 			loadingThumbnails.add(id);
-			relayCommInstance.send(productId, "getThumbnail", { id }).catch(() => {
-				loadingThumbnails.delete(id);
-				eventThumbnails[id] = "error";
-			});
+			loadThumbnail(id);
+		}
+	}
+
+	async function loadThumbnail(eventId) {
+		try {
+			const response = await relayCommInstance.request(productId, "getThumbnail", { id: eventId });
+			if (!response.success) {
+				eventThumbnails[eventId] = "error";
+				return;
+			}
+			eventThumbnails[eventId] = URL.createObjectURL(
+				new Blob([response.data], { type: "image/jpeg" })
+			);
+		} catch {
+			eventThumbnails[eventId] = "error";
+		} finally {
+			loadingThumbnails.delete(eventId);
 		}
 	}
 
@@ -342,18 +312,9 @@
 		if (index > -1) thumbnailQueue.splice(index, 1);
 	}
 
-	function handleThumbnailResult(msg) {
-		loadingThumbnails.delete(msg.payload.eventId);
-		if (!msg.payload.success) {
-			eventThumbnails[msg.payload.eventId] = "error";
-			return;
-		}
-		eventThumbnails[msg.payload.eventId] = URL.createObjectURL(new Blob([msg.payload.data], { type: "image/jpeg" }));
-	}
-
 	let recordingDuration = 0;
 
-	function viewRecording(event) {
+	async function viewRecording(event) {
 		viewRecordingDialog = true;
 		loading.set("recording", true);
 		recordingDuration = event.duration || 0;
@@ -361,28 +322,31 @@
 		recordingChunks = { video: [], audio: [] };
 		recordingTotalChunks = { video: 0, audio: 0 };
 		currentRecordingEventId = event.id;
-		relayCommInstance.send(productId, "getRecording", { id: event.id }).catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "getRecording", { id: event.id });
+			if (!response.success) {
+				toast.error("Failed to load recording: " + (response.error || "Unknown error"));
+				loading.set("recording", false);
+			}
+			// Chunks follow as pushes and are dispatched by handleRecordingChunk
+		} catch (error) {
 			toast.error("Failed to load recording: " + error.message);
 			console.error("Failed to load recording:", error);
 			loading.set("recording", false);
-		});
+		}
 	}
 
 	let currentRecordingEventId = $state(null);
 
-	function handleRecordingResult(msg) {
-		if (!msg.payload.success) {
-			toast.error("Failed to load recording: " + msg.payload.error || "Unknown error");
-			loading.set("recording", false);
-			return;
-		}
-
-		const eventId = msg.payload.eventId || msg.payload.metadata?.eventId;
+	// Dispatched by onPush for each streamed file chunk after a successful viewRecording
+	function handleRecordingChunk(payload, error) {
+		if (error) return console.error("Protocol error for recording chunk:", error.message);
+		if (!payload.success) return console.error("Recording chunk error:", payload.error);
+		const eventId = payload.eventId || payload.metadata?.eventId;
 		if (eventId && eventId !== currentRecordingEventId) return;
+		if (!payload.chunk) return;
 
-		if (!msg.payload.chunk) return; // Initial response lacks chunk, only contains metadata
-
-		const { fileType, chunkIndex, totalChunks, chunk } = msg.payload;
+		const { fileType, chunkIndex, totalChunks, chunk } = payload;
 		recordingChunks[fileType][chunkIndex] = chunk;
 		recordingTotalChunks[fileType] = totalChunks;
 
@@ -493,164 +457,154 @@
 	}
 
 	// Controls handlers
-	function loadMicrophone() {
+	async function loadMicrophone() {
 		loading.set("mic", true);
-		relayCommInstance.send(productId, "getMicrophone").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "getMicrophone");
+			if (!response.success) {
+				toast.error("Failed to load microphone setting: " + (response.error || "Unknown error"));
+				return;
+			}
+			micEnabled = response.enabled;
+		} catch (error) {
 			toast.error("Failed to load microphone setting: " + error.message);
 			console.error("Failed to load microphone setting:", error);
+		} finally {
 			loading.set("mic", false);
-		});
-	}
-
-	function handleGetMicrophoneResult(msg) {
-		loading.set("mic", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to load microphone setting: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		micEnabled = msg.payload.enabled;
 	}
 
-	function toggleMicrophone() {
+	async function toggleMicrophone() {
 		loading.set("mic", true);
-		relayCommInstance.send(productId, "setMicrophone", { enabled: micEnabled }).catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "setMicrophone", { enabled: micEnabled });
+			if (!response.success) {
+				micEnabled = !micEnabled;
+				toast.error("Failed to set microphone: " + (response.error || "Unknown error"));
+				return;
+			}
+			micEnabled = response.enabled;
+		} catch (error) {
 			micEnabled = !micEnabled;
 			toast.error("Failed to set microphone: " + error.message);
 			console.error("Failed to set microphone:", error);
+		} finally {
 			loading.set("mic", false);
-		});
-	}
-
-	function handleSetMicrophoneResult(msg) {
-		loading.set("mic", false);
-		if (!msg.payload.success) {
-			micEnabled = !micEnabled;
-			toast.error("Failed to set microphone: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		micEnabled = msg.payload.enabled;
 	}
 
-	function loadRecordingSound() {
+	async function loadRecordingSound() {
 		loading.set("sound", true);
-		relayCommInstance.send(productId, "getRecordingSound").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "getRecordingSound");
+			if (!response.success) {
+				toast.error("Failed to load recording sound setting: " + (response.error || "Unknown error"));
+				return;
+			}
+			recordingSoundEnabled = response.enabled;
+		} catch (error) {
 			toast.error("Failed to load recording sound setting: " + error.message);
 			console.error("Failed to load recording sound setting:", error);
+		} finally {
 			loading.set("sound", false);
-		});
-	}
-
-	function handleGetRecordingSoundResult(msg) {
-		loading.set("sound", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to load recording sound setting: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		recordingSoundEnabled = msg.payload.enabled;
 	}
 
-	function toggleRecordingSound() {
+	async function toggleRecordingSound() {
 		loading.set("sound", true);
-		relayCommInstance.send(productId, "setRecordingSound", { enabled: recordingSoundEnabled }).catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "setRecordingSound", { enabled: recordingSoundEnabled });
+			if (!response.success) {
+				recordingSoundEnabled = !recordingSoundEnabled;
+				toast.error("Failed to set recording sound: " + (response.error || "Unknown error"));
+				return;
+			}
+			recordingSoundEnabled = response.enabled;
+		} catch (error) {
 			recordingSoundEnabled = !recordingSoundEnabled;
 			toast.error("Failed to toggle recording sound: " + error.message);
 			console.error("Failed to toggle recording sound:", error);
+		} finally {
 			loading.set("sound", false);
-		});
-	}
-
-	function handleSetRecordingSoundResult(msg) {
-		loading.set("sound", false);
-		if (!msg.payload.success) {
-			recordingSoundEnabled = !recordingSoundEnabled;
-			toast.error("Failed to set recording sound: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		recordingSoundEnabled = msg.payload.enabled;
 	}
 
-	function loadEventDetectionConfig() {
+	async function loadEventDetectionConfig() {
 		loading.set("eventDetection", true);
-		relayCommInstance.send(productId, "getEventDetectionConfig").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "getEventDetectionConfig");
+			if (!response.success) {
+				toast.error("Failed to load event detection config: " + (response.error || "Unknown error"));
+				return;
+			}
+			eventDetectionEnabled = response.enabled;
+			eventDetectionTypes = response.enabledTypes || [];
+			eventTypes = response.availableEventTypes || [];
+		} catch (error) {
 			toast.error("Failed to load event detection config: " + error.message);
 			console.error("Failed to load event detection config:", error);
+		} finally {
 			loading.set("eventDetection", false);
-		});
-	}
-
-	function handleGetEventDetectionConfigResult(msg) {
-		loading.set("eventDetection", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to load event detection config: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		eventDetectionEnabled = msg.payload.enabled;
-		eventDetectionTypes = msg.payload.enabledTypes || [];
-		eventTypes = msg.payload.availableEventTypes || [];
 	}
 
-	function toggleEventDetection() {
+	async function toggleEventDetection() {
 		loading.set("eventDetection", true);
-		relayCommInstance.send(productId, "setEventDetectionEnabled", { enabled: eventDetectionEnabled }).catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "setEventDetectionEnabled", { enabled: eventDetectionEnabled });
+			if (!response.success) {
+				eventDetectionEnabled = !eventDetectionEnabled;
+				toast.error("Failed to set event detection: " + (response.error || "Unknown error"));
+				return;
+			}
+			eventDetectionEnabled = response.enabled;
+		} catch (error) {
 			eventDetectionEnabled = !eventDetectionEnabled;
 			toast.error("Failed to toggle event detection: " + error.message);
 			console.error("Failed to toggle event detection:", error);
+		} finally {
 			loading.set("eventDetection", false);
-		});
-	}
-
-	function handleSetEventDetectionEnabledResult(msg) {
-		loading.set("eventDetection", false);
-		if (!msg.payload.success) {
-			eventDetectionEnabled = !eventDetectionEnabled;
-			toast.error("Failed to set event detection: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		eventDetectionEnabled = msg.payload.enabled;
 	}
 
 	let previousEventDetectionTypes = [];
 
-	function updateEventDetectionTypes() {
+	async function updateEventDetectionTypes() {
 		loading.set("eventDetectionTypes", true);
 		previousEventDetectionTypes = [...eventDetectionTypes];
-		relayCommInstance
-			.send(productId, "setEventDetectionTypes", { enabledTypes: eventDetectionTypes })
-			.catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "setEventDetectionTypes", { enabledTypes: eventDetectionTypes });
+			if (!response.success) {
 				eventDetectionTypes = previousEventDetectionTypes;
-				toast.error("Failed to update event detection types: " + error.message);
-				console.error("Failed to update event detection types:", error);
-				loading.set("eventDetectionTypes", false);
-			});
-	}
-
-	function handleSetEventDetectionTypesResult(msg) {
-		loading.set("eventDetectionTypes", false);
-		if (!msg.payload.success) {
+				toast.error("Failed to set event detection types: " + (response.error || "Unknown error"));
+				return;
+			}
+			eventDetectionTypes = response.enabledTypes || [];
+		} catch (error) {
 			eventDetectionTypes = previousEventDetectionTypes;
-			toast.error("Failed to set event detection types: " + msg.payload.error || "Unknown error");
-			return;
+			toast.error("Failed to update event detection types: " + error.message);
+			console.error("Failed to update event detection types:", error);
+		} finally {
+			loading.set("eventDetectionTypes", false);
 		}
-		eventDetectionTypes = msg.payload.enabledTypes || [];
 	}
 
-	function loadNotifications() {
+	async function loadNotifications() {
 		loading.set("notifications", true);
-		relayCommInstance.send(productId, "getNotifications").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "getNotifications");
+			if (!response.success) {
+				toast.error("Failed to load notification status: " + (response.error || "Unknown error"));
+				return;
+			}
+			notificationsEnabled = response.enabled;
+			notificationCooldown = response.cooldownMinutes;
+		} catch (error) {
 			toast.error("Failed to load notification status: " + error.message);
 			console.error("Failed to load notification status:", error);
+		} finally {
 			loading.set("notifications", false);
-		});
-	}
-
-	function handleGetNotificationsResult(msg) {
-		loading.set("notifications", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to load notification status: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		notificationsEnabled = msg.payload.enabled;
-		notificationCooldown = msg.payload.cooldownMinutes;
 	}
 
 	async function toggleNotifications() {
@@ -660,230 +614,212 @@
 		}
 		loading.set("notifications", true);
 
-		if (notificationsEnabled) {
-			const fcmToken = await getFCMToken();
-			if (!fcmToken) {
-				notificationsEnabled = false;
-				loading.set("notifications", false);
+		try {
+			let response;
+			if (notificationsEnabled) {
+				const fcmToken = await getFCMToken();
+				if (!fcmToken) {
+					notificationsEnabled = false;
+					return;
+				}
+				response = await relayCommInstance.request(productId, "setNotifications", { enabled: true, fcmToken });
+			} else {
+				response = await relayCommInstance.request(productId, "setNotifications", { enabled: false });
+			}
+			if (!response.success) {
+				notificationsEnabled = !notificationsEnabled;
+				toast.error("Failed to update notifications: " + (response.error || "Unknown error"));
 				return;
 			}
-			relayCommInstance.send(productId, "setNotifications", { enabled: true, fcmToken }).catch((error) => {
-				notificationsEnabled = false;
-				toast.error("Failed to enable notifications: " + error.message);
-				console.error("Failed to enable notifications:", error);
-				loading.set("notifications", false);
-			});
-		} else {
-			relayCommInstance.send(productId, "setNotifications", { enabled: false }).catch((error) => {
-				notificationsEnabled = true;
-				toast.error("Failed to disable notifications: " + error.message);
-				console.error("Failed to disable notifications:", error);
-				loading.set("notifications", false);
-			});
-		}
-	}
-
-	function handleSetNotificationsResult(msg) {
-		loading.set("notifications", false);
-		if (!msg.payload.success) {
+			notificationsEnabled = response.enabled;
+		} catch (error) {
 			notificationsEnabled = !notificationsEnabled;
-			toast.error("Failed to update notifications: " + msg.payload.error || "Unknown error");
-			return;
+			toast.error("Failed to update notifications: " + error.message);
+			console.error("Failed to update notifications:", error);
+		} finally {
+			loading.set("notifications", false);
 		}
-		notificationsEnabled = msg.payload.enabled;
 	}
 
 	let previousCooldown = 0;
 
-	function updateNotificationCooldown() {
+	async function updateNotificationCooldown() {
 		loading.set("notificationCooldown", true);
 		previousCooldown = notificationCooldown;
-		relayCommInstance
-			.send(productId, "setNotificationCooldown", { cooldownMinutes: notificationCooldown })
-			.catch((error) => {
-				notificationCooldown = previousCooldown;
-				toast.error("Failed to update notification cooldown: " + error.message);
-				console.error("Failed to update notification cooldown:", error);
-				loading.set("notificationCooldown", false);
+		try {
+			const response = await relayCommInstance.request(productId, "setNotificationCooldown", {
+				cooldownMinutes: notificationCooldown
 			});
-	}
-
-	function handleSetNotificationCooldownResult(msg) {
-		loading.set("notificationCooldown", false);
-		if (!msg.payload.success) {
+			if (!response.success) {
+				notificationCooldown = previousCooldown;
+				toast.error("Failed to update notification cooldown: " + (response.error || "Unknown error"));
+				return;
+			}
+			notificationCooldown = response.cooldownMinutes;
+		} catch (error) {
 			notificationCooldown = previousCooldown;
-			toast.error("Failed to update notification cooldown: " + msg.payload.error || "Unknown error");
-			return;
+			toast.error("Failed to update notification cooldown: " + error.message);
+			console.error("Failed to update notification cooldown:", error);
+		} finally {
+			loading.set("notificationCooldown", false);
 		}
-		notificationCooldown = msg.payload.cooldownMinutes;
 	}
 
-	function loadDevices() {
+	async function loadDevices() {
 		loading.set("devices", true);
-		relayCommInstance.send(productId, "getDevices").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "getDevices");
+			if (!response.success) {
+				toast.error("Failed to load devices: " + (response.error || "Unknown error"));
+				return;
+			}
+			devices = response.devices || [];
+		} catch (error) {
 			toast.error("Failed to load devices: " + error.message);
 			console.error("Failed to load devices:", error);
+		} finally {
 			loading.set("devices", false);
-		});
-	}
-
-	function handleGetDevicesResult(msg) {
-		loading.set("devices", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to load devices: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		devices = msg.payload.devices || [];
 	}
 
-	function removeDevice(deviceId) {
+	async function removeDevice(deviceId) {
 		loading.set(`remove-${deviceId}`, true);
-		relayCommInstance.send(productId, "removeDevice", { targetDeviceId: deviceId }).catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "removeDevice", { targetDeviceId: deviceId });
+			if (!response.success) {
+				toast.error("Failed to remove device: " + (response.error || "Unknown error"));
+				return;
+			}
+			const removedId = response.removedDeviceId;
+			devices = devices.filter((d) => d.id !== removedId);
+			delete removeDeviceDialogOpen[removedId];
+		} catch (error) {
 			toast.error("Failed to remove device: " + error.message);
 			console.error("Failed to remove device:", error);
+		} finally {
 			loading.set(`remove-${deviceId}`, false);
-		});
-	}
-
-	function handleRemoveDeviceResult(msg) {
-		if (!msg.payload.success) {
-			toast.error("Failed to remove device: " + msg.payload.error || "Unknown error");
-			for (const d of devices) loading.set(`remove-${d.id}`, false);
-			return;
 		}
-		const removedId = msg.payload.removedDeviceId;
-		devices = devices.filter((d) => d.id !== removedId);
-		delete removeDeviceDialogOpen[removedId];
-		loading.set(`remove-${removedId}`, false);
 	}
 
-	function restartProduct() {
+	async function restartProduct() {
 		loading.set("restart", true);
-		relayCommInstance.send(productId, "restart").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "restart");
+			if (!response.success) {
+				toast.error("Failed to restart product: " + (response.error || "Unknown error"));
+				return;
+			}
+			restartDialogOpen = false;
+			toast.success("Restarting.");
+			open = false;
+		} catch (error) {
 			toast.error("Failed to restart device: " + error.message);
 			console.error("Failed to restart device:", error);
+		} finally {
 			loading.set("restart", false);
-		});
-	}
-
-	function handleRestartResult(msg) {
-		loading.set("restart", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to restart product: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		restartDialogOpen = false;
-		toast.success("Restarting.");
-		open = false; // Close drawer
 	}
 
-	function resetProduct() {
+	async function resetProduct() {
 		loading.set("reset", true);
-		relayCommInstance.send(productId, "reset").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "reset");
+			if (!response.success) {
+				toast.error("Failed to reset device: " + (response.error || "Unknown error"));
+				return;
+			}
+			resetDialogOpen = false;
+			toast.success("Reset initiated.");
+			removeProduct(productId);
+			open = false;
+			onProductRemoved();
+		} catch (error) {
 			toast.error("Failed to reset device: " + error.message);
 			console.error("Failed to reset device:", error);
+		} finally {
 			loading.set("reset", false);
-		});
-	}
-
-	function handleResetResult(msg) {
-		loading.set("reset", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to reset device: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		resetDialogOpen = false;
-		toast.success("Reset initiated.");
-		removeProduct(msg.originId);
-		open = false; // Close drawer & remove product
-		onProductRemoved();
 	}
 
-	// Health handlers
-	function loadHealth() {
+	async function loadHealth() {
 		loading.set("health", true);
-		relayCommInstance.send(productId, "getHealth").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "getHealth");
+			if (!response.success) {
+				toast.error("Failed to load health data: " + (response.error || "Unknown error"));
+				return;
+			}
+			health = {
+				battery: response.battery,
+				wifi: response.wifi,
+				relayDomain: response.relayDomain,
+				logs: response.logs,
+				uptimeSeconds: response.uptimeSeconds,
+				metrics: response.metrics
+			};
+		} catch (error) {
 			toast.error("Failed to load health data: " + error.message);
 			console.error("Failed to load health data:", error);
+		} finally {
 			loading.set("health", false);
-		});
-	}
-
-	function handleHealthResult(msg) {
-		loading.set("health", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to load health data: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		health = {
-			battery: msg.payload.battery,
-			wifi: msg.payload.wifi,
-			relayDomain: msg.payload.relayDomain,
-			logs: msg.payload.logs,
-			uptimeSeconds: msg.payload.uptimeSeconds,
-			metrics: msg.payload.metrics
-		};
 	}
 
-	// Update status handlers
-	function loadUpdateStatus() {
+	async function loadUpdateStatus() {
 		loading.set("updateStatus", true);
-		relayCommInstance.send(productId, "getUpdateStatus").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "getUpdateStatus");
+			if (!response.success) {
+				toast.error("Failed to load update status: " + (response.error || "Unknown error"));
+				return;
+			}
+			// eslint-disable-next-line no-unused-vars
+			const { success, ...status } = response;
+			updateStatus = status;
+		} catch (error) {
 			toast.error("Failed to load update status: " + error.message);
 			console.error("Failed to load update status:", error);
+		} finally {
 			loading.set("updateStatus", false);
-		});
-	}
-
-	function handleUpdateStatusResult(msg) {
-		loading.set("updateStatus", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to load update status: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		// eslint-disable-next-line no-unused-vars
-		const { success, ...status } = msg.payload;
-		updateStatus = status;
 	}
 
-	function startUpdate() {
+	async function startUpdate() {
 		loading.set("update", true);
-		relayCommInstance.send(productId, "startUpdate").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "startUpdate");
+			if (!response.success) {
+				toast.error("Failed to start update: " + (response.error || "Unknown error"));
+				return;
+			}
+			updateDialogOpen = false;
+			toast.success("Update started.");
+			loadUpdateStatus();
+		} catch (error) {
 			toast.error("Failed to start update: " + error.message);
 			console.error("Failed to start update:", error);
+		} finally {
 			loading.set("update", false);
-		});
-	}
-
-	function handleStartUpdateResult(msg) {
-		loading.set("update", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to start update: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		updateDialogOpen = false;
-		toast.success("Update started.");
-		loadUpdateStatus();
 	}
 
-	function setVersionDev() {
+	async function setVersionDev() {
 		loading.set("setVersionDev", true);
-		relayCommInstance.send(productId, "setVersionDev").catch((error) => {
+		try {
+			const response = await relayCommInstance.request(productId, "setVersionDev");
+			if (!response.success) {
+				toast.error("Failed to set version to dev: " + (response.error || "Unknown error"));
+				return;
+			}
+			devDialogOpen = false;
+			toast.success("Version set to dev.");
+			loadUpdateStatus();
+		} catch (error) {
 			toast.error("Failed to set version to dev: " + error.message);
 			console.error("Failed to set version to dev:", error);
+		} finally {
 			loading.set("setVersionDev", false);
-		});
-	}
-
-	function handleSetVersionDevResult(msg) {
-		loading.set("setVersionDev", false);
-		if (!msg.payload.success) {
-			toast.error("Failed to set version to dev: " + msg.payload.error || "Unknown error");
-			return;
 		}
-		devDialogOpen = false;
-		toast.success("Version set to dev.");
-		loadUpdateStatus();
 	}
 </script>
 

@@ -1,19 +1,24 @@
 import { SvelteMap } from "svelte/reactivity";
 
+// Ref-counted: concurrent set(key, true) calls all need matching set(key, false) before
+// the key is considered idle, so stale finishers can't flip the flag off mid-load
 export class LoadingState {
 	#map = new SvelteMap();
 	#waiters = [];
 
 	set(key, value) {
-		if (value) this.#map.set(key, true);
+		const count = this.#map.get(key) ?? 0;
+		if (value) this.#map.set(key, count + 1);
 		else {
-			this.#map.delete(key);
-			this.#flush(key);
+			if (count <= 1) {
+				this.#map.delete(key);
+				this.#flush(key);
+			} else this.#map.set(key, count - 1);
 		}
 	}
 
 	is(key) {
-		return Boolean(this.#map.get(key));
+		return this.#map.has(key);
 	}
 
 	any(...keys) {

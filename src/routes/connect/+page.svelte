@@ -38,8 +38,10 @@
 	let streamSnapshots = $state({});
 	let failedStreams = new SvelteSet();
 	let visibleProducts = new SvelteSet();
-	let activeRequestIds = new SvelteSet();
 	let statusLoadedProducts = new SvelteSet();
+
+	// Bumped by refreshAll so late-arriving responses from the prior generation don't overwrite fresh data
+	let loadGen = 0;
 
 	function startProductStream(productId) {
 		if (
@@ -96,52 +98,24 @@
 		};
 	}
 
-	function loadUpdateStatus(productId) {
+	async function loadUpdateStatus(productId) {
 		if (statusLoadedProducts.has(productId) || !relayCommInstance) return;
 		statusLoadedProducts.add(productId);
-		const status = relayCommInstance.send(productId, "getUpdateStatus");
-		activeRequestIds.add(status.requestId);
-		status.catch((error) => console.error(`Failed to get update status for product ${productId}:`, error));
-	}
-
-	function handleGetUpdateStatusResult(msg) {
-		if (!activeRequestIds.has(msg.requestId)) return;
-		if (!msg.payload.success) {
-			toast.error(`Failed to get update status for product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
-			return;
+		const gen = loadGen;
+		try {
+			const response = await relayCommInstance.request(productId, "getUpdateStatus");
+			if (gen !== loadGen) return;
+			if (!response.success) {
+				toast.error(`Failed to get update status for product ${productId}: ` + (response.error || "Unknown error"));
+				return;
+			}
+			// eslint-disable-next-line no-unused-vars
+			const { success, ...status } = response;
+			updateStatuses[productId] = status;
+		} catch (error) {
+			if (gen !== loadGen) return;
+			console.error(`Failed to get update status for product ${productId}:`, error);
 		}
-		// eslint-disable-next-line no-unused-vars
-		const { success, ...status } = msg.payload;
-		updateStatuses[msg.originId] = status;
-	}
-
-	function handleRemoveDeviceResult(msg) {
-		if (!msg.payload.success) {
-			toast.error(
-				`Failed to inform product ${msg.originId} about device removal: ` + (msg.payload.error || "Unknown error")
-			);
-			// Don't return, just acknowledge the error
-		}
-		delete removeDialogOpen[msg.originId];
-		loading.set(`remove-${msg.originId}`, false);
-		cleanupProductState(msg.originId);
-		removeProduct(msg.originId);
-		products = getAllProducts();
-	}
-
-	function handleSetProductAliasResult(msg) {
-		loading.set(`rename-${msg.originId}`, false);
-		if (!msg.payload.success) {
-			toast.error(`Failed to rename product ${msg.originId}: ` + (msg.payload.error || "Unknown error"));
-			return;
-		}
-		// Update locally only on success
-		const product = products.find((p) => p.id === msg.originId);
-		if (product) {
-			product.name = msg.payload.alias;
-			saveProduct(product);
-		}
-		delete renameDialogOpen[msg.originId];
 	}
 
 	// Auto-open CameraView from notification tap query params
@@ -168,16 +142,9 @@
 
 		if (products.length) {
 			relayCommInstance = createRelayInstance();
-			relayCommInstance
-				.connect()
-				.then(() => {
-					relayCommInstance.on("getUpdateStatusResult", handleGetUpdateStatusResult);
-					relayCommInstance.on("removeDeviceResult", handleRemoveDeviceResult);
-					relayCommInstance.on("setProductAliasResult", handleSetProductAliasResult);
-				})
-				.catch((error) => {
-					console.error("Error connecting to relay and getting data from products:", error);
-				});
+			relayCommInstance.connect().catch((error) => {
+				console.error("Error connecting to relay:", error);
+			});
 		}
 
 		return () => {
@@ -186,7 +153,7 @@
 		};
 	});
 
-	function handleRename(product) {
+	async function handleRename(product) {
 		const newName = renameValue[product.id]?.trim();
 		if (!newName || newName.length < 3 || newName.length > 30) {
 			toast.error("Product name must be between 3 and 30 characters");
@@ -195,27 +162,47 @@
 		if (!relayCommInstance) return toast.warning("RelayComm instance is undefined!");
 
 		loading.set(`rename-${product.id}`, true);
-		relayCommInstance.send(product.id, "setProductAlias", { alias: newName }).catch((error) => {
+		try {
+			const response = await relayCommInstance.request(product.id, "setProductAlias", { alias: newName });
+			if (!response.success) {
+				toast.error(`Failed to rename product ${product.id}: ` + (response.error || "Unknown error"));
+				return;
+			}
+			const local = products.find((p) => p.id === product.id);
+			if (local) {
+				local.name = response.alias;
+				saveProduct(local);
+			}
+			delete renameDialogOpen[product.id];
+		} catch (error) {
 			toast.error(`Failed to rename product ${product.id}: ` + error.message);
 			console.error(`Failed to rename product ${product.id}:`, error);
+		} finally {
 			loading.set(`rename-${product.id}`, false);
-		});
+		}
 	}
 
-	function removeProductAndRemoveDevice(productId) {
+	async function removeProductAndRemoveDevice(productId) {
 		if (!relayCommInstance) return toast.warning("RelayComm instance is undefined!");
 		loading.set(`remove-${productId}`, true);
-		relayCommInstance
-			.send(productId, "removeDevice", { targetDeviceId: localStorage.getItem("deviceId") })
-			.catch((error) => {
-				toast.error(`Failed to inform product ${productId} about device removal: ` + error.message);
-				console.error(`Failed to inform product ${productId} about device removal:`, error);
-				delete removeDialogOpen[productId]; // Close dialog since we remove the product anyway
-				loading.set(`remove-${productId}`, false);
-				cleanupProductState(productId);
-				removeProduct(productId);
-				products = getAllProducts();
+		try {
+			const response = await relayCommInstance.request(productId, "removeDevice", {
+				targetDeviceId: localStorage.getItem("deviceId")
 			});
+			if (!response.success) {
+				toast.error(`Failed to inform product ${productId} about device removal: ` + (response.error || "Unknown error"));
+			}
+		} catch (error) {
+			toast.error(`Failed to inform product ${productId} about device removal: ` + error.message);
+			console.error(`Failed to inform product ${productId} about device removal:`, error);
+		} finally {
+			// Remove the product regardless of success
+			delete removeDialogOpen[productId];
+			loading.set(`remove-${productId}`, false);
+			cleanupProductState(productId);
+			removeProduct(productId);
+			products = getAllProducts();
+		}
 	}
 
 	function cleanupProductState(productId) {
@@ -232,12 +219,12 @@
 	function refreshAll() {
 		stopAllStreams();
 
-		// Reset state
+		// Reset state & bump generation
+		loadGen++;
 		updateStatuses = {};
 		streamHandles = {};
 		streamSnapshots = {};
 		failedStreams.clear();
-		activeRequestIds.clear();
 		statusLoadedProducts.clear();
 		for (const productId of visibleProducts) loadUpdateStatus(productId);
 

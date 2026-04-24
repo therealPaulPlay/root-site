@@ -5,8 +5,8 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { Bluetooth } from "$lib/utils/bluetooth";
 	import { encode } from "cbor-x";
-	import { encodeKey, Encryption } from "$lib/utils/encryption";
-	import { getProduct, saveProduct } from "$lib/utils/pairedProductsStorage";
+	import { generateKeypair } from "root-e2ee-protocol";
+	import { bytesToB64, getProduct, saveProduct, sessionFromProduct } from "$lib/utils/pairedProductsStorage";
 	import {
 		RiAlertLine,
 		RiArrowLeftLine,
@@ -228,7 +228,7 @@
 
 			{#if step == 1}
 				<p class="max-w-3xl">
-					Connect your ROOT camera to power and wait until a startup sound plays. Rarely, this can take up to 3 minutes.
+					Connect your ROOT product to power and wait until a startup sound plays. Rarely, this can take up to 3 minutes.
 				</p>
 				<p class="text-muted-foreground">
 					By continuing setup, you agree to our <IframeDialog src="/terms" variant={null}
@@ -375,7 +375,7 @@
 								localStorage.setItem("deviceId", deviceId);
 
 								// Generate keypair for this device
-								const keypair = await Encryption.generateKeypair();
+								const keypair = await generateKeypair();
 
 								await bluetoothInstance.writeAndRead("pair", {
 									deviceId,
@@ -393,9 +393,9 @@
 								saveProduct({
 									id: currentProductId,
 									name: "My ROOT " + modelResponse.model?.[0]?.toUpperCase() + modelResponse.model?.slice(1), // Don't change this prefix! It needs to match the firmware ProductAlias
-									productPublicKey: encodeKey(publicKeyResponse.publicKey),
-									devicePublicKey: encodeKey(keypair.publicKey),
-									devicePrivateKey: encodeKey(keypair.privateKey),
+									productPublicKey: bytesToB64(publicKeyResponse.publicKey),
+									devicePublicKey: bytesToB64(keypair.publicKey),
+									devicePrivateKey: bytesToB64(keypair.privateKey),
 									previousDevicePrivateKey: null,
 									keyCreatedAt: Date.now(),
 									model: modelResponse.model
@@ -519,8 +519,8 @@
 									let relayDomain = relayDomainInput.trim();
 									if (relayDomain.endsWith("/")) relayDomain = relayDomain.slice(0, -1);
 
-									const encryption = await Encryption.initForProduct(currentProductId);
-									const payload = await encryption.encrypt(encode({ relayDomain }), null);
+									const session = await sessionFromProduct(currentProductId);
+									const payload = await session.encrypt(encode({ relayDomain }));
 
 									await bluetoothInstance.writeAndRead("relaySet", {
 										deviceId: localStorage.getItem("deviceId"),
@@ -648,10 +648,9 @@
 					try {
 						currentlyConnectingWifi = true;
 
-						const encryption = await Encryption.initForProduct(currentProductId);
-						const payload = await encryption.encrypt(
-							encode({ ssid: pendingWifiNetwork.ssid, password: wifiPasswordInput, countryCode: wifiCountryCode }),
-							null
+						const session = await sessionFromProduct(currentProductId);
+						const payload = await session.encrypt(
+							encode({ ssid: pendingWifiNetwork.ssid, password: wifiPasswordInput, countryCode: wifiCountryCode })
 						);
 
 						await bluetoothInstance.writeAndPoll("wifiConnect", {

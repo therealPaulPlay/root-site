@@ -45,14 +45,25 @@ export class StreamManager {
 		this.#productId = productId;
 		this.#options = options;
 
-		// Register handlers
-		relayCommInstance.on("startStreamResult", this.#handleStartResult);
-		relayCommInstance.on("streamVideoChunkResult", this.#handleVideoChunk);
-		relayCommInstance.on("streamAudioChunkResult", this.#handleAudioChunk);
-		relayCommInstance.on("continueStreamResult", this.#handleContinueResult);
+		// Chunks arrive as server pushes, dispatched by type
+		relayCommInstance.onPush(productId, "streamVideoChunk", this.#handleVideoChunk);
+		relayCommInstance.onPush(productId, "streamAudioChunk", this.#handleAudioChunk);
 
 		// Start stream
-		relayCommInstance.send(productId, "startStream").catch((error) => this.#endWithError(error));
+		this.#startStream();
+	}
+
+	async #startStream() {
+		try {
+			const response = await this.#relay.request(this.#productId, "startStream");
+			if (!response.success) return this.#endWithError(new Error(response.error || "Failed to start stream"));
+			if (this.#ended) return;
+			if (!this.#mediaSourceManager) this.#setupMediaSource();
+			this.#startHeartbeat();
+			this.#resetVideoStaleTimeout();
+		} catch (error) {
+			this.#endWithError(error);
+		}
 	}
 
 	bindVideo(el) {
@@ -96,11 +107,9 @@ export class StreamManager {
 			this.#heartbeatInterval = null;
 		}
 
-		// Unregister event callbacks
-		this.#relay.off("startStreamResult", this.#handleStartResult);
-		this.#relay.off("streamVideoChunkResult", this.#handleVideoChunk);
-		this.#relay.off("streamAudioChunkResult", this.#handleAudioChunk);
-		this.#relay.off("continueStreamResult", this.#handleContinueResult);
+		// Unregister push handlers
+		this.#relay.offPush(this.#productId, "streamVideoChunk", this.#handleVideoChunk);
+		this.#relay.offPush(this.#productId, "streamAudioChunk", this.#handleAudioChunk);
 
 		// Media source and video
 		if (this.#mediaSourceManager) {
@@ -155,29 +164,21 @@ export class StreamManager {
 		else manager.setup();
 	}
 
-	#handleStartResult = (msg) => {
-		if (msg.originId !== this.#productId) return;
-		if (!msg.payload.success) return this.#endWithError(new Error(msg.payload.error || "Failed to start stream"));
-		if (!this.#mediaSourceManager) this.#setupMediaSource();
-		this.#startHeartbeat();
-		this.#resetVideoStaleTimeout();
-	};
-
-	#handleVideoChunk = (msg) => {
-		if (msg.originId !== this.#productId) return;
-		if (!msg.payload.success) return this.#endWithError(new Error(msg.payload.error));
-		if (!this.#initReceived && msg.payload.chunkIndex !== 0) return;
-		if (msg.payload.chunkIndex === 0) this.#initReceived = true;
+	#handleVideoChunk = (payload, error) => {
+		if (error) return console.error("Protocol error for video chunk:", error.message);
+		if (!payload.success) return this.#endWithError(new Error(payload.error));
+		if (!this.#initReceived && payload.chunkIndex !== 0) return;
+		if (payload.chunkIndex === 0) this.#initReceived = true;
 		if (this.#videoElement?.error) return this.#endWithError(new Error("Video element error"));
 
 		this.#resetVideoStaleTimeout();
-		this.#mediaSourceManager?.appendChunk(msg.payload.chunk);
+		this.#mediaSourceManager?.appendChunk(payload.chunk);
 		this.#correctVideoDrift();
 	};
 
-	#handleAudioChunk = (msg) => {
-		if (msg.originId !== this.#productId) return;
-		if (!msg.payload.success) return console.error("Audio stream error:", msg.payload.error);
+	#handleAudioChunk = (payload, error) => {
+		if (error) return console.error("Protocol error for audio chunk:", error.message);
+		if (!payload.success) return console.error("Audio stream error:", payload.error);
 		if (!this.#audioActive) this.#audioActive = true;
 
 		// Audio timeout to evaluate whether or not audio is active
@@ -187,7 +188,7 @@ export class StreamManager {
 		}, 3000);
 
 		// Decode PCM data from chunk field (slice creates aligned copy for Int16Array)
-		const pcmData = new Int16Array(msg.payload.chunk.slice().buffer);
+		const pcmData = new Int16Array(payload.chunk.slice().buffer);
 
 		// Convert Int16 PCM to Float32
 		const float32Data = new Float32Array(pcmData.length);
@@ -209,17 +210,15 @@ export class StreamManager {
 		this.#scheduleAudio();
 	};
 
-	#handleContinueResult = (msg) => {
-		if (msg.originId !== this.#productId) return;
-		if (!msg.payload.success) this.#options.onError?.(new Error(msg.payload.error || "Stream heartbeat failed"));
-	};
-
 	#startHeartbeat() {
 		if (this.#heartbeatInterval) return;
-		this.#heartbeatInterval = setInterval(() => {
-			this.#relay.send(this.#productId, "continueStream").catch((error) => {
+		this.#heartbeatInterval = setInterval(async () => {
+			try {
+				const response = await this.#relay.request(this.#productId, "continueStream");
+				if (!response.success) this.#options.onError?.(new Error(response.error || "Stream heartbeat failed"));
+			} catch (error) {
 				console.error("Failed to send heartbeat:", error);
-			});
+			}
 		}, 2000);
 	}
 
