@@ -6,9 +6,10 @@
 	import { toast } from "svelte-sonner";
 
 	const REPOSITORY_URLS = {
-		site: "https://github.com/therealPaulPlay/root-site",
-		relay: "https://github.com/therealPaulPlay/root-relay",
-		firmware: "https://github.com/therealPaulPlay/root-firmware"
+		website: "https://github.com/therealPaulPlay/root-site",
+		firmware: "https://github.com/therealPaulPlay/root-firmware",
+		"relay server": "https://github.com/therealPaulPlay/root-relay",
+		protocol: "https://github.com/therealPaulPlay/root-e2ee-protocol"
 	};
 
 	onMount(() => {
@@ -37,20 +38,12 @@
 
 <section class="relative mb-20 w-full space-y-4 border-y p-6 lg:p-8">
 	<div class="space-y-2">
-		<p>
-			<Button href={REPOSITORY_URLS.site} target="_blank" variant="link" class="px-0!"
-				>Website <RiExternalLinkLine class="h-4! w-4!" /></Button
-			>
-		</p>
-		<p>
-			<Button href={REPOSITORY_URLS.relay} target="_blank" variant="link" class=" px-0!"
-				>Relay server <RiExternalLinkLine class="h-4! w-4!" /></Button
-			>
-		</p>
-		<p>
-			<Button href={REPOSITORY_URLS.firmware} target="_blank" variant="link" class="px-0!"
-				>Firmware <RiExternalLinkLine class="h-4! w-4!" /></Button
-			>
-		</p>
+		{#each Object.values(REPOSITORY_URLS) as repositoryName, index}
+			<p>
+				<Button href={repositoryName} target="_blank" variant="link" class="px-0!"
+					>{Object.keys(REPOSITORY_URLS)[index]} <RiExternalLinkLine class="h-4! w-4!" /></Button
+				>
+			</p>
+		{/each}
 	</div>
 </section>

@@ -154,7 +154,7 @@
 	<p>
 		All you need to do in order to deploy your own instance is to view the <a
 			class="underline"
-			href="/source-code?redirect=relay"
+			href={encodeURI("/source-code?redirect=relay server")}
 			target="_blank">server's repository</a
 		> on GitHub and click the deploy button in the readme.
 	</p>
