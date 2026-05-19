@@ -47,10 +47,7 @@
 		<Accordion.Item value="item-3">
 			<Accordion.Trigger>Can the microphone be disabled?</Accordion.Trigger>
 			<Accordion.Content class="flex flex-col gap-4 text-balance">
-				<p>
-					Yes, via the "Controls" section in the connect panel. Extra cautious users can additionally open up the device
-					and unplug the microphone.
-				</p>
+				<p>Yes, via the "Controls" section in the connect panel.</p>
 			</Accordion.Content>
 		</Accordion.Item>
 		<Accordion.Item value="item-4">
