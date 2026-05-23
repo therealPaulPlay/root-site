@@ -95,24 +95,27 @@ export async function sessionFromProduct(productId) {
 
 // KeyStore adapter for root-e2ee-protocol
 export const pairedProductsKeyStore = {
-	async getCurrent(productId) {
+	async getServerPublicKey(productId) {
 		const p = getProduct(productId);
-		if (!p?.devicePrivateKey || !p?.productPublicKey) return null;
+		if (!p?.productPublicKey) return null;
+		return b64ToBytes(p.productPublicKey);
+	},
+	async getCurrentPrivateKey(productId) {
+		const p = getProduct(productId);
+		if (!p?.devicePrivateKey) return null;
 		return {
 			privateKey: b64ToBytes(p.devicePrivateKey),
-			serverPublicKey: b64ToBytes(p.productPublicKey),
 			createdAt: p.keyCreatedAt
 		};
 	},
-	async getPrevious(productId) {
+	async getPreviousPrivateKey(productId) {
 		const p = getProduct(productId);
 		if (!p?.previousDevicePrivateKey) return null;
 		return {
-			privateKey: b64ToBytes(p.previousDevicePrivateKey),
-			serverPublicKey: b64ToBytes(p.productPublicKey)
+			privateKey: b64ToBytes(p.previousDevicePrivateKey)
 		};
 	},
-	async commitNewKey(productId, newPrivateKey) {
+	async commitNewPrivateKey(productId, newPrivateKey) {
 		const p = getProduct(productId);
 		if (!p) throw new Error(`Product ${productId} not found`);
 		p.previousDevicePrivateKey = p.devicePrivateKey;
@@ -120,7 +123,7 @@ export const pairedProductsKeyStore = {
 		p.keyCreatedAt = Date.now();
 		saveProduct(p);
 	},
-	async revertToPrevious(productId) {
+	async revertToPreviousPrivateKey(productId) {
 		const p = getProduct(productId);
 		if (!p?.previousDevicePrivateKey) return;
 		p.devicePrivateKey = p.previousDevicePrivateKey;
