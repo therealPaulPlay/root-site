@@ -25,6 +25,18 @@
 	let hoveredTimestamp = $state(null);
 	let prevLogs = $state(null);
 
+	// Format uptime as years, days, hours, minutes (narrow style, so e.g. years -> y)
+	const uptimeFormatter = new Intl.DurationFormat("en", { style: "narrow" });
+	
+	function formatUptime(seconds) {
+		return uptimeFormatter.format({
+			years: Math.floor(seconds / 31536000),
+			days: Math.floor((seconds % 31536000) / 86400),
+			hours: Math.floor((seconds % 86400) / 3600),
+			minutes: Math.floor((seconds % 3600) / 60)
+		});
+	}
+
 	// Index of the single nearest log to the hovered timestamp (within 2s)
 	const highlightedLogIndex = $derived.by(() => {
 		if (!hoveredTimestamp || !health?.logs?.length) return -1;
@@ -151,7 +163,7 @@
 				{#if health.uptimeSeconds !== undefined}
 					<div class="flex justify-between">
 						<span class="text-muted-foreground">Uptime</span>
-						<span>{Math.floor(health.uptimeSeconds / 3600)}h {Math.floor((health.uptimeSeconds % 3600) / 60)}m</span>
+						<span>{formatUptime(health.uptimeSeconds)}</span>
 					</div>
 				{/if}
 			</div>
