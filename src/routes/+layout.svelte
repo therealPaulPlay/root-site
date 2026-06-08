@@ -75,6 +75,13 @@
 		name="description"
 		content="Privacy-first smart home cameras. Root devices use on-device ML models and never transfer unencrypted data."
 	/>
+	<meta property="og:title" content="ROOT" />
+	<meta property="og:type" content="website" />
+	<meta
+		property="og:description"
+		content="Privacy-first smart home cameras. Root devices use on-device ML models and never transfer unencrypted data."
+	/>
+	<meta property="og:image" content="https://rootprivacy.dev/images/og-image.jpg" />
 </svelte:head>
 
 {#if isNative && !isIframed}
@@ -89,7 +96,10 @@
 
 <main class="items-start-safe relative container mx-auto flex">
 	<Navbar />
-	<article bind:this={articleEl} class="no-scrollbar safe-min-h-svh relative flex w-full flex-col overflow-x-hidden sm:border-x">
+	<article
+		bind:this={articleEl}
+		class="safe-min-h-svh relative no-scrollbar flex w-full flex-col overflow-x-hidden sm:border-x"
+	>
 		<div style="view-transition-name: content" class="flex min-h-0 flex-1 flex-col">
 			{@render children?.()}
 		</div>
