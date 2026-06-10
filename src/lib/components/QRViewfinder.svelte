@@ -25,6 +25,12 @@
 				if (!canvas) return;
 				if (!response.success) throw new Error(response.error || "Unknown error");
 
+				// Camera has no frame yet (usually right after boot up), wait and retry
+				if (response.retry) {
+					await new Promise((resolve) => setTimeout(resolve, 1000));
+					return;
+				}
+
 				if (response.width && response.height && (response.width !== canvas.width || response.height !== canvas.height)) {
 					canvas.width = response.width;
 					canvas.height = response.height;
