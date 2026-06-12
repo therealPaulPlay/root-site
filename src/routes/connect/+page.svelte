@@ -55,7 +55,8 @@
 			onError: (error) => {
 				console.error(`Stream error for product ${productId}:`, error);
 				failedStreams.add(productId);
-			}
+			},
+			onVideoReady: () => failedStreams.delete(productId) // Streams can recover via restart
 		});
 		if (streamVideoElements[productId]) streamHandles[productId].bindVideo(streamVideoElements[productId]);
 	}
@@ -190,7 +191,9 @@
 				targetDeviceId: localStorage.getItem("deviceId")
 			});
 			if (!response.success) {
-				toast.error(`Failed to inform product ${productId} about device removal: ` + (response.error || "Unknown error"));
+				toast.error(
+					`Failed to inform product ${productId} about device removal: ` + (response.error || "Unknown error")
+				);
 			}
 		} catch (error) {
 			toast.error(`Failed to inform product ${productId} about device removal: ` + error.message);

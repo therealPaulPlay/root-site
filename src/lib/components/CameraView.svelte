@@ -63,6 +63,7 @@
 	// Controls
 	let micEnabled = $state(false);
 	let recordingSoundEnabled = $state(false);
+	let cameraFlipEnabled = $state(false);
 	let eventDetectionEnabled = $state(false);
 	let eventDetectionTypes = $state([]);
 	let eventTypes = $state([]);
@@ -297,9 +298,7 @@
 				eventThumbnails[eventId] = "error";
 				return;
 			}
-			eventThumbnails[eventId] = URL.createObjectURL(
-				new Blob([response.data], { type: "image/jpeg" })
-			);
+			eventThumbnails[eventId] = URL.createObjectURL(new Blob([response.data], { type: "image/jpeg" }));
 		} catch {
 			eventThumbnails[eventId] = "error";
 		} finally {
@@ -513,7 +512,9 @@
 	async function toggleRecordingSound() {
 		loading.set("sound", true);
 		try {
-			const response = await relayCommInstance.request(productId, "setRecordingSound", { enabled: recordingSoundEnabled });
+			const response = await relayCommInstance.request(productId, "setRecordingSound", {
+				enabled: recordingSoundEnabled
+			});
 			if (!response.success) {
 				recordingSoundEnabled = !recordingSoundEnabled;
 				toast.error("Failed to set recording sound: " + (response.error || "Unknown error"));
@@ -522,10 +523,47 @@
 			recordingSoundEnabled = response.enabled;
 		} catch (error) {
 			recordingSoundEnabled = !recordingSoundEnabled;
-			toast.error("Failed to toggle recording sound: " + error.message);
-			console.error("Failed to toggle recording sound:", error);
+			toast.error("Failed to set recording sound: " + error.message);
+			console.error("Failed to set recording sound:", error);
 		} finally {
 			loading.set("sound", false);
+		}
+	}
+
+	async function loadCameraFlip() {
+		loading.set("flip", true);
+		try {
+			const response = await relayCommInstance.request(productId, "getCameraFlip");
+			if (!response.success) {
+				toast.error("Failed to load camera flip setting: " + (response.error || "Unknown error"));
+				return;
+			}
+			cameraFlipEnabled = response.enabled;
+		} catch (error) {
+			toast.error("Failed to load camera flip setting: " + error.message);
+			console.error("Failed to load camera flip setting:", error);
+		} finally {
+			loading.set("flip", false);
+		}
+	}
+
+	async function toggleCameraFlip() {
+		loading.set("flip", true);
+		try {
+			const response = await relayCommInstance.request(productId, "setCameraFlip", { enabled: cameraFlipEnabled });
+			if (!response.success) {
+				cameraFlipEnabled = !cameraFlipEnabled;
+				toast.error("Failed to set camera flip: " + (response.error || "Unknown error"));
+				return;
+			}
+			cameraFlipEnabled = response.enabled;
+			streamHandle?.restart(); // Flipping restarts the camera, which ends active streams
+		} catch (error) {
+			cameraFlipEnabled = !cameraFlipEnabled;
+			toast.error("Failed to set camera flip: " + error.message);
+			console.error("Failed to set camera flip:", error);
+		} finally {
+			loading.set("flip", false);
 		}
 	}
 
@@ -551,7 +589,9 @@
 	async function toggleEventDetection() {
 		loading.set("eventDetection", true);
 		try {
-			const response = await relayCommInstance.request(productId, "setEventDetectionEnabled", { enabled: eventDetectionEnabled });
+			const response = await relayCommInstance.request(productId, "setEventDetectionEnabled", {
+				enabled: eventDetectionEnabled
+			});
 			if (!response.success) {
 				eventDetectionEnabled = !eventDetectionEnabled;
 				toast.error("Failed to set event detection: " + (response.error || "Unknown error"));
@@ -573,7 +613,9 @@
 		loading.set("eventDetectionTypes", true);
 		previousEventDetectionTypes = [...eventDetectionTypes];
 		try {
-			const response = await relayCommInstance.request(productId, "setEventDetectionTypes", { enabledTypes: eventDetectionTypes });
+			const response = await relayCommInstance.request(productId, "setEventDetectionTypes", {
+				enabledTypes: eventDetectionTypes
+			});
 			if (!response.success) {
 				eventDetectionTypes = previousEventDetectionTypes;
 				toast.error("Failed to set event detection types: " + (response.error || "Unknown error"));
@@ -868,6 +910,7 @@
 						tabsLoaded[TABS.CONTROLS] = true;
 						loadMicrophone();
 						loadRecordingSound();
+						loadCameraFlip();
 						loadNotifications();
 						loadDevices();
 					} else if (v === TABS.HEALTH && !tabsLoaded[TABS.HEALTH]) {
@@ -945,10 +988,11 @@
 						onRefresh={() => {
 							loadMicrophone();
 							loadRecordingSound();
+							loadCameraFlip();
 							loadEventDetectionConfig();
 							loadNotifications();
 							loadDevices();
-							return loading.promise("mic", "sound", "eventDetection", "notifications", "devices");
+							return loading.promise("mic", "sound", "flip", "eventDetection", "notifications", "devices");
 						}}
 						class="of-top of-bottom space-y-6 p-6 pb-12"
 					>
@@ -960,6 +1004,7 @@
 							bind:removeDeviceDialogOpen
 							{toggleMicrophone}
 							{toggleRecordingSound}
+							{toggleCameraFlip}
 							{toggleNotifications}
 							{updateNotificationCooldown}
 							{toggleEventDetection}
@@ -969,6 +1014,7 @@
 							{resetProduct}
 							bind:micEnabled
 							bind:recordingSoundEnabled
+							bind:cameraFlipEnabled
 							bind:eventDetectionEnabled
 							bind:eventDetectionTypes
 							bind:notificationsEnabled

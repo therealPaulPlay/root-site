@@ -25,6 +25,7 @@
 		removeDeviceDialogOpen = $bindable({}),
 		toggleMicrophone = () => {},
 		toggleRecordingSound = () => {},
+		toggleCameraFlip = () => {},
 		toggleNotifications = () => {},
 		updateNotificationCooldown = () => {},
 		toggleEventDetection = () => {},
@@ -34,6 +35,7 @@
 		resetProduct = () => {},
 		micEnabled = $bindable(),
 		recordingSoundEnabled = $bindable(),
+		cameraFlipEnabled = $bindable(),
 		eventDetectionEnabled = $bindable(),
 		eventDetectionTypes = $bindable([]),
 		notificationsEnabled = $bindable(),
@@ -110,6 +112,13 @@
 			disabled={loading.is("sound")}
 			bind:checked={recordingSoundEnabled}
 		/>
+	</div>
+	<div class="flex items-center justify-between gap-4 border p-4">
+		<div class="pr-6">
+			<Label class="text-base">Flip camera</Label>
+			<p class="text-sm text-muted-foreground">Rotate video by 180 degrees.</p>
+		</div>
+		<Switch onCheckedChange={toggleCameraFlip} disabled={loading.is("flip")} bind:checked={cameraFlipEnabled} />
 	</div>
 
 	<div class="space-y-4 border p-4">

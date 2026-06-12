@@ -44,16 +44,21 @@ export class StreamManager {
 		this.#relay = relayCommInstance;
 		this.#productId = productId;
 		this.#options = options;
+		this.#startStream();
+	}
 
-		// Chunks arrive as server pushes, dispatched by type
-		relayCommInstance.onPush(productId, "streamVideoChunk", this.#handleVideoChunk);
-		relayCommInstance.onPush(productId, "streamAudioChunk", this.#handleAudioChunk);
-
-		// Start stream
+	// Restart the stream
+	restart() {
+		this.cleanup();
+		this.#ended = false;
+		this.#loading = true;
 		this.#startStream();
 	}
 
 	async #startStream() {
+		// Chunks arrive as server pushes, dispatched by type
+		this.#relay.onPush(this.#productId, "streamVideoChunk", this.#handleVideoChunk);
+		this.#relay.onPush(this.#productId, "streamAudioChunk", this.#handleAudioChunk);
 		try {
 			const response = await this.#relay.request(this.#productId, "startStream");
 			if (!response.success) return this.#endWithError(new Error(response.error || "Failed to start stream"));
@@ -74,7 +79,7 @@ export class StreamManager {
 	// audioUnlockEl is an optional silent <audio> element to unlock iOS audio session
 	setupAudio(audioUnlockEl) {
 		if (this.#audioContext) return;
-		audioUnlockEl?.play()?.catch(() => { });
+		audioUnlockEl?.play()?.catch(() => {});
 		this.#audioContext = new AudioContext();
 		this.#audioGainNode = this.#audioContext.createGain();
 		this.#audioGainNode.gain.value = this.#audioMuted ? 0 : 1;
@@ -120,6 +125,8 @@ export class StreamManager {
 			this.#videoElement.src = "";
 			this.#videoElement.load();
 		}
+		this.#videoStarted = false;
+		this.#initReceived = false;
 
 		// Audio
 		if (this.#audioContext) {
@@ -131,6 +138,7 @@ export class StreamManager {
 		this.#nextAudioTime = 0;
 		this.#audioActive = false;
 		this.#audioStarted = false;
+		this.#audioMuted = true;
 	}
 
 	// Private --------------------
@@ -151,7 +159,11 @@ export class StreamManager {
 			isLive: true,
 			onChunkAppended: () => {
 				// Buffer ~1s before starting playback
-				if (!this.#videoStarted && this.#videoElement?.buffered.length > 0 && this.#videoElement.buffered.end(0) >= 0.9) {
+				if (
+					!this.#videoStarted &&
+					this.#videoElement?.buffered.length > 0 &&
+					this.#videoElement.buffered.end(0) >= 0.9
+				) {
 					this.#videoStarted = true;
 					this.#loading = false;
 					this.#videoElement.play().catch(console.error);
