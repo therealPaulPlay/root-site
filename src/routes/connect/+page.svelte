@@ -52,10 +52,7 @@
 		)
 			return;
 		streamHandles[productId] = new StreamManager(productId, relayCommInstance, {
-			onError: (error) => {
-				console.error(`Stream error for product ${productId}:`, error);
-				failedStreams.add(productId);
-			},
+			onError: () => failedStreams.add(productId),
 			onVideoReady: () => failedStreams.delete(productId) // Streams can recover via restart
 		});
 		if (streamVideoElements[productId]) streamHandles[productId].bindVideo(streamVideoElements[productId]);

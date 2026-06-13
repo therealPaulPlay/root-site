@@ -176,9 +176,16 @@ export class StreamManager {
 		else manager.setup();
 	}
 
+	#handleChunkError(payload, label, fatal) {
+		if (payload.restart) return this.restart();
+		console.error(`${label}:`, payload.error);
+		if (fatal) this.#endWithError(new Error(payload.error));
+	}
+
 	#handleVideoChunk = (payload, error) => {
+		// Protocol errors can be transient, so they don't shut down the stream
 		if (error) return console.error("Protocol error for video chunk:", error.message);
-		if (!payload.success) return this.#endWithError(new Error(payload.error));
+		if (!payload.success) return this.#handleChunkError(payload, "Video stream error", true);
 		if (!this.#initReceived && payload.chunkIndex !== 0) return;
 		if (payload.chunkIndex === 0) this.#initReceived = true;
 		if (this.#videoElement?.error) return this.#endWithError(new Error("Video element error"));
@@ -190,7 +197,7 @@ export class StreamManager {
 
 	#handleAudioChunk = (payload, error) => {
 		if (error) return console.error("Protocol error for audio chunk:", error.message);
-		if (!payload.success) return console.error("Audio stream error:", payload.error);
+		if (!payload.success) return this.#handleChunkError(payload, "Audio stream error", false);
 		if (!this.#audioActive) this.#audioActive = true;
 
 		// Audio timeout to evaluate whether or not audio is active

@@ -557,7 +557,6 @@
 				return;
 			}
 			cameraFlipEnabled = response.enabled;
-			streamHandle?.restart(); // Flipping restarts the camera, which ends active streams
 		} catch (error) {
 			cameraFlipEnabled = !cameraFlipEnabled;
 			toast.error("Failed to set camera flip: " + error.message);
