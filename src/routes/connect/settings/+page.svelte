@@ -8,6 +8,7 @@
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
 	import { theme, ThemePreference } from "$lib/utils/theme.svelte.js";
 	import * as NativeSelect from "$lib/components/ui/native-select";
+	import LogViewerPopup from "$lib/components/LogViewerPopup.svelte";
 
 	let relayDomain = $state("");
 	let relayDomainInput = $state("");
@@ -39,42 +40,55 @@
 	<div class="of-top of-bottom of-length-2 max-h-full w-full overflow-y-auto">
 		<!-- Theme -->
 		<section class="mt-10 w-full border-y p-6 lg:p-8">
-			<div class="flex max-w-lg flex-col gap-4">
-				<div class="space-y-1">
-					<Label class="text-sm font-medium">Theme</Label>
-					<NativeSelect.Root value={theme.preference} onchange={(e) => (theme.preference = e.currentTarget.value)}>
-						<NativeSelect.Option value={ThemePreference.SYSTEM}>System</NativeSelect.Option>
-						<NativeSelect.Option value={ThemePreference.LIGHT}>Light</NativeSelect.Option>
-						<NativeSelect.Option value={ThemePreference.DARK}>Dark</NativeSelect.Option>
-					</NativeSelect.Root>
-				</div>
+			<div class="space-y-1">
+				<Label class="text-sm font-medium">Theme</Label>
+				<NativeSelect.Root value={theme.preference} onchange={(e) => (theme.preference = e.currentTarget.value)}>
+					<NativeSelect.Option value={ThemePreference.SYSTEM}>System</NativeSelect.Option>
+					<NativeSelect.Option value={ThemePreference.LIGHT}>Light</NativeSelect.Option>
+					<NativeSelect.Option value={ThemePreference.DARK}>Dark</NativeSelect.Option>
+				</NativeSelect.Root>
 			</div>
 		</section>
 
 		<!-- Relay domain -->
 		<section class="mt-10 w-full space-y-8 border-y p-6 lg:p-8">
-			<div class="flex max-w-lg flex-col gap-4">
-				<div class="space-y-1">
-					<Label for="relay-domain" class="text-sm font-medium">Relay domain</Label>
-					<Input id="relay-domain" type="text" bind:value={relayDomainInput} placeholder={OFFICIAL_RELAY_DOMAIN} />
-				</div>
-				<p class="text-xs text-muted-foreground max-w-xs">
-					Connected products must be configured to use the same domain.
+			<div class="space-y-1">
+				<Label for="relay-domain" class="text-sm font-medium">Relay domain</Label>
+				<p class="max-w-xs text-xs text-muted-foreground">
+					Connected products should be configured to use the same domain.
 				</p>
 			</div>
+			<div class="flex gap-2">
+				<Input
+					id="relay-domain"
+					type="text"
+					class="max-w-60"
+					bind:value={relayDomainInput}
+					placeholder={OFFICIAL_RELAY_DOMAIN}
+				/>
+				<Button
+					disabled={relayDomainInput === relayDomain}
+					onclick={() => {
+						let domain = relayDomainInput.trim();
+						if (domain.endsWith("/")) domain = domain.slice(0, -1);
+						if (domain) {
+							localStorage.setItem("relayDomain", domain);
+							relayDomain = domain;
+						}
+					}}>Update</Button
+				>
+			</div>
+		</section>
 
-			<!-- Button text here should match the relay update button text in /add for consistency -->
-			<Button
-				disabled={relayDomainInput === relayDomain}
-				onclick={() => {
-					let domain = relayDomainInput.trim();
-					if (domain.endsWith("/")) domain = domain.slice(0, -1);
-					if (domain) {
-						localStorage.setItem("relayDomain", domain);
-						relayDomain = domain;
-					}
-				}}>Update domain</Button
-			>
+		<!-- View app logs -->
+		<section class="mt-10 w-full space-y-8 border-y p-6 lg:p-8">
+			<div class="space-y-1">
+				<Label class="text-sm font-medium">App logs</Label>
+				<p class="max-w-xs text-xs text-muted-foreground">
+					View logs collected by the application in the current session.
+				</p>
+			</div>
+			<LogViewerPopup />
 		</section>
 
 		<section class="mt-10 mb-10 flex flex-col gap-2 border-y p-6 lg:p-8">

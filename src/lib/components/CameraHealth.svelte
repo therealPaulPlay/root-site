@@ -27,7 +27,7 @@
 
 	// Format uptime as years, days, hours, minutes (narrow style, so e.g. years -> y)
 	const uptimeFormatter = new Intl.DurationFormat("en", { style: "narrow" });
-	
+
 	function formatUptime(seconds) {
 		return uptimeFormatter.format({
 			years: Math.floor(seconds / 31536000),
@@ -178,7 +178,7 @@
 				</div>
 				<div class="flex justify-between gap-4">
 					<span class="text-muted-foreground">ID</span>
-					<span class="text-end select-text text-xs leading-5">{productId || "N/A"}</span>
+					<span class="text-end text-xs leading-5 select-text">{productId || "N/A"}</span>
 				</div>
 			</div>
 		</div>
@@ -189,13 +189,13 @@
 				<div class="relative h-60 overflow-hidden border bg-muted text-xs">
 					<div
 						bind:this={logsContainer}
-						class="of-top of-bottom of-length-2 h-full w-full overflow-x-hidden overflow-y-auto p-4 wrap-break-word"
+						class="of-top of-bottom of-length-2 h-full w-full space-y-2 overflow-x-hidden overflow-y-auto p-4 wrap-break-word"
 					>
 						{#each health.logs as log, i}
-							<div class:bg-border={i === highlightedLogIndex} class="select-text">
+							<p class:bg-border={i === highlightedLogIndex} class="select-text">
 								<span class="text-muted-foreground select-text">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
 								{log.msg}
-							</div>
+							</p>
 						{/each}
 					</div>
 				</div>
