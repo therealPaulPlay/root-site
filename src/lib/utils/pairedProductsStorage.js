@@ -1,5 +1,5 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
-import { deriveSession } from "root-e2ee-protocol";
+import { deriveSessionP256 } from "root-e2ee-protocol";
 
 const STORAGE_KEY = "pairedProducts";
 
@@ -13,7 +13,8 @@ function syncToNative(products) {
 		id: p.id,
 		productPublicKey: p.productPublicKey,
 		devicePrivateKey: p.devicePrivateKey,
-		previousDevicePrivateKey: p.previousDevicePrivateKey
+		previousDevicePrivateKey: p.previousDevicePrivateKey,
+		sharedKeyType: p.sharedKeyType
 	}));
 	NativeStorage?.sync({ products: JSON.stringify(minimal) }).catch((error) =>
 		console.error("Failed to sync products to native storage:", error)
@@ -42,11 +43,12 @@ export function saveProduct(product) {
 		!product.devicePublicKey ||
 		!product.devicePrivateKey ||
 		product.previousDevicePrivateKey === undefined || // Can explicitly be null
-		!product.keyCreatedAt ||
+		!product.sharedKeyType ||
+		!product.deviceKeyCreatedAt ||
 		!product.model
 	) {
 		throw new Error(
-			"Product must have id, name, productPublicKey, devicePublicKey, devicePrivateKey, previousDevicePrivateKey, keyCreatedAt, and model"
+			"Product must have id, name, productPublicKey, devicePublicKey, devicePrivateKey, previousDevicePrivateKey, sharedKeyType, deviceKeyCreatedAt, and model"
 		);
 	}
 
@@ -86,11 +88,11 @@ export function bytesToB64(bytes) {
 	return btoa(binary);
 }
 
-// Derive an AES-GCM session for talking to a paired product (e.g. over Bluetooth)
-export async function sessionFromProduct(productId) {
+// Derive an AES-GCM session from P-256 keys for talking to a paired product (e.g. over Bluetooth)
+export async function sessionFromProductP256(productId) {
 	const p = getProduct(productId);
 	if (!p) throw new Error(`Product ${productId} not paired`);
-	return deriveSession(b64ToBytes(p.devicePrivateKey), b64ToBytes(p.productPublicKey));
+	return deriveSessionP256(b64ToBytes(p.devicePrivateKey), b64ToBytes(p.productPublicKey));
 }
 
 // KeyStore adapter for root-e2ee-protocol
@@ -98,29 +100,32 @@ export const pairedProductsKeyStore = {
 	async getServerPublicKey(productId) {
 		const p = getProduct(productId);
 		if (!p?.productPublicKey) return null;
-		return b64ToBytes(p.productPublicKey);
+		return { key: b64ToBytes(p.productPublicKey), keyType: p.sharedKeyType };
 	},
 	async getCurrentPrivateKey(productId) {
 		const p = getProduct(productId);
 		if (!p?.devicePrivateKey) return null;
 		return {
-			privateKey: b64ToBytes(p.devicePrivateKey),
-			createdAt: p.keyCreatedAt
+			key: b64ToBytes(p.devicePrivateKey),
+			keyType: p.sharedKeyType,
+			createdAt: p.deviceKeyCreatedAt
 		};
 	},
 	async getPreviousPrivateKey(productId) {
 		const p = getProduct(productId);
 		if (!p?.previousDevicePrivateKey) return null;
 		return {
-			privateKey: b64ToBytes(p.previousDevicePrivateKey)
+			key: b64ToBytes(p.previousDevicePrivateKey),
+			keyType: p.sharedKeyType
 		};
 	},
 	async commitNewPrivateKey(productId, newPrivateKey) {
 		const p = getProduct(productId);
 		if (!p) throw new Error(`Product ${productId} not found`);
 		p.previousDevicePrivateKey = p.devicePrivateKey;
-		p.devicePrivateKey = bytesToB64(newPrivateKey);
-		p.keyCreatedAt = Date.now();
+		p.devicePrivateKey = bytesToB64(newPrivateKey.key);
+		p.sharedKeyType = newPrivateKey.keyType;
+		p.deviceKeyCreatedAt = Date.now();
 		saveProduct(p);
 	},
 	async revertToPreviousPrivateKey(productId) {
@@ -128,7 +133,7 @@ export const pairedProductsKeyStore = {
 		if (!p?.previousDevicePrivateKey) return;
 		p.devicePrivateKey = p.previousDevicePrivateKey;
 		p.previousDevicePrivateKey = null;
-		p.keyCreatedAt = Date.now();
+		p.deviceKeyCreatedAt = Date.now();
 		saveProduct(p);
 	}
 };

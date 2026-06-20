@@ -5,8 +5,8 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { Bluetooth } from "$lib/utils/bluetooth";
 	import { encode } from "cbor-x";
-	import { generateKeypair } from "root-e2ee-protocol";
-	import { bytesToB64, getProduct, saveProduct, sessionFromProduct } from "$lib/utils/pairedProductsStorage";
+	import { generateKeypairP256, KEY_TYPE_P256 } from "root-e2ee-protocol";
+	import { bytesToB64, getProduct, saveProduct, sessionFromProductP256 } from "$lib/utils/pairedProductsStorage";
 	import {
 		RiAlertLine,
 		RiArrowLeftLine,
@@ -375,7 +375,7 @@
 								localStorage.setItem("deviceId", deviceId);
 
 								// Generate keypair for this device
-								const keypair = await generateKeypair();
+								const keypair = await generateKeypairP256();
 
 								await bluetoothInstance.writeAndRead("pair", {
 									deviceId,
@@ -397,7 +397,8 @@
 									devicePublicKey: bytesToB64(keypair.publicKey),
 									devicePrivateKey: bytesToB64(keypair.privateKey),
 									previousDevicePrivateKey: null,
-									keyCreatedAt: Date.now(),
+									sharedKeyType: KEY_TYPE_P256,
+									deviceKeyCreatedAt: Date.now(),
 									model: modelResponse.model
 								});
 
@@ -519,7 +520,7 @@
 									let relayDomain = relayDomainInput.trim();
 									if (relayDomain.endsWith("/")) relayDomain = relayDomain.slice(0, -1);
 
-									const session = await sessionFromProduct(currentProductId);
+									const session = await sessionFromProductP256(currentProductId);
 									const payload = await session.encrypt(encode({ relayDomain }));
 
 									await bluetoothInstance.writeAndRead("relaySet", {
@@ -648,7 +649,7 @@
 					try {
 						currentlyConnectingWifi = true;
 
-						const session = await sessionFromProduct(currentProductId);
+						const session = await sessionFromProductP256(currentProductId);
 						const payload = await session.encrypt(
 							encode({ ssid: pendingWifiNetwork.ssid, password: wifiPasswordInput, countryCode: wifiCountryCode })
 						);

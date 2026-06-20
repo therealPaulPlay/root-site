@@ -193,7 +193,7 @@
 					>
 						{#each health.logs as log, i}
 							<p class:bg-border={i === highlightedLogIndex} class="select-text">
-								<span class="text-muted-foreground select-text">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+								<span class="text-muted-foreground select-text">{new Date(log.timestamp).toLocaleTimeString()}</span>
 								{log.msg}
 							</p>
 						{/each}
