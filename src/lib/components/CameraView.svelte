@@ -198,12 +198,9 @@
 	});
 
 	function cleanupRecording() {
-		recordingManager?.cleanup();
+		recordingManager?.cleanup(); // Also revokes the blob url on recordingVideoElement.src
 		recordingManager = null;
-		if (recordingVideoElement?.src) {
-			URL.revokeObjectURL(recordingVideoElement.src);
-			recordingVideoElement.src = "";
-		}
+		if (recordingVideoElement) recordingVideoElement.src = "";
 		if (recordingAudioUrl) URL.revokeObjectURL(recordingAudioUrl);
 		recordingAudioUrl = null;
 	}
@@ -427,32 +424,6 @@
 		} catch (error) {
 			if (error.name !== "AbortError") console.error("Share failed:", error);
 		}
-	}
-
-	function switchRecordingToBlobUrl() {
-		if (!recordingChunks.video.length || !recordingVideoElement) return;
-		if (recordingManager) {
-			recordingManager.cleanup();
-			recordingManager = null;
-		}
-		// Revoke old blob URL if present
-		if (recordingVideoElement.src?.startsWith("blob:")) URL.revokeObjectURL(recordingVideoElement.src);
-		const chunks = recordingChunks.video.filter(Boolean);
-		// Pause and reset playback once the new blob src loads
-		recordingVideoElement.addEventListener(
-			"loadedmetadata",
-			() => {
-				recordingVideoElement.pause();
-				recordingVideoElement.dispatchEvent(new Event("pause")); // Ensure onpause fires even if already paused through reset
-				recordingVideoElement.currentTime = 0;
-				if (recordingAudioElement) {
-					recordingAudioElement.pause();
-					recordingAudioElement.currentTime = 0;
-				}
-			},
-			{ once: true }
-		);
-		recordingVideoElement.src = createBlobUrl(chunks, "video/mp4");
 	}
 
 	// Controls handlers
@@ -977,7 +948,6 @@
 							bind:recordingVideoElement
 							{recordingAudioUrl}
 							{recordingFullyLoaded}
-							onVideoError={switchRecordingToBlobUrl}
 							onShareRecording={shareRecording}
 						/>
 					</PullToRefresh>
