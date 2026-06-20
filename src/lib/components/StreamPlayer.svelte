@@ -87,7 +87,7 @@
 				// Ignore empty src errors
 				const error = e.currentTarget.error;
 				if (error && !error.message?.toLowerCase()?.includes("empty src"))
-					console.error("Video playback error:", error);
+					console.error(`Video playback error code=${error.code}:`, error);
 			}}
 		></video>
 	{/if}

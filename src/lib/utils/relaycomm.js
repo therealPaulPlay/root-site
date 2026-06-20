@@ -23,8 +23,7 @@ export class RelayComm {
 	}
 
 	// Run fn when the WebSocket is confirmed open, otherwise queue it for when the connection opens
-	// Brief delay lets stale connections close first (e.g. mobile app resume)
-	// On iOS, at least ~90ms are required for WebKit to update the WebSocket state
+	// On iOS, at least ~90ms are required for WebKit to update the WebSocket state to closed upon relaunching the app (when it resumes and wasn't fully closed)
 	onConnected(fn) {
 		setTimeout(() => {
 			if (this.#ws?.readyState === WebSocket.OPEN) {

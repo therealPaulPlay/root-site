@@ -79,7 +79,7 @@ export class StreamManager {
 	// audioUnlockEl is an optional silent <audio> element to unlock iOS audio session
 	setupAudio(audioUnlockEl) {
 		if (this.#audioContext) return;
-		audioUnlockEl?.play()?.catch(() => {});
+		audioUnlockEl?.play()?.catch(() => { });
 		this.#audioContext = new AudioContext();
 		this.#audioGainNode = this.#audioContext.createGain();
 		this.#audioGainNode.gain.value = this.#audioMuted ? 0 : 1;
@@ -145,6 +145,7 @@ export class StreamManager {
 
 	#endWithError(error) {
 		if (this.#ended) return;
+		console.error(`Stream ended with error for ${this.#productId}:`, error?.message || error);
 		this.cleanup();
 		this.#options.onError?.(error);
 	}
@@ -188,7 +189,10 @@ export class StreamManager {
 		if (!payload.success) return this.#handleChunkError(payload, "Video stream error", true);
 		if (!this.#initReceived && payload.chunkIndex !== 0) return;
 		if (payload.chunkIndex === 0) this.#initReceived = true;
-		if (this.#videoElement?.error) return this.#endWithError(new Error("Video element error"));
+		if (this.#videoElement?.error)
+			return this.#endWithError(
+				new Error(`Video element error code=${this.#videoElement.error.code} chunkIndex=${payload.chunkIndex}`)
+			);
 
 		this.#resetVideoStaleTimeout();
 		this.#mediaSourceManager?.appendChunk(payload.chunk);
