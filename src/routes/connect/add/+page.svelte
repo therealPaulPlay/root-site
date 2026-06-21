@@ -228,7 +228,8 @@
 
 			{#if step == 1}
 				<p class="max-w-3xl">
-					Connect your ROOT product to power and wait until a startup sound plays. Rarely, this can take up to 3 minutes.
+					Connect your ROOT product to power and wait until a startup sound plays. Rarely, this can take up to 3
+					minutes.
 				</p>
 				<p class="text-muted-foreground">
 					By continuing setup, you agree to our <IframeDialog src="/terms" variant={null}
@@ -452,7 +453,7 @@
 											wifiCountryCode = "";
 											wifiConnectDialogOpen = true;
 										}}
-										class="flex w-full items-center justify-between gap-2 border-b p-2 hover:bg-accent/50 active:bg-accent/50 {network.ssid ===
+										class="flex w-full items-center justify-between gap-4 border-b p-2 hover:bg-accent/50 active:bg-accent/50 {network.ssid ===
 										currentWifiSSID
 											? 'pointer-events-none bg-muted'
 											: ''}"
@@ -468,7 +469,9 @@
 												{network.ssid === currentWifiSSID ? "(Connected)" : ""}
 											</p>
 										</span>
-										<span class="text-sm text-nowrap">{network.signal}/100</span>
+										<span class="relative mr-1 h-2 w-12 border border-muted-foreground/50">
+											<div class="h-full bg-muted-foreground/50" style:width={(network.signal ?? 0) + "%"}></div>
+										</span>
 									</div>
 								{/each}
 							{:else}
