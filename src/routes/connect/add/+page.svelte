@@ -561,28 +561,32 @@
 
 	<!-- Controls -->
 	<div class="mt-auto flex w-full justify-between gap-8 p-6 pb-8! max-sm:pb-10! lg:p-8">
-		<AlertDialog.Root>
-			<AlertDialog.Trigger class={buttonVariants({ variant: "outline" })}>
-				<RiArrowLeftLine class="h-4! w-4!" />Abort
-			</AlertDialog.Trigger>
-			<AlertDialog.Content>
-				<AlertDialog.Header>
-					<AlertDialog.Title>Abort?</AlertDialog.Title>
-					<AlertDialog.Description>
-						{#if successfulPair}
-							Aborting the setup now will not reset the full pairing progress. Finishing the WiFi and Relay setup is
-							highly recommended.
-						{:else}
-							All setup progress will be lost.
-						{/if}
-					</AlertDialog.Description>
-				</AlertDialog.Header>
-				<AlertDialog.Footer>
-					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-					<AlertDialog.Action onclick={() => goto("/connect")}>Confirm</AlertDialog.Action>
-				</AlertDialog.Footer>
-			</AlertDialog.Content>
-		</AlertDialog.Root>
+		{#if step == 1}
+			<Button variant="outline" onclick={() => goto("/connect")}><RiArrowLeftLine class="h-4! w-4!" />Abort</Button>
+		{:else}
+			<AlertDialog.Root>
+				<AlertDialog.Trigger class={buttonVariants({ variant: "outline" })}>
+					<RiArrowLeftLine class="h-4! w-4!" />Abort
+				</AlertDialog.Trigger>
+				<AlertDialog.Content>
+					<AlertDialog.Header>
+						<AlertDialog.Title>Abort?</AlertDialog.Title>
+						<AlertDialog.Description>
+							{#if successfulPair}
+								Aborting the setup now will not reset the full pairing progress. Finishing the WiFi and Relay setup is
+								highly recommended.
+							{:else}
+								All setup progress will be lost.
+							{/if}
+						</AlertDialog.Description>
+					</AlertDialog.Header>
+					<AlertDialog.Footer>
+						<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+						<AlertDialog.Action onclick={() => goto("/connect")}>Confirm</AlertDialog.Action>
+					</AlertDialog.Footer>
+				</AlertDialog.Content>
+			</AlertDialog.Root>
+		{/if}
 		<Button
 			disabled={!stepConditionMet}
 			onclick={() => {
