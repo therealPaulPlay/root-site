@@ -227,10 +227,7 @@
 			<h3 class="text-3xl">{step}. {stepTitle[step - 1] || "Default."}</h3>
 
 			{#if step == 1}
-				<p class="max-w-3xl">
-					Connect your ROOT product to power and wait until a startup sound plays. Rarely, this can take up to 3
-					minutes.
-				</p>
+				<p class="max-w-3xl">Connect your ROOT product to power and wait until a startup sound plays.</p>
 				<p class="text-muted-foreground">
 					By continuing setup, you agree to our <IframeDialog src="/terms" variant={null}
 						><span class="underline">Terms of Use</span>.</IframeDialog
