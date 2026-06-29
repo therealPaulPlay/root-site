@@ -842,7 +842,7 @@
 		if (!isOpen) onClose();
 	}}
 >
-	<Drawer.Content class="safe-h-svh top-0! bottom-auto!" showHandle={false}>
+	<Drawer.Content class="safe-h-svh bottom-auto!" showHandle={false} onCloseAutoFocus={(e) => e.preventDefault()}>
 		<!-- Top bar with close button -->
 		<div class="flex border-b text-xl">
 			<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" onclick={closeDrawer}>

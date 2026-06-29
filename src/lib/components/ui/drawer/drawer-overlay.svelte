@@ -29,7 +29,7 @@
 	<div
 		bind:this={ref}
 		data-slot="drawer-overlay"
-		class={cn("safe-h-svh absolute inset-x-0 top-0 z-50 touch-none overscroll-none", className)}
+		class={cn("safe-h-svh pointer-events-none absolute inset-x-0 top-0 z-50", className)}
 		style:background="rgb(0 0 0 / {opacity * 0.5})"
 		style:backdrop-filter="blur({opacity * 4}px)"
 	></div>
