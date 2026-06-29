@@ -1,5 +1,5 @@
 <script>
-	import { Drawer as DrawerPrimitive } from "vaul-svelte";
+	import { Drawer as DrawerPrimitive } from "@paulplay/vaul-svelte";
 	import DrawerPortal from "./drawer-portal.svelte";
 	import DrawerOverlay from "./drawer-overlay.svelte";
 	import { cn } from "$lib/utils.js";

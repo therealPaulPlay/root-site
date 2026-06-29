@@ -21,7 +21,6 @@
 	import { Capacitor } from "@capacitor/core";
 	import { snapshotVideo } from "$lib/utils/snapshotVideo";
 	import { muxVideoAndAudio } from "$lib/utils/muxRecording";
-	import { innerWidth } from "svelte/reactivity/window";
 
 	let {
 		productId,
@@ -159,12 +158,11 @@
 		}
 	});
 
-	// Listen for drawer close
-	let closeTimer;
-	$effect(() => {
-		if (!open) closeTimer = setTimeout(onClose, 500);
-		return () => clearTimeout(closeTimer);
-	});
+	// Programmatic close, gesture closes fire the drawer's onAnimationEnd which runs onClose instead
+	function closeDrawer() {
+		open = false;
+		setTimeout(onClose, 500);
+	}
 
 	onMount(() => {
 		if (!relayCommInstance) return console.warn("No relayComm instance passed to CameraView!");
@@ -723,7 +721,7 @@
 			}
 			restartDialogOpen = false;
 			toast.success("Restarting.");
-			open = false;
+			closeDrawer();
 		} catch (error) {
 			toast.error("Failed to restart device: " + error.message);
 			console.error("Failed to restart device:", error);
@@ -743,7 +741,7 @@
 			resetDialogOpen = false;
 			toast.success("Reset initiated.");
 			removeProduct(productId);
-			open = false;
+			closeDrawer();
 			onProductRemoved();
 		} catch (error) {
 			toast.error("Failed to reset device: " + error.message);
@@ -839,12 +837,15 @@
 	bind:open
 	shouldScaleBackground={false}
 	container={getArticleEl()}
-	modal={Capacitor.isNativePlatform() || innerWidth.current < 640}
+	modal={false}
+	onAnimationEnd={(isOpen) => {
+		if (!isOpen) onClose();
+	}}
 >
 	<Drawer.Content class="safe-h-svh top-0! bottom-auto!" showHandle={false}>
 		<!-- Top bar with close button -->
 		<div class="flex border-b text-xl">
-			<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" onclick={() => (open = false)}>
+			<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" onclick={closeDrawer}>
 				<RiCloseLine class="shape-crisp h-8! w-8!" />
 			</Button>
 		</div>

@@ -1,12 +1,8 @@
 <script>
-	import { Drawer as DrawerPrimitive } from "vaul-svelte";
+	import { Drawer as DrawerPrimitive } from "@paulplay/vaul-svelte";
 	import { cn } from "$lib/utils.js";
 
-	let {
-		ref = $bindable(null),
-		class: className,
-		...restProps
-	} = $props();
+	let { ref = $bindable(null), class: className, ...restProps } = $props();
 
 	// backdrop-filter + element opacity < 1 causes smearing
 	// Vaul controls a hidden proxy's opacity; we read it and apply as background alpha + blur
@@ -25,18 +21,16 @@
 	});
 </script>
 
-<!-- Hidden proxy that vaul controls -->
-<DrawerPrimitive.Overlay
-	bind:ref={proxyEl}
-	class="pointer-events-none fixed invisible"
-	{...restProps}
-/>
+<!-- Renders with height 0, purely used to sync its opacity to the div below-->
+<!-- In normal shadcn this gets classes to make it the visual overlay, but since its in the wrong stacking context we can't use it for backdrop blur (smeary) -->
+<DrawerPrimitive.Overlay bind:ref={proxyEl} {...restProps} />
 
-<!-- Visible overlay — no element opacity, blur stays clean -->
-<div
-	bind:this={ref}
-	data-slot="drawer-overlay"
-	class={cn("absolute inset-x-0 top-0 safe-h-svh z-50", className)}
-	style:background="rgb(0 0 0 / {opacity * 0.5})"
-	style:backdrop-filter="blur({opacity * 4}px)"
-></div>
+{#if proxyEl}
+	<div
+		bind:this={ref}
+		data-slot="drawer-overlay"
+		class={cn("safe-h-svh absolute inset-x-0 top-0 z-50 touch-none overscroll-none", className)}
+		style:background="rgb(0 0 0 / {opacity * 0.5})"
+		style:backdrop-filter="blur({opacity * 4}px)"
+	></div>
+{/if}
