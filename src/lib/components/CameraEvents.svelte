@@ -325,7 +325,7 @@
 				<div transition:slide={{ duration: 250 }}>
 					<div transition:fade={{ duration: 150 }} class="flex items-center justify-between gap-4 p-3 pl-4">
 						<p class="min-w-0 truncate text-sm text-muted-foreground">
-							Deleting {formatDeletionCountdown(event.deletionAt)}
+							Deleting {formatDeletionCountdown(event.deletionAt)}.
 						</p>
 						<Button variant="ghost" size="xs" aria-label="Restore" onclick={() => onSetDeletion(event, false)}>
 							<RiArrowGoBackLine class="size-4" />
