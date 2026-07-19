@@ -6,8 +6,9 @@
 <script>
 	import { onDestroy } from "svelte";
 
-	let { icon: Icon, onclick, children, actionWidth = 80, threshold = 40, class: className = "", ariaLabel = "Info" } = $props();
+	let { actions, children, threshold = 40, class: className = "" } = $props();
 
+	let actionsWidth = $state(0);
 	let offset = $state(0);
 	let startX = null;
 	let startY = null;
@@ -51,12 +52,12 @@
 			e.currentTarget.setPointerCapture(e.pointerId);
 			return;
 		}
-		offset = Math.max(-actionWidth, Math.min(0, startOffset + dx));
+		offset = Math.max(-actionsWidth, Math.min(0, startOffset + dx));
 	}
 
 	function onPointerEnd() {
 		if (!dragging) return;
-		offset = offset < -threshold ? -actionWidth : 0;
+		offset = offset < -threshold ? -actionsWidth : 0;
 		if (offset < 0) openInstances.add(self);
 		else openInstances.delete(self);
 		dragging = false;
@@ -77,18 +78,17 @@
 </script>
 
 <div class="relative overflow-hidden {className}">
-	<button
-		class="absolute inset-y-0 right-0 flex items-center justify-center hover:bg-accent active:bg-accent"
-		style:width="{actionWidth}px"
-		aria-label={ariaLabel}
+	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+	<div
+		class="absolute inset-y-0 right-0 flex"
+		bind:offsetWidth={actionsWidth}
 		onclick={() => {
-			onclick?.();
 			offset = 0;
 			openInstances.delete(self);
 		}}
 	>
-		<Icon class="size-4" />
-	</button>
+		{@render actions()}
+	</div>
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="relative touch-pan-y bg-background"

@@ -171,16 +171,22 @@
 		{:else}
 			<div class="space-y-4">
 				{#each devices as device}
-					<SwipeAction
-						icon={RiInformationLine}
-						class="border"
-						onclick={() => {
-							deviceInfoDevice = device;
-							deviceInfoOpen = true;
-						}}
-					>
+					<SwipeAction class="border">
+						{#snippet actions()}
+							<button
+								class="flex w-20 items-center justify-center hover:bg-accent active:bg-accent"
+								aria-label="Info"
+								onclick={() => {
+									deviceInfoDevice = device;
+									deviceInfoOpen = true;
+								}}
+							>
+								<RiInformationLine class="size-4" />
+							</button>
+						{/snippet}
 						<div
-							class="flex items-center justify-between gap-2 p-3 py-2 {device.id === localStorage.getItem('deviceId')
+							class="flex items-center justify-between gap-2 p-3 py-2 pl-4 {device.id ===
+							localStorage.getItem('deviceId')
 								? 'bg-muted'
 								: ''}"
 						>

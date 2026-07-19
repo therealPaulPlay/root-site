@@ -5,8 +5,10 @@
 	import Label from "./ui/label/label.svelte";
 	import {
 		RiArrowDownSLine,
+		RiArrowGoBackLine,
 		RiCalendarFill,
 		RiCalendarLine,
+		RiDeleteBinLine,
 		RiErrorWarningLine,
 		RiFilterFill,
 		RiFilterLine,
@@ -49,7 +51,8 @@
 		dateRange = $bindable(),
 		selectedTypes = $bindable([]),
 		onApplyFilter = () => {},
-		onLoadMore = () => {}
+		onLoadMore = () => {},
+		onSetDeletion = () => {}
 	} = $props();
 
 	// Events list state
@@ -204,10 +207,26 @@
 				}
 			}
 			clusters.push(current);
-			result[dateKey] = clusters.map((evts) => ({ id: evts[0]?.id, events: evts }));
+
+			// Deleted events cannot act as a group's preview, hoist them out until a viewable one leads
+			result[dateKey] = clusters.map((evts) => {
+				const deleted = [];
+				if (evts.length > 1) while (evts.length > 0 && evts[0].deletionAt) deleted.push(evts.shift());
+				return { id: (deleted[0] ?? evts[0]).id, deleted, events: evts };
+			});
 		}
 		return result;
 	});
+
+	const countdownFormat = new Intl.RelativeTimeFormat("en", { numeric: "always" });
+
+	// Countdown until scheduled deletion, shown in days, then hours, then minutes
+	function formatDeletionCountdown(deletionAt) {
+		const remaining = Number(deletionAt) - Date.now();
+		if (remaining >= 86400000) return countdownFormat.format(Math.round(remaining / 86400000), "day");
+		if (remaining >= 3600000) return countdownFormat.format(Math.round(remaining / 3600000), "hour");
+		return countdownFormat.format(Math.max(1, Math.round(remaining / 60000)), "minute");
+	}
 
 	function observeLoadMore(element) {
 		const observer = new IntersectionObserver(
@@ -301,67 +320,104 @@
 	{/if}
 {:else}
 	{#snippet eventItem(event)}
-		<SwipeAction
-			icon={RiInformationLine}
-			onclick={() => {
-				detectionEvent = event;
-				detectionDialogOpen = true;
-			}}
-		>
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<div
-				bind:this={eventElements[event.id]}
-				class="flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-accent active:bg-accent {highlightedEventId ===
-				event.id
-					? 'animate-highlight'
-					: ''}"
-				role="button"
-				tabindex="0"
-				onclick={() => {
-					selectedEvent = event;
-					viewedEventIds.add(event.id);
-					viewRecording(event);
-				}}
-			>
-				<div class="mb-auto flex-1">
-					<Label class="mb-2">
-						{event.eventType || "N/A"}
-					</Label>
-					<div class="flex flex-col gap-1">
-						<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
-							<RiTimeLine class="size-4" />{new Date(event.timestamp).toLocaleTimeString([], {
-								hour: "2-digit",
-								minute: "2-digit"
-							})}
+		<div>
+			{#if event.deletionAt}
+				<div transition:slide={{ duration: 250 }}>
+					<div transition:fade={{ duration: 150 }} class="flex items-center justify-between gap-4 p-3 pl-4">
+						<p class="min-w-0 truncate text-sm text-muted-foreground">
+							Deleting {formatDeletionCountdown(event.deletionAt)}
 						</p>
-						<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
-							<RiHourglass2Fill class="size-4" />{event.duration != null ? Math.round(event.duration) + "s" : "N/A"}
-						</p>
+						<Button variant="ghost" size="xs" aria-label="Restore" onclick={() => onSetDeletion(event, false)}>
+							<RiArrowGoBackLine class="size-4" />
+						</Button>
 					</div>
 				</div>
-				<div class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted" {@attach observeThumbnail(event.id)}>
-					{#if eventThumbnails[event.id] && eventThumbnails[event.id] !== "error"}
-						<img
-							transition:fade={{ duration: 150 }}
-							src={eventThumbnails[event.id]}
-							alt="Event thumbnail"
-							class="h-full w-full object-cover"
-						/>
-					{:else}
-						<div class="flex h-full w-full items-center justify-center">
-							{#if !eventThumbnails[event.id] && (loadingThumbnails.has(event.id) || thumbnailQueue.includes(event.id))}
-								<div class="h-full w-full animate-shimmer-intense"></div>
-							{:else}
-								<RiErrorWarningLine class="size-4" />
-							{/if}
-						</div>
-					{/if}
+			{:else}
+				<div transition:slide={{ duration: 250 }}>
+					<div transition:fade={{ duration: 150 }}>
+						<SwipeAction>
+							{#snippet actions()}
+								<button
+									class="flex w-20 items-center justify-center hover:bg-accent active:bg-accent"
+									aria-label="Info"
+									onclick={() => {
+										detectionEvent = event;
+										detectionDialogOpen = true;
+									}}
+								>
+									<RiInformationLine class="size-4" />
+								</button>
+								<button
+									class="flex w-20 items-center justify-center border-l hover:bg-accent active:bg-accent"
+									aria-label="Delete"
+									onclick={() => onSetDeletion(event, true)}
+								>
+									<RiDeleteBinLine class="size-4" />
+								</button>
+							{/snippet}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<div
+								bind:this={eventElements[event.id]}
+								class="flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-accent active:bg-accent {highlightedEventId ===
+								event.id
+									? 'animate-highlight'
+									: ''}"
+								role="button"
+								tabindex="0"
+								onclick={() => {
+									selectedEvent = event;
+									viewedEventIds.add(event.id);
+									viewRecording(event);
+								}}
+							>
+								<div class="mb-auto flex-1">
+									<Label class="mb-2">
+										{event.eventType || "N/A"}
+									</Label>
+									<div class="flex flex-col gap-1">
+										<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
+											<RiTimeLine class="size-4" />{new Date(event.timestamp).toLocaleTimeString([], {
+												hour: "2-digit",
+												minute: "2-digit"
+											})}
+										</p>
+										<p class="flex w-fit items-center gap-1 text-sm text-muted-foreground">
+											<RiHourglass2Fill class="size-4" />{event.duration != null
+												? Math.round(event.duration) + "s"
+												: "N/A"}
+										</p>
+									</div>
+								</div>
+								<div
+									class="aspect-video h-20 shrink-0 overflow-hidden border bg-muted"
+									{@attach observeThumbnail(event.id)}
+								>
+									{#if eventThumbnails[event.id] && eventThumbnails[event.id] !== "error"}
+										<img
+											transition:fade={{ duration: 150 }}
+											src={eventThumbnails[event.id]}
+											alt="Event thumbnail"
+											class="h-full w-full object-cover"
+										/>
+									{:else}
+										<div class="flex h-full w-full items-center justify-center">
+											{#if !eventThumbnails[event.id] && (loadingThumbnails.has(event.id) || thumbnailQueue.includes(event.id))}
+												<div class="h-full w-full animate-shimmer-intense"></div>
+											{:else}
+												<RiErrorWarningLine class="size-4" />
+											{/if}
+										</div>
+									{/if}
+								</div>
+								{#if viewedEventIds.has(event.id)}
+									<div class="absolute top-2 left-2 h-1 w-1 bg-border"></div>
+								{/if}
+							</div>
+						</SwipeAction>
+					</div>
 				</div>
-				{#if viewedEventIds.has(event.id)}
-					<div class="absolute top-2 left-2 h-1 w-1 bg-border"></div>
-				{/if}
-			</div>
-		</SwipeAction>
+			{/if}
+		</div>
 	{/snippet}
 
 	{#each Object.entries(groupedEvents) as [dateKey, clusters]}
@@ -372,12 +428,15 @@
 		</div>
 		<!-- Scrollable event list -->
 		<div class="divide-y overflow-y-auto border">
-			{#each clusters as cluster}
+			{#each clusters as cluster (cluster.id)}
+				{#each cluster.deleted as event (event.id)}
+					<div transition:slide={{ duration: 250 }}>{@render eventItem(event)}</div>
+				{/each}
 				{#if cluster.events.length === 1}
-					{@render eventItem(cluster.events[0])}
-				{:else}
+					<div transition:slide={{ duration: 250 }}>{@render eventItem(cluster.events[0])}</div>
+				{:else if cluster.events.length > 1}
 					{@const expanded = expandedStacks.has(cluster.id)}
-					<div class="relative">
+					<div class="relative" transition:slide={{ duration: 250 }}>
 						{#if expanded}
 							<div
 								class="absolute top-0 bottom-0 left-0 z-1 w-0.5 bg-border"

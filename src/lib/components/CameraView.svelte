@@ -248,8 +248,11 @@
 			}
 			initialEventsLoaded = true;
 			const incoming = response.events || [];
-			if (eventsNextCursor > 0) events = [...events, ...incoming];
-			else events = incoming;
+			if (eventsNextCursor > 0) {
+				// Positional cursors can drift when events are added or purged between pages, deduplicate
+				const known = new Set(events.map((e) => e.id));
+				events = [...events, ...incoming.filter((e) => !known.has(e.id))];
+			} else events = incoming;
 			// Firmware returns 0 as nextCursor when there are no more pages
 			eventsNextCursor = response.nextCursor ?? 0;
 		} catch (error) {
@@ -421,6 +424,32 @@
 			await navigator.share({ files: [file] });
 		} catch (error) {
 			if (error.name !== "AbortError") console.error("Share failed:", error);
+		}
+	}
+
+	async function setEventDeletion(event, deletionScheduled) {
+		const target = events.find((e) => e.id === event.id);
+		if (!target) return;
+		loading.set(`deletion-${event.id}`, true);
+		const previousDeletionAt = target.deletionAt || 0;
+		target.deletionAt = deletionScheduled ? Date.now() + 7 * 24 * 60 * 60 * 1000 : 0;
+		try {
+			const response = await relayCommInstance.request(productId, "setEventDeletion", {
+				id: event.id,
+				deletionScheduled
+			});
+			if (!response.success) {
+				target.deletionAt = previousDeletionAt;
+				toast.error("Failed to update event deletion: " + (response.error || "Unknown error"));
+				return;
+			}
+			target.deletionAt = response.deletionAt;
+		} catch (error) {
+			target.deletionAt = previousDeletionAt;
+			toast.error("Failed to update event deletion: " + error.message);
+			console.error("Failed to update event deletion:", error);
+		} finally {
+			loading.set(`deletion-${event.id}`, false);
 		}
 	}
 
@@ -940,6 +969,7 @@
 							bind:dateRange={eventsDateRange}
 							bind:selectedTypes={eventsSelectedTypes}
 							onApplyFilter={applyFilterIfChanged}
+							onSetDeletion={setEventDeletion}
 							onLoadMore={() => {
 								if (eventsNextCursor !== 0 && !loading.is("events")) loadEvents(eventsNextCursor);
 							}}
