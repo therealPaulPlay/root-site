@@ -1,5 +1,5 @@
 <script>
-	import "../app.css";
+	import "./layout.css";
 	import "$lib/utils/theme.svelte.js";
 	import { onDestroy, onMount } from "svelte";
 	import { Capacitor } from "@capacitor/core";
