@@ -2,13 +2,23 @@
 	import Button, { buttonVariants } from "$lib/components/ui/button/button.svelte";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
-	import { getAllProducts, removeProduct, saveProduct } from "$lib/utils/pairedProductsStorage";
+	import { getAllProducts, moveProduct, removeProduct, saveProduct } from "$lib/utils/pairedProductsStorage";
 	import { createRelayInstance } from "$lib/utils/createRelayInstance";
 	import { onMount } from "svelte";
-	import { RiDeleteBinLine, RiDownload2Line, RiEdit2Line, RiSettings3Line, RiVideoAddLine } from "svelte-remixicon";
+	import {
+		RiArrowDownLine,
+		RiArrowUpLine,
+		RiDeleteBinLine,
+		RiDownload2Line,
+		RiEdit2Line,
+		RiMore2Fill,
+		RiSettings3Line,
+		RiVideoAddLine
+	} from "svelte-remixicon";
 	import { toast } from "svelte-sonner";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
+	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import PullToRefresh from "$lib/components/PullToRefresh.svelte";
 	import StreamPlayer from "$lib/components/StreamPlayer.svelte";
 	import { StreamManager } from "$lib/utils/streamManager.svelte.js";
@@ -31,6 +41,7 @@
 	let streamHandles = $state({});
 	let streamVideoElements = $state({});
 
+	let menuOpen = $state({});
 	let renameDialogOpen = $state({});
 	let removeDialogOpen = $state({});
 	let renameValue = $state({});
@@ -205,6 +216,13 @@
 		}
 	}
 
+	function moveProductInView(index, isUp) {
+		const targetIndex = index + (isUp ? -1 : 1);
+		if (targetIndex < 0 || targetIndex >= products.length) return;
+		moveProduct(products[index].id, isUp);
+		[products[index], products[targetIndex]] = [products[targetIndex], products[index]];
+	}
+
 	function cleanupProductState(productId) {
 		stopProductStream(productId);
 		delete streamHandles[productId];
@@ -257,7 +275,7 @@
 	</Button>
 </div>
 
-{#snippet productItem(product)}
+{#snippet productItem(product, index)}
 	{@const isRenameDialogOpen = renameDialogOpen[product.id] ?? false}
 	{@const isRemoveDialogOpen = removeDialogOpen[product.id] ?? false}
 	{@const stream = streamHandles[product.id]}
@@ -343,20 +361,51 @@
 					</div>
 				</AlertDialog.Content>
 			</AlertDialog.Root>
+			<DropdownMenu.Root
+				open={Boolean(menuOpen[product.id])}
+				onOpenChange={(open) => {
+					if (open) menuOpen[product.id] = true;
+					else delete menuOpen[product.id];
+				}}
+			>
+				<DropdownMenu.Trigger
+					class="{buttonVariants({
+						variant: 'ghost'
+					})} h-fit! px-1.5! py-1.25!"
+					onpointerdown={(event) => event.preventDefault()}
+					onclick={(event) => {
+						event.stopPropagation();
+						if (event.pointerType === "touch") return;
+						menuOpen[product.id] = true;
+					}}
+				>
+					<RiMore2Fill />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end" class="w-fit min-w-40 border p-0 shadow-lg ring-0">
+					<DropdownMenu.Item disabled={index === 0} onSelect={() => moveProductInView(index, true)}>
+						<RiArrowUpLine />
+						Move up
+					</DropdownMenu.Item>
+					<DropdownMenu.Item disabled={index === products.length - 1} onSelect={() => moveProductInView(index, false)}>
+						<RiArrowDownLine />
+						Move down
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						onSelect={() => {
+							removeDialogOpen[product.id] = true;
+						}}
+					>
+						<RiDeleteBinLine />
+						Remove
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 			<AlertDialog.Root
 				open={isRemoveDialogOpen}
 				onOpenChange={(open) => {
 					removeDialogOpen[product.id] = open;
 				}}
 			>
-				<AlertDialog.Trigger
-					class="{buttonVariants({
-						variant: 'ghost'
-					})} h-fit! px-1.5! py-1.25!"
-					onclick={(event) => event.stopPropagation()}
-				>
-					<RiDeleteBinLine />
-				</AlertDialog.Trigger>
 				<AlertDialog.Content>
 					<AlertDialog.Header>
 						<AlertDialog.Title>Remove?</AlertDialog.Title>
@@ -388,8 +437,8 @@
 		class="of-top of-bottom -mt-px space-y-10 pb-10"
 	>
 		{#if products.length}
-			{#each products as product}
-				{@render productItem(product)}
+			{#each products as product, index (product.id)}
+				{@render productItem(product, index)}
 			{/each}
 		{:else}
 			<div class="flex h-full w-full items-center justify-center">

@@ -12,5 +12,5 @@
 			}
 		}
 	],
-	"tailwindStylesheet": "./src/layout.css"
+	"tailwindStylesheet": "./src/routes/layout.css"
 }

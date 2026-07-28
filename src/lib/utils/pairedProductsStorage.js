@@ -66,6 +66,22 @@ export function saveProduct(product) {
 	}
 }
 
+export function moveProduct(productId, isUp) {
+	const products = getAllProducts();
+	const index = products.findIndex((p) => p.id === productId);
+	const targetIndex = index + (isUp ? -1 : 1);
+	if (index < 0 || targetIndex < 0 || targetIndex >= products.length) return;
+
+	[products[index], products[targetIndex]] = [products[targetIndex], products[index]];
+
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+		syncToNative(products);
+	} catch (error) {
+		console.error("Failed to move product:", error);
+	}
+}
+
 export function removeProduct(productId) {
 	const products = getAllProducts().filter((p) => p.id !== productId);
 	try {
