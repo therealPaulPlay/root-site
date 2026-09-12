@@ -27,8 +27,8 @@
 			<Button variant="link" class="text-background" href="/terms">Terms</Button>
 			<Button variant="link" class="text-background" href="/support">Support</Button>
 			<Button variant="link" class="text-background" href="/source-code">Source code</Button>
-			<Button variant="link" class="text-background" href="https://paulplay.studio/imprint" target="_blank"
-				>Imprint</Button
+			<Button variant="link" class="text-background" href="https://paulplay.studio/company-information" target="_blank"
+				>Company</Button
 			>
 			<Button variant="link" class="text-muted-foreground" href="/">© ROOT {new Date().getFullYear()}</Button>
 		</div>
