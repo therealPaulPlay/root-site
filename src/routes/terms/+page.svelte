@@ -106,10 +106,10 @@
 
 		<h2 class="mb-4 font-mono">Contact</h2>
 		<p>
-			For questions about these terms, please reach out via the contact form at the bottom of <a
-				href="https://paulplay.studio/legal"
+			For questions about these terms, please reach out via this <a
+				href="https://paulplay.studio/contact"
 				target="_blank"
-				class="underline">this page</a
+				class="underline">contact form</a
 			>.
 			<br /><br />
 			Last updated: February 25, 2026
