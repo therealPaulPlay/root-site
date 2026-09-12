@@ -4,5 +4,5 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit({ kit: { adapter: adapter({ fallback: "index.html" }) } })]
+	plugins: [tailwindcss(), sveltekit({ adapter: adapter({ fallback: "index.html" }) })]
 });
