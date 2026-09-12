@@ -1,5 +1,5 @@
 <svelte:head>
-	<title>Terms of Use</title>
+	<title>Terms</title>
 </svelte:head>
 
 <section class="-z-1 h-60 w-full md:h-80 lg:h-120 xl:h-svh">
@@ -10,7 +10,7 @@
 	class="right-0 max-w-xl border-t bg-background xl:absolute xl:mt-15 xl:mr-15 xl:h-[calc(100svh-7.5rem)] xl:border-b xl:border-l"
 >
 	<div class="of-top of-bottom of-length-2 max-h-full p-6 max-xl:pb-16 lg:p-8 xl:overflow-y-auto">
-		<h1 class="text-4xl">Terms of Use</h1>
+		<h1 class="text-4xl">Terms of use</h1>
 		<br />
 		<p>By using our products and services, you agree to these terms.</p>
 		<br /><br />

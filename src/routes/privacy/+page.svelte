@@ -1,5 +1,5 @@
 <svelte:head>
-	<title>Privacy Policy</title>
+	<title>Privacy</title>
 </svelte:head>
 
 <section class="-z-1 h-60 w-full md:h-80 lg:h-120 xl:h-svh">
@@ -10,7 +10,7 @@
 	class="right-0 max-h-fit max-w-xl border-t bg-background xl:absolute xl:mt-15 xl:mr-15 xl:h-[calc(100svh-7.5rem)] xl:border-b xl:border-l"
 >
 	<div class="of-top of-bottom of-length-2 max-h-full p-6 max-xl:pb-16 lg:p-8 xl:overflow-y-auto">
-		<h1 class="text-4xl">Privacy Policy</h1>
+		<h1 class="text-4xl">Privacy policy</h1>
 		<br />
 		<p>By using our services, you agree to the collection and use of information as described in this policy.</p>
 		<br /><br />
