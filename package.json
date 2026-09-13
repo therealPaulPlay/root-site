@@ -53,6 +53,7 @@
 		"@capacitor/haptics": "^8.0.0",
 		"@capacitor/keyboard": "^8.0.1",
 		"@capacitor/push-notifications": "^8.0.2",
+		"@capacitor/splash-screen": "^8.0.2",
 		"cbor-x": "^1.6.0",
 		"mp4box": "^2.3.0",
 		"overfade": "^0.0.11",

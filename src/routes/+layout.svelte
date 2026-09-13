@@ -3,6 +3,7 @@
 	import "$lib/utils/theme.svelte.js";
 	import { onDestroy, onMount } from "svelte";
 	import { Capacitor } from "@capacitor/core";
+	import { SplashScreen } from "@capacitor/splash-screen";
 	import init from "overfade";
 	import Navbar from "$lib/components/Navbar.svelte";
 	import Footer from "$lib/components/Footer.svelte";
@@ -52,7 +53,12 @@
 	onMount(init); // Overfade
 	onMount(initializeBackGestureHandler); // Back gesture support for going back (Android)
 
-	// Handle notification taps - navigate to /connect with product and event query params
+	// Show splash screen until second frame to ensure the layout with the safe areas has settled
+	onMount(() => {
+		if (isNative) requestAnimationFrame(() => requestAnimationFrame(() => SplashScreen.hide()));
+	});
+
+	// Handle notification taps (navigate to /connect with product and event query params)
 	let removeNotificationTapListener;
 
 	onMount(() => {
