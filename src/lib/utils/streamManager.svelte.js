@@ -122,7 +122,7 @@ export class StreamManager {
 			this.#mediaSourceManager = null;
 		}
 		if (this.#videoElement) {
-			this.#videoElement.src = "";
+			this.#videoElement.removeAttribute("src"); // Setting the source to "" triggers a video error, so we remove instead
 			this.#videoElement.load();
 		}
 		this.#videoStarted = false;

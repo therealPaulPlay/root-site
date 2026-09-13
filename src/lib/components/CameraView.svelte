@@ -198,7 +198,10 @@
 	function cleanupRecording() {
 		recordingManager?.cleanup(); // Also revokes the blob url on recordingVideoElement.src
 		recordingManager = null;
-		if (recordingVideoElement) recordingVideoElement.src = "";
+		if (recordingVideoElement) {
+			recordingVideoElement.removeAttribute("src"); // Setting the src to "" triggers a video error, so we remove instead
+			recordingVideoElement.load();
+		}
 		if (recordingAudioUrl) URL.revokeObjectURL(recordingAudioUrl);
 		recordingAudioUrl = null;
 	}

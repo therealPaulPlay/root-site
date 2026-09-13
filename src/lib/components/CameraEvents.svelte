@@ -555,7 +555,7 @@
 					}}
 					onerror={(e) => {
 						const error = e.currentTarget.error;
-						if (!error.message?.toLowerCase()?.includes("empty src")) console.error("Recording playback error:", error); // Ignore empty src
+						if (error) console.error("Recording playback error:", error);
 					}}
 				></video>
 			</div>
