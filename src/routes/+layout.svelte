@@ -79,13 +79,13 @@
 	<link rel="manifest" href="/images/site.webmanifest" />
 	<meta
 		name="description"
-		content="Privacy-first smart home cameras. Root devices use on-device ML models and never transfer unencrypted data."
+		content="Privacy-first smart home security cameras. ROOT products use on-device ML models and end-to-end encryption."
 	/>
 	<meta property="og:title" content="ROOT" />
 	<meta property="og:type" content="website" />
 	<meta
 		property="og:description"
-		content="Privacy-first smart home cameras. Root devices use on-device ML models and never transfer unencrypted data."
+		content="Privacy-first smart home security cameras. ROOT products use on-device ML models and end-to-end encryption."
 	/>
 	<meta property="og:image" content="https://rootprivacy.dev/images/og-image.jpg" />
 </svelte:head>
