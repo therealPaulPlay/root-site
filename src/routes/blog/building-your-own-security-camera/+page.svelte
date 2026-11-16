@@ -133,7 +133,7 @@
 			direction.
 		</li>
 		<li>Plug the microphone into a USB port (optional). This enables audio recording for your camera.</li>
-		<li>Wire the passive buzzer to GPIO 18 and 3.3V (optional). This allows the camera to play sounds.</li>
+		<li>Wire the passive buzzer to GPIO 13 and 3.3V (optional). This allows the camera to play sounds.</li>
 		<li>Insert the flashed SD card into the card slot.</li>
 	</ol>
 	<br />
