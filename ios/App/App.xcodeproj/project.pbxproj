@@ -20,6 +20,7 @@
 		DACC8C792F5F181500B43F2B /* NotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DACC8C722F5F181500B43F2B /* NotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DACC8C8B2F5F536C00B43F2B /* CustomViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DACC8C892F5F536C00B43F2B /* CustomViewController.swift */; };
 		DACC8C8C2F5F536C00B43F2B /* NativeStoragePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = DACC8C8A2F5F536C00B43F2B /* NativeStoragePlugin.swift */; };
+		BC27FB5B472A46C0BFB6A357 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92A592BCD1FE48ADBC334815 /* SceneDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +63,7 @@
 		DACC8C722F5F181500B43F2B /* NotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DACC8C892F5F536C00B43F2B /* CustomViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomViewController.swift; sourceTree = "<group>"; };
 		DACC8C8A2F5F536C00B43F2B /* NativeStoragePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeStoragePlugin.swift; sourceTree = "<group>"; };
+		92A592BCD1FE48ADBC334815 /* SceneDelegate.swift */ = {isa = PBXFileReference; name = "SceneDelegate.swift"; path = "SceneDelegate.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -75,7 +77,18 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		DACC8C732F5F181500B43F2B /* NotificationServiceExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (DACC8C7A2F5F181500B43F2B /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = NotificationServiceExtension; sourceTree = "<group>"; };
+		DACC8C732F5F181500B43F2B /* NotificationServiceExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DACC8C7A2F5F181500B43F2B /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = NotificationServiceExtension;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +145,7 @@
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				92A592BCD1FE48ADBC334815 /* SceneDelegate.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -258,6 +272,7 @@
 				DACC8C8B2F5F536C00B43F2B /* CustomViewController.swift in Sources */,
 				DACC8C8C2F5F536C00B43F2B /* NativeStoragePlugin.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				BC27FB5B472A46C0BFB6A357 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -56,6 +56,7 @@ export class StreamManager {
 	}
 
 	async #startStream() {
+		this.#createMediaSource(); // Created before the request since chunks can arrive ahead of the startStream success reply
 		// Chunks arrive as server pushes, dispatched by type
 		this.#relay.onPush(this.#productId, "streamVideoChunk", this.#handleVideoChunk);
 		this.#relay.onPush(this.#productId, "streamAudioChunk", this.#handleAudioChunk);
@@ -63,7 +64,7 @@ export class StreamManager {
 			const response = await this.#relay.request(this.#productId, "startStream");
 			if (!response.success) return this.#endWithError(new Error(response.error || "Failed to start stream"));
 			if (this.#ended) return;
-			if (!this.#mediaSourceManager) this.#setupMediaSource();
+			this.#attachMediaSource();
 			this.#startHeartbeat();
 			this.#resetVideoStaleTimeout();
 		} catch (error) {
@@ -155,8 +156,8 @@ export class StreamManager {
 		this.#videoStaleTimeout = setTimeout(() => this.#endWithError(new Error("Stream stale")), 10_000);
 	}
 
-	#setupMediaSource() {
-		const manager = new MediaSourceManager({
+	#createMediaSource() {
+		this.#mediaSourceManager = new MediaSourceManager({
 			isLive: true,
 			onChunkAppended: () => {
 				// Buffer ~1s before starting playback
@@ -172,9 +173,13 @@ export class StreamManager {
 				}
 			}
 		});
-		this.#mediaSourceManager = manager;
-		if (this.#videoElement) this.#videoElement.src = manager.setup();
-		else manager.setup();
+	}
+
+	#attachMediaSource() {
+		const manager = this.#mediaSourceManager;
+		if (!manager || manager.mediaSource) return;
+		const url = manager.setup();
+		if (this.#videoElement) this.#videoElement.src = url;
 	}
 
 	#handleChunkError(payload, label, fatal) {
