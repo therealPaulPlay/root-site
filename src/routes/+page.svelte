@@ -1,15 +1,13 @@
 <script>
 	import { onMount } from "svelte";
-	import {
-		RiDeviceLine,
-		RiTimeLine,
-		RiComputerLine,
-		RiCpuLine,
-		RiTranslate2,
-		RiCamera2Line,
-		RiServerLine,
-		RiSmartphoneLine
-	} from "svelte-remixicon";
+	import DeviceThin from "$lib/components/custom-icons/DeviceThin.svelte";
+	import TimeThin from "$lib/components/custom-icons/TimeThin.svelte";
+	import ComputerThin from "$lib/components/custom-icons/ComputerThin.svelte";
+	import CpuThin from "$lib/components/custom-icons/CpuThin.svelte";
+	import Translate2Thin from "$lib/components/custom-icons/Translate2Thin.svelte";
+	import Camera2Thin from "$lib/components/custom-icons/Camera2Thin.svelte";
+	import ServerThin from "$lib/components/custom-icons/ServerThin.svelte";
+	import SmartphoneThin from "$lib/components/custom-icons/SmartphoneThin.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { decryptTextEffect } from "$lib/utils/decryptTextEffect.js";
 	import * as Carousel from "$lib/components/ui/carousel";
@@ -28,7 +26,7 @@
 	onMount(() => {
 		exampleTrackingInfo = [
 			{
-				icon: RiDeviceLine,
+				icon: DeviceThin,
 				text: navigator.userAgent.includes("Android")
 					? "Android"
 					: /iPhone|iPad|iPod/.test(navigator.userAgent)
@@ -42,19 +40,19 @@
 									: navigator.platform
 			},
 			{
-				icon: RiComputerLine,
+				icon: ComputerThin,
 				text: `${window.screen.height}p`
 			},
 			{
-				icon: RiTimeLine,
+				icon: TimeThin,
 				text: Intl.DateTimeFormat().resolvedOptions().timeZone?.split("/")?.[1]
 			},
 			{
-				icon: RiTranslate2,
+				icon: Translate2Thin,
 				text: navigator.language?.toUpperCase()?.slice(0, 2)
 			},
 			{
-				icon: RiCpuLine,
+				icon: CpuThin,
 				text: `${navigator.hardwareConcurrency} cores`
 			}
 		];
@@ -421,11 +419,11 @@
 	{/snippet}
 	<div class="my-auto w-1/2 p-8 max-xl:w-full xl:mx-6 2xl:mx-8">
 		<div class="flex items-start">
-			{@render productBox(RiSmartphoneLine, "Your device")}
+			{@render productBox(SmartphoneThin, "Your device")}
 			{@render lanes(0)}
-			{@render productBox(RiServerLine, "Stateless Relay")}
+			{@render productBox(ServerThin, "Stateless Relay")}
 			{@render lanes(0.3)}
-			{@render productBox(RiCamera2Line, "ROOT product")}
+			{@render productBox(Camera2Thin, "ROOT product")}
 		</div>
 	</div>
 

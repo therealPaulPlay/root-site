@@ -11,9 +11,7 @@
 		RiDeleteBinLine,
 		RiDownload2Line,
 		RiEdit2Line,
-		RiMore2Fill,
-		RiSettings3Line,
-		RiVideoAddLine
+		RiMore2Fill
 	} from "svelte-remixicon";
 	import { toast } from "svelte-sonner";
 	import Label from "$lib/components/ui/label/label.svelte";
@@ -28,6 +26,8 @@
 	import { page } from "$app/state";
 	import { snapshotVideoSrc } from "$lib/utils/snapshotVideo";
 	import { fade } from "svelte/transition";
+	import Settings3Thin from "$lib/components/custom-icons/Settings3Thin.svelte";
+	import VideoAddThin from "$lib/components/custom-icons/VideoAddThin.svelte";
 
 	const loading = new LoadingState();
 
@@ -268,10 +268,10 @@
 
 <div class="absolute top-0 right-0 z-1 flex bg-background text-xl">
 	<Button class="h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/settings">
-		<RiSettings3Line class="h-8! w-8!" />
+		<Settings3Thin class="h-8! w-8!" />
 	</Button>
 	<Button class="h-20! border-t-0 border-r-0 p-6!" variant="outline" href="/connect/add">
-		<RiVideoAddLine class="h-8! w-8!" />
+		<VideoAddThin class="h-8! w-8!" />
 	</Button>
 </div>
 
@@ -443,7 +443,7 @@
 		{:else}
 			<div class="flex h-full w-full items-center justify-center">
 				<Label class="min-w-fit overflow-hidden text-nowrap"
-					>Click "<RiVideoAddLine class="-mx-1.25 size-4!" />" to connect a camera.</Label
+					>Click "<VideoAddThin class="-mx-1.25 size-4!" strokeWidth={2} />" to connect a camera.</Label
 				>
 			</div>
 		{/if}

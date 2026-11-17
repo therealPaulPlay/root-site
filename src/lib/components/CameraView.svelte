@@ -12,7 +12,8 @@
 	import CameraEvents from "$lib/components/CameraEvents.svelte";
 	import PullToRefresh from "$lib/components/PullToRefresh.svelte";
 	import StreamPlayer from "$lib/components/StreamPlayer.svelte";
-	import { RiCloseLine, RiDownload2Line, RiErrorWarningLine } from "svelte-remixicon";
+	import { RiDownload2Line, RiErrorWarningLine } from "svelte-remixicon";
+	import CloseThin from "$lib/components/custom-icons/CloseThin.svelte";
 	import { slide } from "svelte/transition";
 	import { SvelteSet } from "svelte/reactivity";
 	import { MediaSourceManager } from "$lib/utils/mediaSourceManager";
@@ -878,7 +879,7 @@
 		<!-- Top bar with close button -->
 		<div class="flex border-b text-xl">
 			<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" onclick={closeDrawer}>
-				<RiCloseLine class="shape-crisp h-8! w-8!" />
+				<CloseThin class="shape-crisp h-8! w-8!" />
 			</Button>
 		</div>
 

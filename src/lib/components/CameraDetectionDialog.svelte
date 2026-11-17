@@ -36,7 +36,7 @@
 		</Dialog.Header>
 		{#if event}
 			<div
-				class="relative flex w-full items-center justify-center overflow-hidden border bg-muted"
+				class="relative flex w-full items-center justify-center overflow-hidden border bg-muted text-muted-foreground"
 				style:aspect-ratio="{imgW || 16}/{imgH || 9}"
 			>
 				{#if thumbnailSrc}

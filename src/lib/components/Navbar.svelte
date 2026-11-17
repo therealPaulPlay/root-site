@@ -2,7 +2,9 @@
 	import { page } from "$app/state";
 	import { slide } from "svelte/transition";
 	import Button, { buttonVariants } from "./ui/button/button.svelte";
-	import { RiCloseLargeLine, RiCornerDownRightLine, RiMenuLine } from "svelte-remixicon";
+	import { RiCornerDownRightLine } from "svelte-remixicon";
+	import MenuThin from "$lib/components/custom-icons/MenuThin.svelte";
+	import CloseLargeThin from "$lib/components/custom-icons/CloseLargeThin.svelte";
 	import { afterNavigate } from "$app/navigation";
 	import { handlePointerMove, resetPointerMove } from "$lib/utils/trackPointer";
 	import { Capacitor } from "@capacitor/core";
@@ -42,7 +44,7 @@
 				showMobileNavbar = true;
 			}}
 		>
-			<RiMenuLine class="shape-crisp h-8! w-8!" />
+			<MenuThin class="shape-crisp h-8! w-8!" />
 		</Button>
 	</div>
 
@@ -61,7 +63,7 @@
 						showMobileNavbar = false;
 					}}
 				>
-					<RiCloseLargeLine class="h-8! w-8!" />
+					<CloseLargeThin class="h-8! w-8!" />
 				</Button>
 			{/if}
 		</div>

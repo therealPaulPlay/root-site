@@ -3,7 +3,8 @@
 	import Input from "$lib/components/ui/input/input.svelte";
 	import { OFFICIAL_RELAY_DOMAIN } from "$lib/config";
 	import { onMount } from "svelte";
-	import { RiArrowLeftLine, RiExternalLinkLine } from "svelte-remixicon";
+	import { RiExternalLinkLine } from "svelte-remixicon";
+	import ArrowLeftThin from "$lib/components/custom-icons/ArrowLeftThin.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import IframeDialog from "$lib/components/IframeDialog.svelte";
 	import { theme, ThemePreference } from "$lib/utils/theme.svelte.js";
@@ -25,7 +26,7 @@
 
 <div class="absolute top-0 left-0 flex text-xl">
 	<Button class="h-20! border-t-0 border-l-0 p-6!" variant="outline" href="/connect">
-		<RiArrowLeftLine class="shape-crisp h-8! w-8!" />
+		<ArrowLeftThin class="shape-crisp h-8! w-8!" />
 	</Button>
 </div>
 

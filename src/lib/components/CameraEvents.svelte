@@ -481,7 +481,7 @@
 	{/if}
 {/if}
 
-<!-- Recording Viewer Dialog -->
+<!-- Recording viewer dialog -->
 <Dialog.Root bind:open={viewRecordingDialog}>
 	<Dialog.Content>
 		<Dialog.Header>
