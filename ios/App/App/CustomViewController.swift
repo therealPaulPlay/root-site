@@ -5,5 +5,6 @@ class CustomViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(NativeStoragePlugin())
+        bridge?.registerPluginInstance(AccessibilityPlugin())
     }
 }

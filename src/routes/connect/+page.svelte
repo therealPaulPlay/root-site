@@ -23,6 +23,7 @@
 	import { LoadingState } from "$lib/utils/loadingState.svelte.js";
 	import { SvelteSet } from "svelte/reactivity";
 	import CameraView from "$lib/components/CameraView.svelte";
+	import VideoAutoplayDisabledDialog from "$lib/components/VideoAutoplayDisabledDialog.svelte";
 	import { page } from "$app/state";
 	import { snapshotVideoSrc } from "$lib/utils/snapshotVideo";
 	import { fade } from "svelte/transition";
@@ -474,3 +475,5 @@
 		/>
 	{/if}
 {/if}
+
+<VideoAutoplayDisabledDialog />
