@@ -259,10 +259,6 @@
 		scrollbar-width: none;
 	}
 
-	.shape-crisp {
-		shape-rendering: crispEdges;
-	}
-
 	.items-start-safe {
 		align-items: safe start;
 	}

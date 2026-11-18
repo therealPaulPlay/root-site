@@ -26,7 +26,7 @@
 
 <div class="absolute top-0 left-0 flex text-xl">
 	<Button class="h-20! border-t-0 border-l-0 p-6!" variant="outline" href="/connect">
-		<ArrowLeftThin class="shape-crisp h-8! w-8!" />
+		<ArrowLeftThin class="h-8! w-8!" />
 	</Button>
 </div>
 

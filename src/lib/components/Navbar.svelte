@@ -44,7 +44,7 @@
 				showMobileNavbar = true;
 			}}
 		>
-			<MenuThin class="shape-crisp h-8! w-8!" />
+			<MenuThin class="h-8! w-8!" />
 		</Button>
 	</div>
 

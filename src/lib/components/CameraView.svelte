@@ -879,7 +879,7 @@
 		<!-- Top bar with close button -->
 		<div class="flex border-b text-xl">
 			<Button class="h-20! border-t-0 border-b-0 border-l-0 p-6!" variant="outline" onclick={closeDrawer}>
-				<CloseThin class="shape-crisp h-8! w-8!" />
+				<CloseThin class="h-8! w-8!" />
 			</Button>
 		</div>
 
