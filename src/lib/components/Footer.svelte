@@ -1,5 +1,5 @@
 <script>
-	import { RiBlueskyLine, RiTwitterXLine, RiYoutubeLine } from "svelte-remixicon";
+	import { RiDiscordLine, RiTwitterXLine, RiYoutubeLine } from "svelte-remixicon";
 	import Button from "./ui/button/button.svelte";
 	import { Capacitor } from "@capacitor/core";
 	import { page } from "$app/state";
@@ -14,11 +14,8 @@
 			<Button class="text-background" href="https://www.youtube.com/@PaulPlay" target="_blank" variant="link"
 				>YouTube <RiYoutubeLine /></Button
 			>
-			<Button
-				class="text-background"
-				href="https://bsky.app/profile/paulplay.bsky.social"
-				target="_blank"
-				variant="link">Bluesky <RiBlueskyLine /></Button
+			<Button class="text-background" href="https://discord.com/invite/pau5WtvpNt" target="_blank" variant="link"
+				>Discord <RiDiscordLine /></Button
 			>
 			<Button class="text-background" href="https://x.com/PaulPlayStudio" target="_blank" variant="link"
 				>Twitter <RiTwitterXLine /></Button
